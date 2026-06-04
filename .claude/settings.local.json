@@ -5,7 +5,12 @@
       "Bash(git add *)",
       "Bash(git config *)",
       "Bash(git commit -m ' *)",
-      "Bash(git commit -am ' *)"
+      "Bash(git commit -am ' *)",
+      "Bash(gh auth *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(cp \"C:\\\\Users\\\\topge\\\\Downloads\\\\研究の進め方.md\" .)",
+      "Bash(cp \"C:\\\\Users\\\\topge\\\\Downloads\\\\pre_study_homework.md\" .)"
     ]
   }
 }
