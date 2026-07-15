@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>loop engineering入門 — エージェントのループ設計 4類型</title>
+<style>
+  :root{
+    --ink:#33302b;
+    --sub:#6b6459;
+    --paper:#faf6ec;
+    --card:#ffffff;
+    --line:#e4dac0;
+    --blue:#3d6f8e;     /* Turn-based */
+    --blue-bg:#e8f0f4;
+    --teal:#3f8f6d;     /* Goal-based */
+    --teal-bg:#e7f4ee;
+    --orange:#d97e33;   /* Time-based */
+    --orange-bg:#faeee0;
+    --purple:#8a5ea3;   /* Proactive */
+    --purple-bg:#f1e7f5;
+    --gray:#8a8478;
+    --human:#5b7fa6;
+    --agent:#4f9d8a;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Yu Gothic","Meiryo","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    line-height:1.85;
+    font-size:16px;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:28px 22px 90px;}
+  header.hero{
+    background:linear-gradient(135deg,#fffef9 0%,#f6efd9 100%);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:32px 30px;
+    margin-bottom:26px;
+    box-shadow:0 4px 18px rgba(80,60,20,0.08);
+  }
+  header.hero h1{
+    margin:0 0 10px;
+    font-size:1.7rem;
+    line-height:1.5;
+    color:var(--ink);
+  }
+  header.hero .lead{
+    color:var(--sub);
+    font-size:0.98rem;
+    margin:6px 0 0;
+  }
+  .badge-row{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;}
+  .badge{
+    display:inline-block;
+    font-size:0.78rem;
+    padding:4px 11px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid var(--line);
+    color:var(--sub);
+  }
+  .source-note{
+    margin-top:18px;
+    background:#fffdf5;
+    border-left:4px solid var(--orange);
+    padding:12px 16px;
+    border-radius:6px;
+    font-size:0.92rem;
+    color:var(--ink);
+  }
+  .source-note a{color:var(--blue);}
+
+  nav.toc{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 26px;
+    margin-bottom:30px;
+  }
+  nav.toc h2{margin:0 0 10px;font-size:1.05rem;color:var(--ink);}
+  nav.toc ol{margin:0;padding-left:1.3em;columns:2;column-gap:28px;}
+  nav.toc li{margin-bottom:6px;font-size:0.92rem;break-inside:avoid;}
+  nav.toc a{color:var(--blue);text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+
+  section{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:28px 30px;
+    margin-bottom:22px;
+    scroll-margin-top:16px;
+  }
+  section h2{
+    margin:0 0 14px;
+    font-size:1.32rem;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--line);
+    display:flex;align-items:center;gap:10px;
+  }
+  section h2 .num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:30px;height:30px;border-radius:50%;
+    background:var(--ink);color:#fff;font-size:0.85rem;flex:none;
+  }
+  h3{font-size:1.08rem;margin:26px 0 10px;color:var(--ink);}
+  h3.type-h{
+    display:inline-block;padding:6px 14px;border-radius:8px;color:#fff;font-size:1.1rem;margin:8px 0 14px;
+  }
+  .type1 h3.type-h{background:var(--blue);}
+  .type2 h3.type-h{background:var(--teal);}
+  .type3 h3.type-h{background:var(--orange);}
+  .type4 h3.type-h{background:var(--purple);}
+
+  p{margin:0.7em 0;}
+  ul,ol.normal{padding-left:1.4em;}
+  ul li,ol.normal li{margin-bottom:6px;}
+
+  blockquote.orig{
+    margin:14px 0;
+    padding:14px 18px;
+    background:#f7f4ea;
+    border-left:4px solid var(--gray);
+    border-radius:6px;
+    font-size:0.9rem;
+    color:#4a453c;
+  }
+  blockquote.orig .en{font-style:italic;}
+  blockquote.orig .ja{margin-top:8px;color:var(--ink);font-style:normal;font-size:0.93rem;}
+  blockquote.orig .ja::before{content:"訳: ";color:var(--sub);}
+
+  .quote-strong{
+    margin:16px 0;
+    padding:16px 20px;
+    background:#fbf3e3;
+    border:1px dashed var(--orange);
+    border-radius:10px;
+  }
+
+  .kv-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:0.92rem;}
+  .kv-table th,.kv-table td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;}
+  .kv-table th{background:#f5efdc;white-space:nowrap;}
+  table.data{width:100%;border-collapse:collapse;margin:14px 0;font-size:0.9rem;}
+  table.data th,table.data td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;}
+  table.data th{background:var(--ink);color:#fff;}
+  table.data tr:nth-child(even){background:#faf6ea;}
+  table.anti td.bad{color:#a33c3c;font-weight:bold;width:26%;}
+  table.anti td.reason{font-size:0.86rem;color:var(--sub);font-family:Consolas,"Courier New",monospace;}
+
+  pre.code{
+    background:#2b2a26;
+    color:#eae4d3;
+    padding:16px 18px;
+    border-radius:10px;
+    overflow-x:auto;
+    font-size:0.84rem;
+    line-height:1.6;
+    font-family:Consolas,"Courier New",monospace;
+  }
+  code.inline{
+    background:#efe8d2;
+    padding:1px 6px;
+    border-radius:4px;
+    font-family:Consolas,"Courier New",monospace;
+    font-size:0.88em;
+  }
+  .cmd{
+    background:#efe8d2;
+    border-radius:8px;
+    padding:10px 14px;
+    font-family:Consolas,"Courier New",monospace;
+    font-size:0.86rem;
+    margin:10px 0;
+    overflow-x:auto;
+  }
+
+  .doc-box{
+    margin:18px 0;
+    border:2px dashed var(--blue);
+    background:var(--blue-bg);
+    border-radius:12px;
+    padding:16px 20px;
+  }
+  .doc-box .doc-title{
+    font-weight:bold;color:var(--blue);margin-bottom:8px;font-size:0.95rem;
+  }
+  .doc-box p, .doc-box li{font-size:0.9rem;}
+
+  .fig{
+    margin:22px 0;
+    text-align:center;
+  }
+  .fig svg{max-width:100%;height:auto;display:block;margin:0 auto;background:#fffdf6;border:1px solid var(--line);border-radius:14px;}
+  .fig figcaption{
+    margin-top:10px;font-size:0.86rem;color:var(--sub);
+  }
+  .fig figcaption .cap-title{color:var(--ink);font-weight:bold;}
+
+  .type-card{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 20px;
+  }
+  .type-card > div{
+    border-radius:10px;padding:12px 14px;font-size:0.84rem;color:#fff;
+  }
+  .type-card .lbl{opacity:0.85;font-size:0.76rem;display:block;margin-bottom:2px;}
+
+  .pillar-note{background:#f5efdc;border-radius:10px;padding:14px 18px;font-size:0.9rem;margin:14px 0;}
+
+  footer{
+    text-align:center;color:var(--sub);font-size:0.84rem;margin-top:40px;padding-top:20px;border-top:1px solid var(--line);
+  }
+  .anchor-jump{color:var(--sub);font-size:0.8rem;text-decoration:none;}
+  .back-top{display:inline-block;margin-top:10px;font-size:0.82rem;color:var(--blue);text-decoration:none;}
+  strong.hl{background:#fbeccb;padding:0 4px;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- ============ 共有アイコン定義（このHTML内のすべてのSVG図から参照） ============ -->
+<svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
+<defs>
+  <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="2" stdDeviation="2.6" flood-color="#33302b" flood-opacity="0.16"/>
+  </filter>
+
+  <marker id="ah-blue" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#3d6f8e"/></marker>
+  <marker id="ah-teal" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#3f8f6d"/></marker>
+  <marker id="ah-orange" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#d97e33"/></marker>
+  <marker id="ah-purple" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#8a5ea3"/></marker>
+  <marker id="ah-gray" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#8a8478"/></marker>
+  <marker id="ah-ink" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#33302b"/></marker>
+
+  <symbol id="ic-human" viewBox="0 0 40 64">
+    <circle cx="20" cy="11" r="9" fill="#fff" stroke="currentColor" stroke-width="3.2"/>
+    <path d="M20,20 L20,42" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M8,28 L32,28" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M20,42 L9,61" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M20,42 L31,61" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="ic-agent" viewBox="0 0 56 60">
+    <line x1="28" y1="8" x2="28" y2="18" stroke="currentColor" stroke-width="3"/>
+    <circle cx="28" cy="6" r="4" fill="currentColor"/>
+    <rect x="9" y="18" width="38" height="30" rx="11" fill="#fff" stroke="currentColor" stroke-width="3.2"/>
+    <circle cx="20" cy="33" r="3.4" fill="currentColor"/>
+    <circle cx="36" cy="33" r="3.4" fill="currentColor"/>
+    <path d="M19,41 Q28,46 37,41" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+    <rect x="4" y="50" width="10" height="8" rx="2.5" fill="currentColor" opacity="0.85"/>
+    <rect x="42" y="50" width="10" height="8" rx="2.5" fill="currentColor" opacity="0.85"/>
+  </symbol>
+
+  <symbol id="ic-check" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="17.5" fill="#fff" stroke="currentColor" stroke-width="3"/>
+    <path d="M11,20 L17,27 L29,12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="ic-cross" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="17.5" fill="#fff" stroke="currentColor" stroke-width="3"/>
+    <path d="M13,13 L27,27 M27,13 L13,27" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="ic-magnifier" viewBox="0 0 40 40">
+    <circle cx="16" cy="16" r="11.5" fill="#fff" stroke="currentColor" stroke-width="3.2"/>
+    <line x1="24.5" y1="24.5" x2="35" y2="35" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="ic-bolt" viewBox="0 0 30 40">
+    <path d="M17,2 L4,24 L14,24 L11,38 L27,14 L16,14 Z" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ic-flag" viewBox="0 0 30 60">
+    <line x1="4" y1="2" x2="4" y2="58" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M4,4 L27,11 L4,19 Z" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ic-envelope" viewBox="0 0 40 30">
+    <rect x="2" y="4" width="36" height="22" rx="3" fill="#fff" stroke="currentColor" stroke-width="3"/>
+    <path d="M2,6 L20,20 L38,6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="ic-book" viewBox="0 0 40 34">
+    <path d="M20,6 C15,2 6,2 3,4 L3,29 C6,27 15,27 20,31 C25,27 34,27 37,29 L37,4 C34,2 25,2 20,6 Z" fill="#fff" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+    <line x1="20" y1="6" x2="20" y2="31" stroke="currentColor" stroke-width="2.2"/>
+  </symbol>
+
+  <symbol id="ic-broom" viewBox="0 0 40 40">
+    <line x1="30" y1="4" x2="12" y2="24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M12,24 L4,36 L8,38 L18,29 Z M12,24 L18,29 L14,34 M6,34 L10,29" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="ic-review" viewBox="0 0 40 40">
+    <circle cx="15" cy="15" r="9" fill="#fff" stroke="currentColor" stroke-width="3"/>
+    <line x1="21.5" y1="21.5" x2="31" y2="31" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>
+    <path d="M8,32 C8,26 22,26 22,32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="ic-cloud" viewBox="0 0 60 40">
+    <path d="M14,32 C6,32 2,26 6,20 C4,12 14,7 20,11 C24,4 38,4 41,12 C50,11 54,20 47,25 C50,31 44,34 38,32 Z" fill="#fff" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="ic-desktop" viewBox="0 0 50 40">
+    <rect x="4" y="4" width="42" height="26" rx="3" fill="#fff" stroke="currentColor" stroke-width="2.6"/>
+    <line x1="18" y1="36" x2="32" y2="36" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+    <line x1="25" y1="30" x2="25" y2="36" stroke="currentColor" stroke-width="2.6"/>
+  </symbol>
+
+  <symbol id="ic-terminal" viewBox="0 0 50 40">
+    <rect x="4" y="4" width="42" height="32" rx="4" fill="#2b2a26" stroke="currentColor" stroke-width="2.4"/>
+    <path d="M11,14 L19,20 L11,26" fill="none" stroke="#eae4d3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="23" y1="26" x2="34" y2="26" stroke="#eae4d3" stroke-width="2.6" stroke-linecap="round"/>
+  </symbol>
+</defs>
+</svg>
+
+<div class="wrap">
+
+<header class="hero">
+  <h1>loop engineering入門<br>— エージェントのループ設計 4類型 —</h1>
+  <p class="lead">Anthropic公式ブログ「Loop engineering: Getting started with loops」を読み解く。<strong class="hl">Turn-based → Goal-based → Time-based → Proactive</strong>と進むにつれ、人間が「検証」「停止条件」「トリガー」「プロンプトそのもの」を1つずつエージェントに手放していく“梯子”の構造こそが主題である。</p>
+  <div class="badge-row">
+    <span class="badge">🔵 Turn-based</span>
+    <span class="badge">🟢 Goal-based</span>
+    <span class="badge">🟠 Time-based</span>
+    <span class="badge">🟣 Proactive</span>
+  </div>
+  <div class="source-note">
+    この資料は Anthropic公式ブログ記事「<a href="https://claude.com/blog/getting-started-with-loops" target="_blank" rel="noopener">Loop engineering: Getting started with loops</a>」（著者: Delba de Oliveira, Michael Segner）の日本語要約である。一部は公式ドキュメント（<a href="https://code.claude.com/docs/en/scheduled-tasks" target="_blank" rel="noopener">scheduled-tasks</a> / <a href="https://code.claude.com/docs/en/goal" target="_blank" rel="noopener">goal</a> / <a href="https://code.claude.com/docs/en/routines" target="_blank" rel="noopener">routines</a>）で補完している。ブログ記事に基づく内容と、公式ドキュメントで補った実務情報は
+    <span style="border:1px dashed var(--blue);border-radius:5px;padding:1px 7px;background:var(--blue-bg);color:var(--blue);font-weight:bold;">📘 公式ドキュメント補足</span>
+    の枠で明確に区別している。
+  </div>
+</header>
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#definition">ループとは何か（定義）</a></li>
+    <li><a href="#comparison">通常の一問一答 vs ループ</a></li>
+    <li><a href="#four-types">4類型の全体像（階段図）</a></li>
+    <li><a href="#handoff">手放すものが増えていく</a></li>
+    <li><a href="#turn-based">類型①: Turn-based loop</a></li>
+    <li><a href="#goal-based">類型②: Goal-based loop（/goal）</a></li>
+    <li><a href="#time-based">類型③: Time-based loop（/loop・/schedule）</a></li>
+    <li><a href="#exec-layers">実行場所の3層比較</a></li>
+    <li><a href="#proactive">類型④: Proactive loop</a></li>
+    <li><a href="#quality">品質を支える4本の柱</a></li>
+    <li><a href="#tokens">トークン使用量の管理</a></li>
+    <li><a href="#summary">まとめ表・アンチパターン集</a></li>
+    <li><a href="#source">出典</a></li>
+  </ol>
+</nav>
+
+<!-- ============ 1. 定義 ============ -->
+<section id="definition">
+  <h2><span class="num">1</span>ループとは何か（定義）</h2>
+  <p>Claude Codeチームは、loopを次のように定義している。</p>
+  <div class="quote-strong">
+    <div class="en" style="font-style:italic;">"On the Claude Code team, we define <strong>loops as agents repeating cycles of work until a stop condition is met</strong>."</div>
+    <div class="ja" style="margin-top:8px;"><span style="color:var(--sub);">訳: </span>「私たちClaude Codeチームは、<strong>ループを、停止条件が満たされるまで作業のサイクルを繰り返すエージェント</strong>として定義している」</div>
+  </div>
+
+  <figure class="fig">
+    <svg viewBox="0 0 760 560" class="doc-svg" style="max-width:640px;">
+      <style>text{font-family:'Yu Gothic','Meiryo',sans-serif;}</style>
+      <text x="380" y="30" text-anchor="middle" font-size="15" font-weight="bold" fill="#33302b">1周のサイクルと、抜け出るためのゲート</text>
+
+      <!-- 3ノードの円環 -->
+      <path d="M 400,130 C 500,150 560,220 560,290" fill="none" stroke="#3d6f8e" stroke-width="3" marker-end="url(#ah-blue)"/>
+      <path d="M 500,320 C 430,340 310,340 240,320" fill="none" stroke="#3d6f8e" stroke-width="3" marker-end="url(#ah-blue)"/>
+      <path d="M 210,290 C 200,220 260,150 350,130" fill="none" stroke="#3d6f8e" stroke-width="3" stroke-dasharray="2 6" marker-end="url(#ah-blue)"/>
+      <text x="150" y="215" font-size="12.5" fill="#8a5ea3" font-weight="bold">未達成</text>
+      <text x="118" y="231" font-size="12.5" fill="#8a5ea3" font-weight="bold">→もう一周</text>
+
+      <!-- gather node -->
+      <g filter="url(#soft-shadow)">
+        <circle cx="380" cy="100" r="46" fill="#fff" stroke="#3d6f8e" stroke-width="3.2"/>
+      </g>
+      <use href="#ic-magnifier" x="360" y="76" width="30" height="30" style="color:#3d6f8e"/>
+      <text x="380" y="160" text-anchor="middle" font-size="13" font-weight="bold" fill="#33302b">① コンテキスト収集</text>
+      <text x="380" y="175" text-anchor="middle" font-size="10.5" fill="#8a8478" font-style="italic">Gather context</text>
+
+      <!-- act node -->
+      <g filter="url(#soft-shadow)">
+        <circle cx="580" cy="300" r="46" fill="#fff" stroke="#3d6f8e" stroke-width="3.2"/>
+      </g>
+      <use href="#ic-bolt" x="565" y="278" width="26" height="34" style="color:#3d6f8e"/>
+      <text x="580" y="360" text-anchor="middle" font-size="13" font-weight="bold" fill="#33302b">② 行動</text>
+      <text x="580" y="375" text-anchor="middle" font-size="10.5" fill="#8a8478" font-style="italic">Act</text>
+
+      <!-- verify node -->
+      <g filter="url(#soft-shadow)">
+        <circle cx="180" cy="300" r="46" fill="#fff" stroke="#3d6f8e" stroke-width="3.2"/>
+      </g>
+      <use href="#ic-check" x="163" y="282" width="34" height="34" style="color:#3d6f8e"/>
+      <text x="180" y="360" text-anchor="middle" font-size="13" font-weight="bold" fill="#33302b">③ 自己検証</text>
+      <text x="180" y="375" text-anchor="middle" font-size="10.5" fill="#8a8478" font-style="italic">Verify</text>
+
+      <!-- verify -> gate (達成) -->
+      <path d="M 200,340 C 220,400 220,420 240,440" fill="none" stroke="#d97e33" stroke-width="3.4" marker-end="url(#ah-orange)"/>
+      <text x="200" y="410" font-size="12.5" fill="#d97e33" font-weight="bold">達成 →</text>
+
+      <!-- gate graphic -->
+      <g filter="url(#soft-shadow)">
+        <rect x="240" y="450" width="14" height="80" rx="4" fill="#d97e33"/>
+        <rect x="330" y="450" width="14" height="80" rx="4" fill="#d97e33"/>
+        <rect x="235" y="444" width="114" height="12" rx="5" fill="#d97e33"/>
+      </g>
+      <text x="292" y="500" text-anchor="middle" font-size="13" font-weight="bold" fill="#fff">?</text>
+      <text x="292" y="410" text-anchor="middle" font-size="13" font-weight="bold" fill="#d97e33">Stop condition</text>
+      <text x="292" y="425" text-anchor="middle" font-size="11" fill="#8a8478">停止条件を満たしたか？</text>
+
+      <!-- gate -> done -->
+      <path d="M 349,490 C 420,490 460,490 500,490" fill="none" stroke="#3f8f6d" stroke-width="3.4" marker-end="url(#ah-teal)"/>
+      <use href="#ic-flag" x="510" y="452" width="26" height="60" style="color:#3f8f6d"/>
+      <text x="545" y="480" font-size="13" font-weight="bold" fill="#3f8f6d">完了</text>
+      <text x="545" y="495" font-size="10.5" fill="#8a8478" font-style="italic">Done</text>
+    </svg>
+    <figcaption><span class="cap-title">図1: ループの定義図。</span>「コンテキスト収集 → 行動 → 自己検証」の1周を、停止条件（Stop condition）というゲートが満たされるまで繰り返す。ゲートを通過すると初めてループを抜け、完了となる。</figcaption>
+  </figure>
+
+  <p>重要なのは、この定義がタスクの中身（コーディングか調査か等）を一切問わないという点である。<strong>「何を、いつ、どうやって止めるか」という制御構造だけ</strong>で4類型に分類される。記事は次の戒めから始まる。</p>
+  <blockquote class="orig">
+    <div class="en">"Not all tasks require complex loops; start with the simplest solution and use these patterns selectively."</div>
+    <div class="ja">すべてのタスクが複雑なループを必要とするわけではない。まずは最もシンプルな解決策から始め、これらのパターンは選択的に使うこと。</div>
+  </blockquote>
+</section>
+
+<!-- ============ 2. 対比図 ============ -->
+<section id="comparison">
+  <h2><span class="num">2</span>通常の一問一答 vs ループ</h2>
+  <p>記事はまず、日々のプロンプトのやり取りそのものが「手動のループ」であると説明する。</p>
+  <blockquote class="orig">
+    <div class="en">"Every prompt you send starts a manual loop with you directing each turn. Claude gathers context, takes action, checks its work, repeats if needed, and responds. We call this <strong>the agentic loop</strong>."</div>
+    <div class="ja">あなたが送るすべてのプロンプトは、各ターンをあなたが指揮する手動ループを開始する。Claudeはコンテキストを集め、行動し、自分の作業を確認し、必要なら繰り返し、応答する。これを<strong>エージェント的ループ</strong>と呼ぶ。</div>
+  </blockquote>
+  <p>4類型のグラデーションは、この「人間が毎ターン監督する状態」から「人間がループの外に出る状態」への移行として理解すると分かりやすい。</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 900 420" class="doc-svg">
+      <text x="450" y="28" text-anchor="middle" font-size="15" font-weight="bold" fill="#33302b">人間はどこにいるか</text>
+
+      <!-- 左パネル -->
+      <g filter="url(#soft-shadow)">
+        <rect x="20" y="50" width="410" height="345" rx="16" fill="#f4ede0" stroke="#c9bfa4" stroke-width="1.6"/>
+      </g>
+      <text x="225" y="82" text-anchor="middle" font-size="14" font-weight="bold" fill="#5b7fa6">通常の一問一答（Turn-based寄り）</text>
+      <text x="225" y="99" text-anchor="middle" font-size="10.5" fill="#8a8478">人間が毎周回に登場しボトルネックになる</text>
+
+      <!-- 3周の反復 -->
+      <g>
+        <!-- iteration 1 -->
+        <use href="#ic-human" x="55" y="120" width="30" height="48" style="color:#5b7fa6"/>
+        <path d="M95,140 C120,120 150,120 175,140" fill="none" stroke="#8a8478" stroke-width="2.4" marker-end="url(#ah-gray)"/>
+        <use href="#ic-agent" x="180" y="118" width="40" height="42" style="color:#4f9d8a"/>
+        <path d="M220,140 C240,155 240,170 220,182" fill="none" stroke="#8a8478" stroke-width="2.2" marker-end="url(#ah-gray)" stroke-dasharray="1 5"/>
+        <text x="230" y="165" font-size="9.5" fill="#8a8478">結果</text>
+        <path d="M180,150 C130,175 100,175 80,168" fill="none" stroke="#d97e33" stroke-width="2.2" marker-end="url(#ah-orange)"/>
+        <text x="90" y="192" font-size="9.5" fill="#d97e33">人間が確認</text>
+
+        <!-- iteration 2 -->
+        <use href="#ic-human" x="55" y="210" width="30" height="48" style="color:#5b7fa6"/>
+        <path d="M95,230 C120,210 150,210 175,230" fill="none" stroke="#8a8478" stroke-width="2.4" marker-end="url(#ah-gray)"/>
+        <use href="#ic-agent" x="180" y="208" width="40" height="42" style="color:#4f9d8a"/>
+        <path d="M180,240 C130,265 100,265 80,258" fill="none" stroke="#d97e33" stroke-width="2.2" marker-end="url(#ah-orange)"/>
+        <text x="90" y="282" font-size="9.5" fill="#d97e33">次のプロンプトを書く</text>
+
+        <!-- iteration 3 -->
+        <use href="#ic-human" x="55" y="300" width="30" height="48" style="color:#5b7fa6"/>
+        <path d="M95,320 C120,300 150,300 175,320" fill="none" stroke="#8a8478" stroke-width="2.4" marker-end="url(#ah-gray)"/>
+        <use href="#ic-agent" x="180" y="298" width="40" height="42" style="color:#4f9d8a"/>
+      </g>
+      <text x="225" y="365" text-anchor="middle" font-size="11.5" fill="#a33c3c" font-weight="bold">人間が毎回ボトルネックに…</text>
+
+      <!-- 右パネル -->
+      <g filter="url(#soft-shadow)">
+        <rect x="470" y="50" width="410" height="345" rx="16" fill="#eaf2ee" stroke="#bcd6c9" stroke-width="1.6"/>
+      </g>
+      <text x="675" y="82" text-anchor="middle" font-size="14" font-weight="bold" fill="#3f8f6d">ループ（Goal / Time / Proactive）</text>
+      <text x="675" y="99" text-anchor="middle" font-size="10.5" fill="#8a8478">人間はループの外に出て、結果だけ受け取る</text>
+
+      <!-- 大きな円環（自律的に回る） -->
+      <g>
+        <circle cx="675" cy="230" r="90" fill="none" stroke="#4f9d8a" stroke-width="3.6" stroke-dasharray="10 8"/>
+        <use href="#ic-agent" x="633" y="150" width="42" height="42" style="color:#4f9d8a"/>
+        <use href="#ic-bolt" x="720" y="200" width="24" height="32" style="color:#4f9d8a"/>
+        <use href="#ic-check" x="700" y="270" width="30" height="30" style="color:#4f9d8a"/>
+        <use href="#ic-magnifier" x="620" y="255" width="28" height="28" style="color:#4f9d8a"/>
+        <text x="675" y="235" text-anchor="middle" font-size="10.5" fill="#3f8f6d" font-weight="bold">自律的に</text>
+        <text x="675" y="249" text-anchor="middle" font-size="10.5" fill="#3f8f6d" font-weight="bold">周回</text>
+      </g>
+
+      <path d="M 675,320 C 675,345 675,350 675,355" stroke="#3f8f6d" stroke-width="3" fill="none" marker-end="url(#ah-teal)"/>
+      <use href="#ic-envelope" x="655" y="358" width="40" height="30" style="color:#3f8f6d"/>
+      <use href="#ic-human" x="770" y="345" width="28" height="45" style="color:#5b7fa6"/>
+      <path d="M700,375 C725,375 745,375 765,368" stroke="#5b7fa6" stroke-width="2.4" fill="none" marker-end="url(#ah-blue)" stroke-dasharray="3 4"/>
+      <text x="735" y="393" text-anchor="middle" font-size="10" fill="#5b7fa6">結果だけ受け取る</text>
+    </svg>
+    <figcaption><span class="cap-title">図2: 通常の一問一答 vs ループ。</span>左は人間が各ターンに介在し続ける従来型のやり取り。右は自律的に周回するループの外側で、人間は完了通知（結果）だけを受け取る。</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 3. 4類型全体像 ============ -->
+<section id="four-types">
+  <h2><span class="num">3</span>4類型の全体像（階段図）</h2>
+  <p>4つの類型は、それぞれ「トリガー（何が始めるか）」「停止条件（何が止めるか）」「プリミティブ（Claude Codeのどの機能を使うか）」の3軸で整理できる。段を上るごとに人間のリアルタイム関与が減り、エージェントの自律性が上がる。</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 1000 660" class="doc-svg">
+      <text x="500" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#33302b">4類型の階段 — 自律性が上がるほど、手放すものが増える</text>
+
+      <!-- カード（トリガー/停止条件/プリミティブ） -->
+      <!-- step1 card -->
+      <g filter="url(#soft-shadow)">
+        <rect x="30" y="55" width="210" height="150" rx="10" fill="#e8f0f4" stroke="#3d6f8e" stroke-width="1.6"/>
+      </g>
+      <text x="135" y="76" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#3d6f8e">① Turn-based</text>
+      <text x="45" y="98" font-size="10.8" fill="#33302b">トリガー:</text>
+      <text x="45" y="112" font-size="10.8" fill="#33302b">ユーザーのプロンプト</text>
+      <text x="45" y="132" font-size="10.8" fill="#33302b">停止条件:</text>
+      <text x="45" y="146" font-size="10.8" fill="#33302b">Claudeの自己判断</text>
+      <text x="45" y="166" font-size="10.8" fill="#33302b">プリミティブ:</text>
+      <text x="45" y="180" font-size="10.8" fill="#33302b">通常のプロンプト+skills</text>
+      <text x="45" y="196" font-size="10" fill="#8a8478">手放すもの→検証</text>
+
+      <!-- step2 card -->
+      <g filter="url(#soft-shadow)">
+        <rect x="270" y="55" width="210" height="150" rx="10" fill="#e7f4ee" stroke="#3f8f6d" stroke-width="1.6"/>
+      </g>
+      <text x="375" y="76" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#3f8f6d">② Goal-based</text>
+      <text x="285" y="98" font-size="10.8" fill="#33302b">トリガー:</text>
+      <text x="285" y="112" font-size="10.8" fill="#33302b">手動プロンプト(1回)</text>
+      <text x="285" y="132" font-size="10.8" fill="#33302b">停止条件:</text>
+      <text x="285" y="146" font-size="10.8" fill="#33302b">ゴール達成 or 上限ターン</text>
+      <text x="285" y="166" font-size="10.8" fill="#33302b">プリミティブ:</text>
+      <text x="285" y="180" font-size="10.8" fill="#33302b">/goal</text>
+      <text x="285" y="196" font-size="10" fill="#8a8478">手放すもの→停止条件</text>
+
+      <!-- step3 card -->
+      <g filter="url(#soft-shadow)">
+        <rect x="510" y="55" width="210" height="150" rx="10" fill="#faeee0" stroke="#d97e33" stroke-width="1.6"/>
+      </g>
+      <text x="615" y="76" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#d97e33">③ Time-based</text>
+      <text x="525" y="98" font-size="10.8" fill="#33302b">トリガー:</text>
+      <text x="525" y="112" font-size="10.8" fill="#33302b">一定間隔</text>
+      <text x="525" y="132" font-size="10.8" fill="#33302b">停止条件:</text>
+      <text x="525" y="146" font-size="10.8" fill="#33302b">人が停止 / 作業完了</text>
+      <text x="525" y="166" font-size="10.8" fill="#33302b">プリミティブ:</text>
+      <text x="525" y="180" font-size="10.8" fill="#33302b">/loop, /schedule</text>
+      <text x="525" y="196" font-size="10" fill="#8a8478">手放すもの→トリガー</text>
+
+      <!-- step4 card -->
+      <g filter="url(#soft-shadow)">
+        <rect x="750" y="40" width="220" height="165" rx="10" fill="#f1e7f5" stroke="#8a5ea3" stroke-width="1.6"/>
+      </g>
+      <text x="860" y="61" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#8a5ea3">④ Proactive</text>
+      <text x="765" y="83" font-size="10.8" fill="#33302b">トリガー:</text>
+      <text x="765" y="97" font-size="10.8" fill="#33302b">イベント/スケジュール(無人)</text>
+      <text x="765" y="117" font-size="10.8" fill="#33302b">停止条件:</text>
+      <text x="765" y="131" font-size="10.8" fill="#33302b">各タスクはゴール達成、</text>
+      <text x="765" y="145" font-size="10.8" fill="#33302b">ルーチンは止めるまで継続</text>
+      <text x="765" y="165" font-size="10.8" fill="#33302b">プリミティブ:</text>
+      <text x="765" y="179" font-size="10.8" fill="#33302b">上記の合成+auto mode+</text>
+      <text x="765" y="193" font-size="10.8" fill="#33302b">dynamic workflows</text>
+
+      <!-- リーダー線 -->
+      <path d="M135,205 L147,438" stroke="#3d6f8e" stroke-width="1.6" stroke-dasharray="3 4"/>
+      <path d="M375,205 L362,358" stroke="#3f8f6d" stroke-width="1.6" stroke-dasharray="3 4"/>
+      <path d="M615,205 L577,278" stroke="#d97e33" stroke-width="1.6" stroke-dasharray="3 4"/>
+      <path d="M860,205 L792,198" stroke="#8a5ea3" stroke-width="1.6" stroke-dasharray="3 4"/>
+
+      <!-- 自律性の矢印 -->
+      <path d="M110,540 C 300,480 600,320 870,230" stroke="#33302b" stroke-width="2" fill="none" stroke-dasharray="6 5" marker-end="url(#ah-ink)"/>
+      <text x="500" y="330" font-size="12.5" fill="#33302b" font-weight="bold" transform="rotate(-19 500 330)">自律性が上がる →</text>
+
+      <!-- 階段 -->
+      <g filter="url(#soft-shadow)">
+        <path d="M40,580 L40,500 L255,500 L255,420 L470,420 L470,340 L685,340 L685,260 L900,260 L900,580 Z"
+          fill="#efe7d6" stroke="#c9bfa4" stroke-width="2"/>
+        <line x1="255" y1="580" x2="255" y2="500" stroke="#c9bfa4" stroke-width="2"/>
+        <line x1="470" y1="580" x2="470" y2="420" stroke="#c9bfa4" stroke-width="2"/>
+        <line x1="685" y1="580" x2="685" y2="340" stroke="#c9bfa4" stroke-width="2"/>
+      </g>
+      <!-- 地面のハッチング -->
+      <line x1="20" y1="580" x2="920" y2="580" stroke="#8a8478" stroke-width="2"/>
+      <line x1="30" y1="588" x2="45" y2="580" stroke="#8a8478" stroke-width="1.4"/>
+      <line x1="130" y1="588" x2="145" y2="580" stroke="#8a8478" stroke-width="1.4"/>
+      <line x1="330" y1="588" x2="345" y2="580" stroke="#8a8478" stroke-width="1.4"/>
+      <line x1="530" y1="588" x2="545" y2="580" stroke="#8a8478" stroke-width="1.4"/>
+      <line x1="730" y1="588" x2="745" y2="580" stroke="#8a8478" stroke-width="1.4"/>
+      <line x1="850" y1="588" x2="865" y2="580" stroke="#8a8478" stroke-width="1.4"/>
+
+      <!-- キャラクター（自律性を表す：段が上がるほどエージェントが大きく） -->
+      <use href="#ic-agent" x="128" y="478" width="20" height="22" style="color:#3d6f8e"/>
+      <use href="#ic-agent" x="345" y="386" width="32" height="34" style="color:#3f8f6d"/>
+      <use href="#ic-agent" x="555" y="290" width="44" height="47" style="color:#d97e33"/>
+      <use href="#ic-agent" x="762" y="196" width="56" height="60" style="color:#8a5ea3"/>
+
+      <text x="60" y="605" font-size="11" fill="#8a8478">① 手動</text>
+      <text x="850" y="605" text-anchor="end" font-size="11" fill="#8a8478">④ 無人・自律</text>
+    </svg>
+    <figcaption><span class="cap-title">図3: 4類型の階段図。</span>段が上がるほどエージェント（キャラクター）が大きく描かれ、人間のリアルタイム関与が小さくなっていく。各段のカードにトリガー・停止条件・プリミティブを示す。</figcaption>
+  </figure>
+
+  <div class="type-card">
+    <div style="background:var(--blue);"><span class="lbl">最適な用途</span>単発の探索・意思決定作業</div>
+    <div style="background:var(--teal);"><span class="lbl">最適な用途</span>検証可能な終了基準があるタスク</div>
+    <div style="background:var(--orange);"><span class="lbl">最適な用途</span>反復作業／外部システムとの対話</div>
+    <div style="background:var(--purple);"><span class="lbl">最適な用途</span>定型化された反復的な作業ストリーム</div>
+  </div>
+</section>
+
+<!-- ============ 4. 手放すもの ============ -->
+<section id="handoff">
+  <h2><span class="num">4</span>手放すものが増えていく</h2>
+  <p>4類型を貫く一本の軸は「人間が何を手放すか」である。Turn-basedでは「検証」を、Goal-basedでは追加で「停止条件」を、Time-basedでは追加で「トリガー」を、Proactiveでは最終的に「プロンプトそのもの」を手放す。</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 1000 460" class="doc-svg">
+      <text x="500" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#33302b">手放すものが増えていく（人間の担当 ▶ エージェントの担当）</text>
+
+      <!-- 凡例 -->
+      <rect x="740" y="42" width="14" height="14" fill="#5b7fa6" rx="2"/>
+      <text x="758" y="53" font-size="11" fill="#33302b">人間の担当</text>
+      <rect x="850" y="42" width="14" height="14" fill="#4f9d8a" rx="2"/>
+      <text x="868" y="53" font-size="11" fill="#33302b">エージェントの担当</text>
+
+      <!-- 列ヘッダー（type色の帯） -->
+      <rect x="60" y="70" width="130" height="8" rx="4" fill="#3d6f8e"/>
+      <rect x="300" y="70" width="130" height="8" rx="4" fill="#3f8f6d"/>
+      <rect x="540" y="70" width="130" height="8" rx="4" fill="#d97e33"/>
+      <rect x="780" y="70" width="130" height="8" rx="4" fill="#8a5ea3"/>
+      <text x="125" y="95" text-anchor="middle" font-size="12" font-weight="bold" fill="#3d6f8e">① Turn-based</text>
+      <text x="365" y="95" text-anchor="middle" font-size="12" font-weight="bold" fill="#3f8f6d">② Goal-based</text>
+      <text x="605" y="95" text-anchor="middle" font-size="12" font-weight="bold" fill="#d97e33">③ Time-based</text>
+      <text x="845" y="95" text-anchor="middle" font-size="12" font-weight="bold" fill="#8a5ea3">④ Proactive</text>
+
+      <!-- バー（total height 260, baseline 380, top 120) -->
+      <!-- col1: human210/agent50 -->
+      <rect x="60" y="120" width="130" height="210" fill="#5b7fa6"/>
+      <rect x="60" y="330" width="130" height="50" fill="#4f9d8a"/>
+      <!-- col2: human145/agent115 -->
+      <rect x="300" y="120" width="130" height="145" fill="#5b7fa6"/>
+      <rect x="300" y="265" width="130" height="115" fill="#4f9d8a"/>
+      <!-- col3: human80/agent180 -->
+      <rect x="540" y="120" width="130" height="80" fill="#5b7fa6"/>
+      <rect x="540" y="200" width="130" height="180" fill="#4f9d8a"/>
+      <!-- col4: human30/agent230 -->
+      <rect x="780" y="120" width="130" height="30" fill="#5b7fa6"/>
+      <rect x="780" y="150" width="130" height="230" fill="#4f9d8a"/>
+
+      <use href="#ic-human" x="108" y="128" width="20" height="30" style="color:#fff"/>
+      <use href="#ic-human" x="348" y="128" width="20" height="30" style="color:#fff"/>
+      <use href="#ic-human" x="588" y="128" width="20" height="30" style="color:#fff"/>
+      <use href="#ic-agent" x="800" y="355" width="26" height="24" style="color:#fff"/>
+      <use href="#ic-agent" x="560" y="345" width="26" height="24" style="color:#fff"/>
+      <use href="#ic-agent" x="320" y="352" width="26" height="24" style="color:#fff"/>
+      <use href="#ic-agent" x="80" y="356" width="26" height="24" style="color:#fff"/>
+
+      <!-- 手放したものラベル（下） -->
+      <g font-size="11.5" fill="#33302b">
+        <rect x="60" y="392" width="130" height="46" rx="7" fill="#fffdf5" stroke="#c9bfa4"/>
+        <text x="125" y="410" text-anchor="middle" font-weight="bold">① 検証を手放す</text>
+        <text x="125" y="425" text-anchor="middle" font-size="9.5" fill="#8a8478">(the check)</text>
+
+        <rect x="300" y="392" width="130" height="46" rx="7" fill="#fffdf5" stroke="#c9bfa4"/>
+        <text x="365" y="410" text-anchor="middle" font-weight="bold">② + 停止条件</text>
+        <text x="365" y="425" text-anchor="middle" font-size="9.5" fill="#8a8478">(stop condition)</text>
+
+        <rect x="540" y="392" width="130" height="46" rx="7" fill="#fffdf5" stroke="#c9bfa4"/>
+        <text x="605" y="410" text-anchor="middle" font-weight="bold">③ + トリガー</text>
+        <text x="605" y="425" text-anchor="middle" font-size="9.5" fill="#8a8478">(the trigger)</text>
+
+        <rect x="780" y="392" width="130" height="46" rx="7" fill="#fffdf5" stroke="#c9bfa4"/>
+        <text x="845" y="410" text-anchor="middle" font-weight="bold">④ + プロンプト自体</text>
+        <text x="845" y="425" text-anchor="middle" font-size="9.5" fill="#8a8478">(the prompt)</text>
+      </g>
+    </svg>
+    <figcaption><span class="cap-title">図4: 手放すものが増えていく図。</span>右へ進むほど人間の担当（青）が縮み、エージェントの担当（緑）が伸びる。各段階は前段階の手放したものを引き継ぎ、累積していく。</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 5. Turn-based ============ -->
+<section id="turn-based" class="type1">
+  <h2><span class="num">5</span>類型①: Turn-based loop</h2>
+  <h3 class="type-h">🔵 Turn-based loop（通常のプロンプト + skills）</h3>
+
+  <table class="kv-table">
+    <tr><th>Triggered by</th><td>A user prompt（ユーザーのプロンプト）</td></tr>
+    <tr><th>Stop criteria</th><td>Claude judges it has completed the task or needs additional context.（Claudeが「完了した」あるいは「追加のコンテキストが必要」と自己判断する）</td></tr>
+    <tr><th>Best used for</th><td>Shorter tasks that are not part of a regular process or schedule.（定型的な反復作業やスケジュールに属さない、短めのタスク）</td></tr>
+    <tr><th>Managed usage by</th><td>Write specific prompts and improve verification using skills to reduce the number of turns.（具体的なプロンプトを書き、skillsで検証の質を上げてターン数を減らす）</td></tr>
+  </table>
+
+  <p>普段のClaude Codeとのやり取りそのものが、実は最小単位のループである。</p>
+  <blockquote class="orig">
+    <div class="en">"For example, ask Claude to create a like button. It reads your code, makes the edit, runs the tests, and hands back something it <em>believes</em> works. You then manually check the work, and write the next prompt."</div>
+    <div class="ja">例えば、Claudeに「いいねボタン」を作らせたとする。Claudeはコードを読み、編集を加え、テストを実行し、動作すると<em>信じている</em>ものを返す。そこで人間が手動で作業内容を確認し、次のプロンプトを書く。</div>
+  </blockquote>
+  <blockquote class="orig">
+    <div class="en">"You can improve the verification step by encoding your manual steps as a SKILL.md so Claude can check more of its own work, end-to-end. This should include tools or connectors to allow Claude to <em>see</em>, <em>measure</em> or <em>interact</em> with the result. <strong>The more quantitative the checks are, the easier it is for Claude to self-verify.</strong>"</div>
+    <div class="ja">人間が手動で行っていた確認手順をSKILL.mdとして符号化することで、Claudeが自分の作業をより多く、end-to-endで確認できるようになる。これには、Claudeが結果を<em>見る</em>・<em>測る</em>・<em>操作する</em>ためのツールやコネクタを含めるべきである。<strong>チェックが定量的であるほど、Claudeにとって自己検証がしやすくなる。</strong></div>
+  </blockquote>
+
+  <p>記事に掲載されているSKILL.mdの例（フロントエンド変更の検証用）:</p>
+  <pre class="code">---
+name: verify-frontend-change
+description: Verify any UI change end-to-end before declaring it done.
+---
+
+# Verifying frontend changes
+Never report a UI change as complete based on a successful edit alone. Verify it the way a human reviewer would:
+
+1. Start the dev server and open the edited page in the browser.
+
+2. Interact with the change directly. For a new control (button, input, toggle): click it, confirm the expected state change, and screenshot before/after.
+
+3. Check the browser console: zero new errors or warnings.
+
+4. Use the Chrome Devtools MCP, run a performance trace and audit Core Web Vitals.
+
+If any step fails, fix the issue and rerun from step 1 — do not hand back partially verified work.</pre>
+  <p style="font-size:0.88rem;color:var(--sub);">（日本語注釈: 「編集が成功した」だけでUI変更を完了報告しない。①devサーバーを起動して該当ページを開く ②実際に操作し変更前後をスクリーンショット比較 ③コンソールに新規エラー/警告がないか確認 ④Chrome Devtools MCPでパフォーマンス計測とCore Web Vitals監査。いずれかが失敗したら手順1からやり直し、中途半端な状態で作業を返さない。）</p>
+</section>
+
+<!-- ============ 6. Goal-based ============ -->
+<section id="goal-based" class="type2">
+  <h2><span class="num">6</span>類型②: Goal-based loop</h2>
+  <h3 class="type-h">🟢 Goal-based loop（プリミティブ: /goal）</h3>
+
+  <table class="kv-table">
+    <tr><th>Triggered by</th><td>A manual prompt in real-time.（リアルタイムでの手動プロンプト、1回）</td></tr>
+    <tr><th>Stop criteria</th><td>Goal achieved OR maximum number of turns reached.（ゴール達成、または最大ターン数への到達）</td></tr>
+    <tr><th>Best used for</th><td>Tasks that have verifiable exit criteria.（検証可能な終了基準を持つタスク）</td></tr>
+    <tr><th>Managed usage by</th><td>Setting a specific completion criteria and explicit turn caps, "stop after 5 tries."（具体的な完了基準の設定と、明示的なターン上限「5回試して止める」など）</td></tr>
+  </table>
+
+  <p>Goal-basedループの核心は、「良し悪しの判断」をClaude自身から切り離す点にある。</p>
+  <blockquote class="orig">
+    <div class="en">"When you define the success criteria, Claude doesn't have to make a determination on what is 'good enough' and end the loop early. <strong>Each time Claude tries to stop, an evaluator model checks your condition and sends it back to work</strong> until the goal is met or a number of turns you define is reached."</div>
+    <div class="ja">成功基準を定義すれば、Claudeは何が「十分に良い」かを自分で判断してループを早々に終わらせる必要がなくなる。<strong>Claudeが停止しようとするたびに、評価モデル（evaluator）があなたの条件をチェックし、達成していなければ作業に送り返す</strong>。これがゴールを達成するか、指定したターン数に達するまで続く。</div>
+  </blockquote>
+  <blockquote class="orig">
+    <div class="en">"This is why <strong>deterministic criteria, such as number of tests passed or clearing a certain score threshold, are so effective.</strong>"</div>
+    <div class="ja">だからこそ、<strong>通過したテスト数や、特定のスコア閾値のクリアといった決定論的な基準が、非常に効果的なのである。</strong></div>
+  </blockquote>
+
+  <div class="cmd">/goal get the homepage Lighthouse score to 90 or above, stop after 5 tries.</div>
+  <p style="font-size:0.88rem;color:var(--sub);">（訳: ホームページのLighthouseスコアを90以上にせよ。5回試したら止める。）</p>
+
+  <div class="doc-box">
+    <div class="doc-title">📘 公式ドキュメント補足: /goal の内部機構</div>
+    <ul>
+      <li><code class="inline">/goal</code>の実体は、session-scopedな <strong>prompt-based Stop hook</strong>。</li>
+      <li>Claudeが停止しようとするたびに「条件＋会話履歴」が小さく高速なモデル（既定 Haiku）に送られ、yes/noの判定を返す。</li>
+      <li><strong>evaluatorはツールを呼び出さない。</strong>会話に既に現れている事実しか判定材料にできないため、条件は「Claudeの出力から証明できる形」で書く必要がある。</li>
+      <li>条件は最大4,000文字。アクティブなゴールは1セッションにつき1つ。</li>
+      <li><code class="inline">/goal</code>単体で現在の状態確認、<code class="inline">/goal clear</code>で解除できる。</li>
+      <li>v2.1.139以降で利用可能。</li>
+    </ul>
+  </div>
+
+  <figure class="fig">
+    <svg viewBox="0 0 780 480" class="doc-svg" style="max-width:660px;">
+      <text x="390" y="24" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#33302b">/goal のevaluatorシーケンス（補足図）</text>
+
+      <!-- lanes -->
+      <g filter="url(#soft-shadow)">
+        <rect x="60" y="40" width="150" height="34" rx="8" fill="#e8f0f4" stroke="#3d6f8e"/>
+        <rect x="315" y="40" width="150" height="34" rx="8" fill="#e7f4ee" stroke="#3f8f6d"/>
+        <rect x="570" y="40" width="150" height="34" rx="8" fill="#f1e7f5" stroke="#8a5ea3"/>
+      </g>
+      <text x="135" y="62" text-anchor="middle" font-size="12" font-weight="bold" fill="#3d6f8e">あなた (User)</text>
+      <text x="390" y="62" text-anchor="middle" font-size="12" font-weight="bold" fill="#3f8f6d">Claude（主）</text>
+      <text x="645" y="62" text-anchor="middle" font-size="12" font-weight="bold" fill="#8a5ea3">評価モデル (Evaluator)</text>
+
+      <line x1="135" y1="74" x2="135" y2="450" stroke="#8a8478" stroke-width="1.4" stroke-dasharray="4 4"/>
+      <line x1="390" y1="74" x2="390" y2="450" stroke="#8a8478" stroke-width="1.4" stroke-dasharray="4 4"/>
+      <line x1="645" y1="74" x2="645" y2="450" stroke="#8a8478" stroke-width="1.4" stroke-dasharray="4 4"/>
+
+      <path d="M135,100 L385,100" stroke="#3d6f8e" stroke-width="2.2" marker-end="url(#ah-blue)"/>
+      <text x="145" y="94" font-size="10.8" fill="#3d6f8e">/goal ... stop after 5 tries</text>
+
+      <!-- loop frame -->
+      <rect x="330" y="118" width="380" height="250" rx="8" fill="none" stroke="#8a8478" stroke-width="1.6" stroke-dasharray="5 4"/>
+      <text x="338" y="134" font-size="10.5" fill="#8a8478" font-weight="bold">ループ（最大5ターン）</text>
+
+      <path d="M390,150 C 430,150 430,170 390,170" fill="none" stroke="#3f8f6d" stroke-width="2" marker-end="url(#ah-teal)"/>
+      <text x="440" y="164" font-size="10.5" fill="#3f8f6d">作業（ツール呼び出し）</text>
+
+      <path d="M390,196 L640,196" stroke="#3f8f6d" stroke-width="2.2" marker-end="url(#ah-teal)"/>
+      <text x="395" y="190" font-size="10.2" fill="#3f8f6d">停止していい？（条件+会話履歴）</text>
+
+      <path d="M640,222 L395,222" stroke="#8a5ea3" stroke-width="2.2" stroke-dasharray="5 3" marker-end="url(#ah-purple)"/>
+      <text x="450" y="216" font-size="10.8" fill="#8a5ea3" font-weight="bold">No（未達成）</text>
+      <text x="345" y="240" font-size="9.5" fill="#8a8478" font-style="italic">※ Evaluatorはツールを呼ばない（会話履歴のみで判定）</text>
+
+      <text x="500" y="270" text-anchor="middle" font-size="16" fill="#8a8478">⋯（未達成の間、繰り返す）⋯</text>
+
+      <path d="M390,296 L640,296" stroke="#3f8f6d" stroke-width="2.2" marker-end="url(#ah-teal)"/>
+      <text x="395" y="290" font-size="10.2" fill="#3f8f6d">停止していい？</text>
+      <path d="M640,322 L395,322" stroke="#3f8f6d" stroke-width="2.4" marker-end="url(#ah-teal)"/>
+      <text x="460" y="316" font-size="10.8" fill="#3f8f6d" font-weight="bold">Yes（達成）</text>
+
+      <path d="M385,400 L140,400" stroke="#3d6f8e" stroke-width="2.2" marker-end="url(#ah-blue)"/>
+      <text x="180" y="394" font-size="10.8" fill="#3d6f8e">完了を報告</text>
+    </svg>
+    <figcaption><span class="cap-title">図5（補足）: /goalのevaluatorシーケンス。</span>Claudeが停止を試みるたびに評価モデルへ判定を委ね、達成するまで作業へ送り返される。</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 7. Time-based ============ -->
+<section id="time-based" class="type3">
+  <h2><span class="num">7</span>類型③: Time-based loop</h2>
+  <h3 class="type-h">🟠 Time-based loop（プリミティブ: /loop, /schedule）</h3>
+
+  <table class="kv-table">
+    <tr><th>Triggered by</th><td>A specified time interval.（指定された時間間隔）</td></tr>
+    <tr><th>Stop criteria</th><td>You cancel it, or the work completes (the PR merges, the queue is empty).（人が止める、あるいはPRのマージやキューの空など作業自体の完了）</td></tr>
+    <tr><th>Best used for</th><td>For recurring work, or interfacing with external environments / systems.（反復的な作業、または外部環境・システムとのやり取り）</td></tr>
+    <tr><th>Managed usage by</th><td>Set longer intervals or react based on events rather than time.（間隔を長めに設定するか、時間ではなくイベントに応じて反応させる）</td></tr>
+  </table>
+
+  <blockquote class="orig">
+    <div class="en">"Some agentic work is recurring: the task stays the same and only the inputs change. For example, <strong>summarizing Slack messages every morning</strong>. Other work depends on external systems, and a simple way to interface with one is to check it on an interval and react to what changed. For example, <strong>a PR which may receive code reviews or fail CI</strong>."</div>
+    <div class="ja">エージェント的な作業の中には反復的なもの — タスク自体は変わらず入力だけが変わる — がある。例えば<strong>毎朝Slackメッセージを要約する</strong>こと。他方、外部システムに依存する作業もあり、それに対応する簡単な方法は、一定間隔でチェックし、変化に反応することである。例えば<strong>コードレビューを受けたりCIが失敗したりするPR</strong>。</div>
+  </blockquote>
+  <blockquote class="orig">
+    <div class="en">"<code>/loop</code> runs on your computer, so if you turn it off, it stops. You can move the loop to the cloud by creating a routine with <code>/schedule</code>."</div>
+    <div class="ja"><code class="inline">/loop</code>はあなたのコンピュータ上で動くため、電源を切れば止まる。<code class="inline">/schedule</code>でルーチンを作成すれば、ループをクラウドに移行できる。</div>
+  </blockquote>
+
+  <div class="cmd">/loop 5m check my PR, address review comments, and fix failing CI</div>
+  <p style="font-size:0.88rem;color:var(--sub);">（訳: 5分ごとに自分のPRを確認し、レビューコメントに対応し、失敗しているCIを修正せよ。）</p>
+
+  <div class="doc-box">
+    <div class="doc-title">📘 公式ドキュメント補足: /loop の実務仕様（記事には未記載）</div>
+    <ul>
+      <li>要 Claude Code <strong>v2.1.72以降</strong>。<code class="inline">/loop</code>はbundled skill。</li>
+      <li>タスクは<strong>session-scoped</strong>（新しい会話を始めると消える。<code class="inline">--resume</code> / <code class="inline">--continue</code>で未期限のものは復元される）。</li>
+    </ul>
+    <table class="data" style="margin-top:8px;">
+      <tr><th>与えるもの</th><th>例</th><th>挙動</th></tr>
+      <tr><td>インターバル + プロンプト</td><td><code class="inline">/loop 5m check the deploy</code></td><td>固定スケジュールで実行</td></tr>
+      <tr><td>プロンプトのみ</td><td><code class="inline">/loop check the deploy</code></td><td>Claudeが毎イテレーションの間隔を自分で決める</td></tr>
+      <tr><td>インターバルのみ / 何もなし</td><td><code class="inline">/loop</code></td><td>組み込みメンテナンスプロンプト、または<code class="inline">loop.md</code>があればそれが走る</td></tr>
+    </table>
+    <ul>
+      <li>単位は s / m / h / d。秒はcronの1分粒度に切り上げ、綺麗なcronステップにならない値は丸められる。</li>
+      <li>slash command併用可: <code class="inline">/loop 20m /review-pr 1234</code>（ただし自律起動が許可されたskillのみ実行される。<code class="inline">/model</code>等の組み込みコマンドやMCP promptはただのテキストとして届く）。</li>
+      <li><strong>dynamic mode</strong>（インターバル省略時）: Claudeが各イテレーション後に1分〜1時間の遅延を自ら選ぶ自己ペーシング。ビルド中やPRがアクティブなら短く、静かなら長く。選んだ遅延と理由が毎回出力される。</li>
+      <li><strong>loop.md</strong>: <code class="inline">.claude/loop.md</code>（プロジェクト優先）/ <code class="inline">~/.claude/loop.md</code>（ユーザー）で既定プロンプトを差し替え可能。実行中の編集も次イテレーションから反映。</li>
+      <li><strong>停止</strong>: 待機中に<code class="inline">Esc</code>でpending wakeupをクリア。dynamic modeではClaude自身が<code class="inline">ScheduleWakeup(stop: true)</code>で終了できる。</li>
+      <li><strong>Jitter</strong>: 全セッションが同時にAPIを叩かぬよう、発火時刻を最大30分ずらす。厳密な時刻運用は不可。</li>
+      <li><strong>7日expiry</strong>: 繰り返しタスクは作成から7日で自動失効（「忘れられたループ」の暴走を時間で縛る設計）。</li>
+      <li>1セッション最大50タスク。<code class="inline">CLAUDE_CODE_DISABLE_CRON=1</code>で無効化。</li>
+    </ul>
+  </div>
+
+  <h3 id="exec-layers" style="scroll-margin-top:16px;">実行場所の3層比較</h3>
+  <figure class="fig">
+    <svg viewBox="0 0 900 420" class="doc-svg">
+      <text x="450" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#33302b">実行場所の3層比較（補足図）</text>
+
+      <!-- card1 cloud -->
+      <g filter="url(#soft-shadow)">
+        <rect x="20" y="50" width="270" height="345" rx="14" fill="#faeee0" stroke="#d97e33" stroke-width="1.8"/>
+      </g>
+      <use href="#ic-cloud" x="125" y="65" width="60" height="40" style="color:#d97e33"/>
+      <text x="155" y="122" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#d97e33">Cloud (Routines)</text>
+      <text x="155" y="138" text-anchor="middle" font-size="10" fill="#8a8478">/schedule</text>
+
+      <use href="#ic-check" x="35" y="155" width="22" height="22" style="color:#3f8f6d"/>
+      <text x="65" y="171" font-size="11" fill="#33302b">PC起動: 不要</text>
+      <use href="#ic-check" x="35" y="185" width="22" height="22" style="color:#3f8f6d"/>
+      <text x="65" y="201" font-size="11" fill="#33302b">セッション開きっぱなし: 不要</text>
+      <use href="#ic-cross" x="35" y="215" width="22" height="22" style="color:#a33c3c"/>
+      <text x="65" y="231" font-size="11" fill="#33302b">ローカルファイル: 不可</text>
+      <text x="35" y="255" font-size="11" fill="#33302b" font-weight="bold">最小インターバル: 1時間</text>
+      <text x="35" y="275" font-size="10" fill="#8a8478">(fresh cloneで実行)</text>
+
+      <!-- card2 desktop -->
+      <g filter="url(#soft-shadow)">
+        <rect x="315" y="50" width="270" height="345" rx="14" fill="#e8f0f4" stroke="#3d6f8e" stroke-width="1.8"/>
+      </g>
+      <use href="#ic-desktop" x="425" y="65" width="50" height="40" style="color:#3d6f8e"/>
+      <text x="450" y="122" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#3d6f8e">Desktop</text>
+      <text x="450" y="138" text-anchor="middle" font-size="10" fill="#8a8478">Claude Desktop</text>
+
+      <use href="#ic-cross" x="330" y="155" width="22" height="22" style="color:#a33c3c"/>
+      <text x="360" y="171" font-size="11" fill="#33302b">PC起動: 必須</text>
+      <use href="#ic-check" x="330" y="185" width="22" height="22" style="color:#3f8f6d"/>
+      <text x="360" y="201" font-size="11" fill="#33302b">セッション開きっぱなし: 不要</text>
+      <use href="#ic-check" x="330" y="215" width="22" height="22" style="color:#3f8f6d"/>
+      <text x="360" y="231" font-size="11" fill="#33302b">ローカルファイル: 可</text>
+      <text x="330" y="255" font-size="11" fill="#33302b" font-weight="bold">最小インターバル: 1分</text>
+
+      <!-- card3 loop -->
+      <g filter="url(#soft-shadow)">
+        <rect x="610" y="50" width="270" height="345" rx="14" fill="#f1e7f5" stroke="#8a5ea3" stroke-width="1.8"/>
+      </g>
+      <use href="#ic-terminal" x="715" y="65" width="50" height="40" style="color:#8a5ea3"/>
+      <text x="745" y="122" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#8a5ea3">/loop</text>
+      <text x="745" y="138" text-anchor="middle" font-size="10" fill="#8a8478">自分のターミナル</text>
+
+      <use href="#ic-cross" x="625" y="155" width="22" height="22" style="color:#a33c3c"/>
+      <text x="655" y="171" font-size="11" fill="#33302b">PC起動: 必須</text>
+      <use href="#ic-cross" x="625" y="185" width="22" height="22" style="color:#a33c3c"/>
+      <text x="655" y="201" font-size="11" fill="#33302b" font-weight="bold">セッション開きっぱなし: 必須</text>
+      <use href="#ic-check" x="625" y="215" width="22" height="22" style="color:#3f8f6d"/>
+      <text x="655" y="231" font-size="11" fill="#33302b">ローカルファイル: 可</text>
+      <text x="625" y="255" font-size="11" fill="#33302b" font-weight="bold">最小インターバル: 1分</text>
+
+      <text x="450" y="410" text-anchor="middle" font-size="10.5" fill="#8a8478">緑チェックは「制約なし・楽」、赤バツは「制約あり・注意」を表す</text>
+    </svg>
+    <figcaption><span class="cap-title">図6（補足）: 実行場所の3層比較。</span>Cloud（Routines）・Desktop・<code class="inline">/loop</code>で、PC起動の要否やセッション維持の要否、最小インターバルが異なる。</figcaption>
+  </figure>
+
+  <table class="data">
+    <tr><th></th><th>Cloud (Routines)</th><th>Desktop</th><th>/loop</th></tr>
+    <tr><td>実行場所</td><td>Anthropicクラウド</td><td>自分のPC</td><td>自分のPC</td></tr>
+    <tr><td>PC起動必須</td><td>いいえ</td><td>はい</td><td>はい</td></tr>
+    <tr><td>セッション開きっぱなし必須</td><td>いいえ</td><td>いいえ</td><td><strong>はい</strong></td></tr>
+    <tr><td>ローカルファイルアクセス</td><td>不可（fresh clone）</td><td>可</td><td>可</td></tr>
+    <tr><td>最小インターバル</td><td><strong>1時間</strong></td><td>1分</td><td>1分</td></tr>
+  </table>
+
+  <p>また、<code class="inline">/goal</code>・<code class="inline">/loop</code>・Stop hookの3つは混同されやすいが、下表のように「次のターンがいつ始まるか」「何が停止を決めるか」が異なる。</p>
+  <table class="data">
+    <tr><th>方式</th><th>次のターンが始まるのは</th><th>停止するのは</th></tr>
+    <tr><td><code class="inline">/goal</code></td><td>前のターンが終わったとき</td><td>モデルが条件成立を確認したとき</td></tr>
+    <tr><td><code class="inline">/loop</code></td><td>時間間隔が経過したとき</td><td>人が止めるか、Claudeが完了と判断したとき</td></tr>
+    <tr><td>Stop hook</td><td>前のターンが終わったとき</td><td>自前のスクリプト/プロンプトが決めたとき</td></tr>
+  </table>
+</section>
+
+<!-- ============ 8. Proactive ============ -->
+<section id="proactive" class="type4">
+  <h2><span class="num">8</span>類型④: Proactive loop</h2>
+  <h3 class="type-h">🟣 Proactive loop（合成 + auto mode + dynamic workflows）</h3>
+
+  <table class="kv-table">
+    <tr><th>Triggered by</th><td>An event or schedule, with no human in real time.（イベントまたはスケジュール。リアルタイムでの人間の介在なし）</td></tr>
+    <tr><th>Stop criteria</th><td>Each task exits when its goal is met. The routine itself runs until you turn it off.（各タスクはゴール達成で終了する。ルーチン自体は停止するまで動き続ける）</td></tr>
+    <tr><th>Best used for</th><td>Recurring streams of well-defined work: bug reports, issue triage, migrations, dependency upgrades, etc.（バグ報告、issueのトリアージ、マイグレーション、依存関係のアップグレードなど、定義済みの反復作業の連続）</td></tr>
+    <tr><th>Managed usage by</th><td>Routing routines to smaller, faster models and using the most capable model for judgment calls.（ルーチンは小さく高速なモデルへ、判断が必要な場面には最も高性能なモデルを使う）</td></tr>
+  </table>
+
+  <blockquote class="orig">
+    <div class="en">"The primitives above, along with other Claude Code features like <strong>auto mode</strong> and <strong>dynamic workflows</strong> (research preview) can be composed into a loop for long-running work."</div>
+    <div class="ja">これまでのプリミティブに加え、<strong>auto mode</strong>や<strong>dynamic workflows</strong>（研究プレビュー）といった他のClaude Code機能を組み合わせることで、長時間稼働するループを構成できる。</div>
+  </blockquote>
+
+  <p>記事はフィードバック対応を例に、次の4ステップの合成レシピを示す。</p>
+  <ol class="normal">
+    <li><code class="inline">/schedule</code>（研究プレビュー）で、新しい報告がないか確認するルーチンを実行</li>
+    <li><code class="inline">/goal</code>で「完了」の定義を設定し、<strong>skills</strong>でその検証方法を文書化</li>
+    <li><strong>Dynamic workflows</strong>で、各報告をトリアージ・修正・レビューするエージェントをオーケストレーション</li>
+    <li><strong>Auto mode</strong>で、許可を求めて止まることなくルーチンを実行</li>
+  </ol>
+
+  <p>これらを1本に束ねたのが、記事の目玉プロンプトである。</p>
+  <div class="cmd">/schedule every hour: check #project-feedback for bug reports. /goal: don't stop until every report found this run is triaged, actioned, and responded to. When fixing a bug, use a workflow to explore three solutions in parallel worktrees and have a judge adversarially review them.</div>
+  <p style="font-size:0.88rem;color:var(--sub);">（訳: 1時間ごとに#project-feedbackチャンネルのバグ報告を確認せよ。今回のスキャンで見つかったすべての報告がトリアージ・対応・返信されるまで止めるな。バグを修正する際は、3つの解決案を並列のworktreeで探索するワークフローを使い、judgeに敵対的レビューをさせよ。）</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 980 580" class="doc-svg">
+      <text x="490" y="24" text-anchor="middle" font-size="15" font-weight="bold" fill="#33302b">Proactive合成図 — 目玉プロンプトの分解</text>
+
+      <!-- outer dashed (auto mode) -->
+      <rect x="25" y="42" width="930" height="216" rx="20" fill="none" stroke="#33302b" stroke-width="2" stroke-dasharray="7 5"/>
+      <text x="45" y="36" font-size="11" fill="#33302b" font-weight="bold">auto modeが全体を無人で実行</text>
+
+      <!-- speech bubble -->
+      <g filter="url(#soft-shadow)">
+        <rect x="40" y="52" width="900" height="196" rx="16" fill="#fffef8" stroke="#c9bfa4" stroke-width="1.6"/>
+      </g>
+      <text x="60" y="82" font-family="Consolas,'Courier New',monospace" font-size="13" fill="#d97e33">/schedule every hour: check #project-feedback for bug reports.</text>
+      <text x="60" y="112" font-family="Consolas,'Courier New',monospace" font-size="12.6" fill="#3d6f8e">/goal: don't stop until every report found this run is triaged,</text>
+      <text x="60" y="132" font-family="Consolas,'Courier New',monospace" font-size="12.6" fill="#3d6f8e">actioned, and responded to.</text>
+      <text x="60" y="162" font-family="Consolas,'Courier New',monospace" font-size="12.6" fill="#3f8f6d">When fixing a bug, use a workflow to explore three solutions</text>
+      <text x="60" y="182" font-family="Consolas,'Courier New',monospace" font-size="12.6" fill="#3f8f6d">in parallel worktrees</text>
+      <text x="60" y="212" font-family="Consolas,'Courier New',monospace" font-size="12.6" fill="#a4629a">and have a judge adversarially review them.</text>
+
+      <!-- anchor dots -->
+      <circle cx="150" cy="248" r="5" fill="#d97e33"/>
+      <circle cx="400" cy="248" r="5" fill="#3d6f8e"/>
+      <circle cx="620" cy="248" r="5" fill="#3f8f6d"/>
+      <circle cx="820" cy="248" r="5" fill="#a4629a"/>
+      <circle cx="900" cy="258" r="5" fill="#33302b"/>
+
+      <!-- leader lines to boxes -->
+      <path d="M150,253 C150,300 130,320 130,340" fill="none" stroke="#d97e33" stroke-width="2.4" marker-end="url(#ah-orange)"/>
+      <path d="M400,253 C400,300 335,320 335,340" fill="none" stroke="#3d6f8e" stroke-width="2.4" marker-end="url(#ah-blue)"/>
+      <path d="M620,253 C620,300 555,320 555,340" fill="none" stroke="#3f8f6d" stroke-width="2.4" marker-end="url(#ah-teal)"/>
+      <path d="M820,253 C820,300 775,320 775,340" fill="none" stroke="#a4629a" stroke-width="2.4" marker-end="url(#ah-purple)"/>
+      <path d="M900,263 C920,300 940,320 935,340" fill="none" stroke="#33302b" stroke-width="2.2" marker-end="url(#ah-ink)"/>
+
+      <!-- 5 boxes -->
+      <g filter="url(#soft-shadow)">
+        <rect x="30" y="345" width="200" height="90" rx="12" fill="#faeee0" stroke="#d97e33" stroke-width="1.8"/>
+        <rect x="235" y="345" width="200" height="90" rx="12" fill="#e8f0f4" stroke="#3d6f8e" stroke-width="1.8"/>
+        <rect x="450" y="345" width="210" height="90" rx="12" fill="#e7f4ee" stroke="#3f8f6d" stroke-width="1.8"/>
+        <rect x="670" y="345" width="150" height="90" rx="12" fill="#f5e7f0" stroke="#a4629a" stroke-width="1.8"/>
+        <rect x="830" y="345" width="130" height="90" rx="12" fill="#eeece6" stroke="#33302b" stroke-width="1.8"/>
+      </g>
+      <text x="130" y="378" text-anchor="middle" font-size="13" font-weight="bold" fill="#d97e33">/schedule</text>
+      <text x="130" y="396" text-anchor="middle" font-size="10.5" fill="#33302b">トリガー</text>
+      <text x="130" y="412" text-anchor="middle" font-size="9.5" fill="#8a8478">毎時のスケジュール起動</text>
+
+      <text x="335" y="378" text-anchor="middle" font-size="13" font-weight="bold" fill="#3d6f8e">/goal</text>
+      <text x="335" y="396" text-anchor="middle" font-size="10.5" fill="#33302b">停止条件</text>
+      <text x="335" y="412" text-anchor="middle" font-size="9.5" fill="#8a8478">全件対応まで終了しない</text>
+
+      <text x="555" y="372" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#3f8f6d">dynamic workflow</text>
+      <text x="555" y="392" text-anchor="middle" font-size="10.5" fill="#33302b">3案並列worktree</text>
+      <text x="555" y="410" text-anchor="middle" font-size="9.5" fill="#8a8478">研究プレビュー機能</text>
+
+      <text x="745" y="378" text-anchor="middle" font-size="13" font-weight="bold" fill="#a4629a">judge</text>
+      <text x="745" y="396" text-anchor="middle" font-size="10.5" fill="#33302b">敵対的レビュー</text>
+      <text x="745" y="412" text-anchor="middle" font-size="9.5" fill="#8a8478">3案を批判的に比較</text>
+
+      <text x="895" y="378" text-anchor="middle" font-size="13" font-weight="bold" fill="#33302b">auto mode</text>
+      <text x="895" y="396" text-anchor="middle" font-size="10.5" fill="#33302b">無人化</text>
+      <text x="895" y="412" text-anchor="middle" font-size="9.5" fill="#8a8478">許可待ちで止まらない</text>
+
+      <!-- 締めの言葉 -->
+      <g filter="url(#soft-shadow)">
+        <rect x="30" y="470" width="930" height="90" rx="14" fill="#fbf3e3" stroke="#d97e33" stroke-width="1.6" stroke-dasharray="1 0"/>
+      </g>
+      <text x="495" y="500" text-anchor="middle" font-size="12.5" fill="#33302b" font-weight="bold">「個別の不具合を直して終わりにせず、以後の全イテレーションが</text>
+      <text x="495" y="520" text-anchor="middle" font-size="12.5" fill="#33302b" font-weight="bold">改善されるようシステムに符号化せよ」</text>
+      <text x="495" y="542" text-anchor="middle" font-size="10.5" fill="#8a8478" font-style="italic">"don't stop at fixing the individual issue, try to encode it to improve the system for all future iterations."</text>
+    </svg>
+    <figcaption><span class="cap-title">図7: Proactive合成図。</span>目玉プロンプトの4つの節が、それぞれ<code class="inline">/schedule</code>・<code class="inline">/goal</code>・dynamic workflow・judgeに対応し、全体がauto modeによって無人で回る。</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 9. 品質 ============ -->
+<section id="quality">
+  <h2><span class="num">9</span>品質を支える4本の柱</h2>
+  <blockquote class="orig">
+    <div class="en">"The quality of a loop's output depends on the system around it."</div>
+    <div class="ja">ループの出力品質は、その周りのシステムに依存する。</div>
+  </blockquote>
+
+  <figure class="fig">
+    <svg viewBox="0 0 900 420" class="doc-svg">
+      <text x="450" y="26" text-anchor="middle" font-size="15" font-weight="bold" fill="#33302b">ループの出力品質を支える4本の柱</text>
+
+      <!-- 屋根（梁） -->
+      <g filter="url(#soft-shadow)">
+        <rect x="60" y="46" width="780" height="46" rx="10" fill="#efe7d6" stroke="#c9bfa4" stroke-width="2"/>
+      </g>
+      <text x="450" y="74" text-anchor="middle" font-size="13" font-weight="bold" fill="#33302b">ループの出力品質（信頼できるかどうか）</text>
+
+      <!-- 柱 -->
+      <g filter="url(#soft-shadow)">
+        <rect x="105" y="100" width="70" height="230" rx="8" fill="#e9dfc4" stroke="#c9bfa4" stroke-width="2"/>
+        <rect x="305" y="100" width="70" height="230" rx="8" fill="#e9dfc4" stroke="#c9bfa4" stroke-width="2"/>
+        <rect x="505" y="100" width="70" height="230" rx="8" fill="#e9dfc4" stroke="#c9bfa4" stroke-width="2"/>
+        <rect x="705" y="100" width="70" height="230" rx="8" fill="#e9dfc4" stroke="#c9bfa4" stroke-width="2"/>
+      </g>
+      <!-- 柱の飾り線 -->
+      <line x1="115" y1="115" x2="115" y2="315" stroke="#c9bfa4" stroke-width="1.4"/>
+      <line x1="165" y1="115" x2="165" y2="315" stroke="#c9bfa4" stroke-width="1.4"/>
+      <line x1="315" y1="115" x2="315" y2="315" stroke="#c9bfa4" stroke-width="1.4"/>
+      <line x1="365" y1="115" x2="365" y2="315" stroke="#c9bfa4" stroke-width="1.4"/>
+      <line x1="515" y1="115" x2="515" y2="315" stroke="#c9bfa4" stroke-width="1.4"/>
+      <line x1="565" y1="115" x2="565" y2="315" stroke="#c9bfa4" stroke-width="1.4"/>
+      <line x1="715" y1="115" x2="715" y2="315" stroke="#c9bfa4" stroke-width="1.4"/>
+      <line x1="765" y1="115" x2="765" y2="315" stroke="#c9bfa4" stroke-width="1.4"/>
+
+      <!-- メダリオン + アイコン -->
+      <circle cx="140" cy="130" r="24" fill="#e8f0f4" stroke="#3d6f8e" stroke-width="2.4"/>
+      <use href="#ic-broom" x="122" y="112" width="36" height="36" style="color:#3d6f8e"/>
+      <circle cx="340" cy="130" r="24" fill="#e7f4ee" stroke="#3f8f6d" stroke-width="2.4"/>
+      <use href="#ic-check" x="322" y="112" width="36" height="36" style="color:#3f8f6d"/>
+      <circle cx="540" cy="130" r="24" fill="#faeee0" stroke="#d97e33" stroke-width="2.4"/>
+      <use href="#ic-book" x="524" y="114" width="32" height="32" style="color:#d97e33"/>
+      <circle cx="740" cy="130" r="24" fill="#f1e7f5" stroke="#8a5ea3" stroke-width="2.4"/>
+      <use href="#ic-review" x="722" y="112" width="36" height="36" style="color:#8a5ea3"/>
+
+      <!-- 地面 -->
+      <line x1="60" y1="330" x2="840" y2="330" stroke="#8a8478" stroke-width="2.4"/>
+
+      <!-- caption cards -->
+      <g font-size="11" fill="#33302b">
+        <rect x="80" y="340" width="120" height="70" rx="8" fill="#fffdf5" stroke="#3d6f8e"/>
+        <text x="140" y="358" text-anchor="middle" font-weight="bold" fill="#3d6f8e">きれいな</text>
+        <text x="140" y="372" text-anchor="middle" font-weight="bold" fill="#3d6f8e">コードベース</text>
+        <text x="140" y="390" text-anchor="middle" font-size="9.3" fill="#8a8478">既存の規約に</text>
+        <text x="140" y="402" text-anchor="middle" font-size="9.3" fill="#8a8478">Claudeが従う</text>
+
+        <rect x="280" y="340" width="120" height="70" rx="8" fill="#fffdf5" stroke="#3f8f6d"/>
+        <text x="340" y="358" text-anchor="middle" font-weight="bold" fill="#3f8f6d">自己検証手段</text>
+        <text x="340" y="372" text-anchor="middle" font-weight="bold" fill="#3f8f6d">（skills）</text>
+        <text x="340" y="390" text-anchor="middle" font-size="9.3" fill="#8a8478">「良し悪し」を</text>
+        <text x="340" y="402" text-anchor="middle" font-size="9.3" fill="#8a8478">符号化する</text>
+
+        <rect x="480" y="340" width="120" height="70" rx="8" fill="#fffdf5" stroke="#d97e33"/>
+        <text x="540" y="358" text-anchor="middle" font-weight="bold" fill="#d97e33">届きやすい</text>
+        <text x="540" y="372" text-anchor="middle" font-weight="bold" fill="#d97e33">ドキュメント</text>
+        <text x="540" y="390" text-anchor="middle" font-size="9.3" fill="#8a8478">最新のベスト</text>
+        <text x="540" y="402" text-anchor="middle" font-size="9.3" fill="#8a8478">プラクティス</text>
+
+        <rect x="680" y="340" width="120" height="70" rx="8" fill="#fffdf5" stroke="#8a5ea3"/>
+        <text x="740" y="358" text-anchor="middle" font-weight="bold" fill="#8a5ea3">別エージェント</text>
+        <text x="740" y="372" text-anchor="middle" font-weight="bold" fill="#8a5ea3">によるレビュー</text>
+        <text x="740" y="390" text-anchor="middle" font-size="9.3" fill="#8a8478">先入観のない</text>
+        <text x="740" y="402" text-anchor="middle" font-size="9.3" fill="#8a8478">再チェック</text>
+      </g>
+    </svg>
+    <figcaption><span class="cap-title">図8（補足）: 品質を支える4本の柱。</span>ループの出力品質は、周囲の環境・仕組みによって支えられている。</figcaption>
+  </figure>
+
+  <ul>
+    <li><strong>Keep the codebase itself clean</strong> — Claude follows patterns and conventions that already exist in your codebase.（コードベース自体を綺麗に保つ。Claudeは既存のパターンや規約に従うため。）</li>
+    <li><strong>Give Claude a way to verify its own work</strong> — Encode what good looks like for you and your team with <strong>skills</strong>.（Claudeに自分の作業を検証する手段を与える。あなたやチームにとっての「良い状態」をskillsとして符号化する。）</li>
+    <li><strong>Make docs easy to reach</strong> — Frameworks and libraries docs have up-to-date best practices.（ドキュメントに手が届きやすくする。フレームワーク/ライブラリのドキュメントには最新のベストプラクティスがある。）</li>
+    <li><strong>Use a second agent for code reviews</strong> — A reviewer with fresh context is less biased and not influenced by the main agent's reasoning.（コードレビューには2つ目のエージェントを使う。フレッシュなコンテキストを持つレビュアーはバイアスが少なく、主エージェントの推論に影響されない。組み込みの<code class="inline">/code-review</code>skillやGitHub向けCode Reviewが該当。）</li>
+  </ul>
+
+  <div class="quote-strong">
+    <p style="margin:0;font-weight:bold;">この記事で最も思想的に重要な一文:</p>
+    <div class="en" style="font-style:italic;margin-top:8px;">"When an individual result doesn't meet the standard, <strong>don't stop at fixing the individual issue, try to encode it to improve the system for all future iterations.</strong>"</div>
+    <div class="ja" style="margin-top:8px;"><span style="color:var(--sub);">訳: </span>個々の結果が基準を満たさなかったとき、<strong>その個別の問題を直して終わりにせず、以後のすべてのイテレーションでシステムが改善されるよう、それを符号化せよ。</strong></div>
+  </div>
+</section>
+
+<!-- ============ 10. トークン管理 ============ -->
+<section id="tokens">
+  <h2><span class="num">10</span>トークン使用量の管理</h2>
+  <blockquote class="orig">
+    <div class="en">"To manage token usage, loops should have clear boundaries:"</div>
+    <div class="ja">トークン使用量を管理するには、ループに明確な境界を持たせるべきである。</div>
+  </blockquote>
+  <ul>
+    <li><strong>Choose the right primitive and model for the job</strong>（適切なプリミティブとモデルを選ぶ） — Smaller tasks don't need multiple agents or loops.（小さなタスクに複数エージェントやループは不要。）</li>
+    <li><strong>Define clear success and stop criteria</strong>（明確な成功・停止基準を定義する） — Be specific about what done looks like so Claude can arrive at the solution sooner (but not too soon).（「完了」の姿を具体的にし、Claudeが早すぎず・遅すぎず解決に到達できるようにする。）</li>
+    <li><strong>Pilot before a large run</strong>（大規模実行の前に試行する） — <strong>Dynamic workflows can spawn hundreds of agents.</strong> Gauge usage on a smaller slice of the work first.（<strong>Dynamic workflowsは数百のエージェントを生成し得る。</strong>まず作業の一部で使用量を見積もる。）</li>
+    <li><strong>Use scripts for deterministic work</strong>（決定論的な作業にはスクリプトを使う） — Running a script is cheaper than reasoning through the steps.（スクリプトの実行は、手順を推論するより安価。例: PDF skillはフォーム記入スクリプトを同梱し、毎回コードを再導出させない。）</li>
+    <li><strong>Don't run routines more often than you need to</strong>（必要以上の頻度でルーチンを回さない） — Match the interval to how often the thing you're watching changes.（監視対象の変化頻度にインターバルを合わせる。）</li>
+    <li><strong>Review usage</strong>（使用量を確認する） — <code class="inline">/usage</code>（skills/subagents/MCP別の使用量）、<code class="inline">/goal</code>（現時点のターン数とトークン使用量）、<code class="inline">/workflows</code>（各エージェントのトークン使用量、任意のタイミングで停止可）。</li>
+  </ul>
+  <blockquote class="orig">
+    <div class="en">"Your model and effort level choices are among the biggest levers on what a loop costs."</div>
+    <div class="ja">モデルとeffortレベルの選択は、ループのコストを左右する最大級のレバーの一つである。</div>
+  </blockquote>
+</section>
+
+<!-- ============ 11. まとめ・アンチパターン ============ -->
+<section id="summary">
+  <h2><span class="num">11</span>まとめ表・アンチパターン集</h2>
+
+  <h3>Getting started（記事の締め表）</h3>
+  <table class="data">
+    <tr><th>Loop</th><th>You hand off（手放すもの）</th><th>Use it when（使いどき）</th><th>Reach for（使う機能）</th></tr>
+    <tr><td>Turn-based</td><td><strong>The check</strong>（検証）</td><td>探索中・意思決定中</td><td>Custom verification skills</td></tr>
+    <tr><td>Goal-based</td><td><strong>The stop condition</strong>（停止条件）</td><td>「完了」の姿が分かっている</td><td><code class="inline">/goal</code></td></tr>
+    <tr><td>Time-based</td><td><strong>The trigger</strong>（トリガー）</td><td>作業がプロジェクトの外・スケジュールで発生</td><td><code class="inline">/loop</code>, <code class="inline">/schedule</code></td></tr>
+    <tr><td>Proactive</td><td><strong>The prompt</strong>（プロンプト自体）</td><td>作業が反復的かつ定義済み</td><td>上記すべて + dynamic workflows</td></tr>
+  </table>
+  <p style="font-size:0.9rem;color:var(--sub);">記事はこの表の後、「あなたがボトルネックになっている作業を1つ選び、そこから始めよ」と促して締めくくる。</p>
+
+  <h3>アンチパターン一覧</h3>
+  <table class="data anti">
+    <tr><th>アンチパターン</th><th>根拠（原文）</th></tr>
+    <tr><td class="bad">何にでも複雑なループを使う</td><td class="reason">"Not all tasks require complex loops; start with the simplest solution and use these patterns selectively."</td></tr>
+    <tr><td class="bad">曖昧な完了条件（Claudeに"good enough"を判断させる）</td><td class="reason">"Claude doesn't have to make a determination on what is 'good enough' and end the loop early."</td></tr>
+    <tr><td class="bad">ターン上限を設けない</td><td class="reason">Managed usage by: "explicit turn caps, 'stop after 5 tries.'"</td></tr>
+    <tr><td class="bad">定性的でしか検証できない設計</td><td class="reason">"The more quantitative the checks are, the easier it is for Claude to self-verify."</td></tr>
+    <tr><td class="bad">汚いコードベースの上でループを回す</td><td class="reason">"Claude follows patterns and conventions that already exist in your codebase."</td></tr>
+    <tr><td class="bad">本体エージェント自身にレビューさせる</td><td class="reason">"A reviewer with fresh context is less biased..."</td></tr>
+    <tr><td class="bad">監視対象の変化頻度より高頻度でルーチンを回す</td><td class="reason">"Match the interval to how often the thing you're watching changes."</td></tr>
+    <tr><td class="bad">dynamic workflowsをいきなり大規模投入</td><td class="reason">"Dynamic workflows can spawn hundreds of agents. Gauge usage on a smaller slice of the work first."</td></tr>
+    <tr><td class="bad">決定的処理を毎回LLMに再導出させる</td><td class="reason">"Running a script is cheaper than reasoning through the steps."</td></tr>
+    <tr><td class="bad">個別修正で満足する</td><td class="reason">"don't stop at fixing the individual issue, try to encode it..."</td></tr>
+  </table>
+</section>
+
+<!-- ============ 出典 ============ -->
+<section id="source">
+  <h2><span class="num">12</span>出典</h2>
+  <p><strong>著者:</strong> Delba de Oliveira, Michael Segner</p>
+  <p><strong>原典:</strong> <a href="https://claude.com/blog/getting-started-with-loops" target="_blank" rel="noopener">https://claude.com/blog/getting-started-with-loops</a></p>
+  <p><strong>参照docs（📘公式ドキュメント補足の典拠）:</strong></p>
+  <ul>
+    <li><a href="https://code.claude.com/docs/en/scheduled-tasks" target="_blank" rel="noopener">https://code.claude.com/docs/en/scheduled-tasks</a></li>
+    <li><a href="https://code.claude.com/docs/en/goal" target="_blank" rel="noopener">https://code.claude.com/docs/en/goal</a></li>
+    <li><a href="https://code.claude.com/docs/en/routines" target="_blank" rel="noopener">https://code.claude.com/docs/en/routines</a></li>
+  </ul>
+  <a class="back-top" href="#top">▲ 先頭（目次）に戻る</a>
+</section>
+
+<footer>
+  <p>この資料はAnthropic公式ブログ記事の日本語要約であり、一部は公式ドキュメントで補完している。原文の正確な表現・最新情報は必ず原典を参照のこと。</p>
+</footer>
+
+</div>
+<span id="top"></span>
+</body>
+</html>
