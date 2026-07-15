@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハーネスエンジニアリング ビジュアル解説</title>
+<style>
+  :root{
+    --bg:#faf8f5;
+    --bg-alt:#f1ece2;
+    --fg:#2b2621;
+    --muted:#6b6259;
+    --border:#ddd3c0;
+    --card:#ffffff;
+    --accent:#a8622f;
+    --accent-dark:#7a431c;
+    --accent2:#3b5a7a;
+    --accent2-dark:#28405a;
+    --good:#3f7d4f;
+    --warn:#a5433a;
+    --horse:#d3a066;
+    --horse-dark:#a9743a;
+    --code-bg:#efe9dc;
+    --ring1:#3b5a7a;
+    --ring2:#6f8fac;
+    --ring3:#a8622f;
+    --layer-a:#dbe6ee;
+    --layer-b:#ecdfcd;
+    --stripe:#f4efe6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1b1815;
+      --bg-alt:#242019;
+      --fg:#eae4da;
+      --muted:#b5ab9c;
+      --border:#4a4136;
+      --card:#221e19;
+      --accent:#d68a4c;
+      --accent-dark:#f0a868;
+      --accent2:#7ea3c9;
+      --accent2-dark:#a8c6e6;
+      --good:#6fbf83;
+      --warn:#e08a80;
+      --horse:#8a5a2e;
+      --horse-dark:#c98f52;
+      --code-bg:#2b241c;
+      --ring1:#7ea3c9;
+      --ring2:#4d6b87;
+      --ring3:#d68a4c;
+      --layer-a:#28323d;
+      --layer-b:#3a3226;
+      --stripe:#231f19;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html,body{
+    background:var(--bg);
+    color:var(--fg);
+    margin:0;
+    padding:0;
+    overflow-x:hidden;
+  }
+  body{
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+    line-height:1.85;
+    font-size:16px;
+  }
+  main{
+    max-width:960px;
+    margin:0 auto;
+    padding: 1.2rem 1.2rem 4rem;
+  }
+  header.hero{
+    max-width:960px;
+    margin:0 auto;
+    padding: 2.4rem 1.2rem 1rem;
+  }
+  h1{
+    font-size:1.9rem;
+    margin:0 0 0.6rem;
+    line-height:1.4;
+  }
+  h1 .sub{
+    display:block;
+    font-size:1rem;
+    color:var(--muted);
+    font-weight:500;
+    margin-top:0.4rem;
+  }
+  p.lead{
+    font-size:1.05rem;
+    color:var(--fg);
+    max-width:46em;
+  }
+  h2{
+    font-size:1.45rem;
+    margin-top:3rem;
+    padding-bottom:0.5rem;
+    border-bottom:3px solid var(--accent);
+    scroll-margin-top: 1rem;
+  }
+  h3{
+    font-size:1.15rem;
+    margin-top:2.2rem;
+    color:var(--fg);
+    border-left:6px solid var(--accent2);
+    padding-left:0.6rem;
+    scroll-margin-top: 1rem;
+  }
+  h4{
+    font-size:1rem;
+    margin-top:1.6rem;
+  }
+  a{ color:var(--accent2-dark); }
+  a:hover{ color:var(--accent); }
+
+  nav.toc{
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:1.2rem 1.4rem;
+    margin-top:1.6rem;
+  }
+  nav.toc p{ margin:0 0 0.6rem; font-weight:700; }
+  nav.toc ol{
+    margin:0;
+    padding-left:1.3rem;
+    columns: 2;
+    column-gap: 2rem;
+  }
+  nav.toc li{ margin-bottom:0.35rem; break-inside: avoid; font-size:0.95rem; }
+  nav.toc ol ol{ columns:1; padding-left:1.1rem; margin-top:0.2rem; }
+
+  figure{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:1rem 1rem 0.9rem;
+    margin:1.8rem 0;
+  }
+  figure .svgwrap{
+    width:100%;
+    overflow-x:auto;
+  }
+  figure svg{
+    display:block;
+    width:100%;
+    height:auto;
+    min-width:520px;
+  }
+  figcaption{
+    font-size:0.92rem;
+    color:var(--muted);
+    margin-top:0.7rem;
+    line-height:1.7;
+  }
+  figcaption .src{
+    display:block;
+    margin-top:0.3rem;
+    font-size:0.83rem;
+  }
+
+  .table-scroll{
+    overflow-x:auto;
+    margin:1.2rem 0;
+    border:1px solid var(--border);
+    border-radius:10px;
+  }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:640px;
+    font-size:0.92rem;
+  }
+  caption{
+    caption-side: top;
+    text-align:left;
+    font-weight:700;
+    padding: 0.6rem 0.8rem 0.2rem;
+    color:var(--fg);
+  }
+  th, td{
+    border:1px solid var(--border);
+    padding:0.55rem 0.75rem;
+    text-align:left;
+    vertical-align:top;
+  }
+  th{ background:var(--bg-alt); }
+  tr:nth-child(even) td{ background: var(--stripe); }
+
+  .callout{
+    border-left:5px solid var(--accent);
+    background:var(--bg-alt);
+    padding:0.9rem 1.1rem;
+    border-radius:0 10px 10px 0;
+    margin:1.3rem 0;
+  }
+  .callout.blue{ border-left-color:var(--accent2); }
+  .callout.warn{ border-left-color:var(--warn); }
+  .quote{ font-style:italic; }
+
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:1rem;
+    margin:1.4rem 0;
+  }
+  .card{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:1rem 1.1rem;
+    background:var(--card);
+  }
+  .card h4{ margin-top:0; }
+  .card .num{
+    display:inline-block;
+    width:1.6em; height:1.6em;
+    line-height:1.6em;
+    text-align:center;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    margin-right:0.4em;
+    font-size:0.9em;
+  }
+
+  .src-line{
+    font-size:0.85rem;
+    color:var(--muted);
+  }
+
+  code, .code{
+    font-family: ui-monospace, Consolas, "SF Mono", monospace;
+    background:var(--code-bg);
+    padding:0.1em 0.35em;
+    border-radius:4px;
+    font-size:0.9em;
+  }
+
+  footer{
+    max-width:960px;
+    margin:2rem auto 3rem;
+    padding: 1.2rem;
+    color:var(--muted);
+    font-size:0.85rem;
+    border-top:1px solid var(--border);
+  }
+
+  .backtotop{
+    display:inline-block;
+    margin-top:0.5rem;
+    font-size:0.85rem;
+  }
+
+  ul.plain{ padding-left:1.4rem; }
+  ul.plain li{ margin-bottom:0.4rem; }
+
+  .pillbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    margin: 0.8rem 0 1.2rem;
+  }
+  .pill{
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:0.25rem 0.8rem;
+    font-size:0.85rem;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>ハーネスエンジニアリング ビジュアル解説
+    <span class="sub">— モデルを「賢い馬」として走らせるための、鞍・手綱・ルートの設計論 —</span>
+  </h1>
+  <p class="lead">
+    「ハーネスエンジニアリング」とは、AIモデル単体ではできないことを、モデルの外側の仕組み（コンテキスト・制約・検証・観測性）で補い、AIを安全かつ自律的に走らせるための環境設計である。
+    本ページは、27本の登壇資料を横断統合した「ハーネスエンジニアリング総まとめ」を土台に、比喩イラストと図表でその要点を一望できるようにまとめたものである。
+  </p>
+
+  <nav class="toc" aria-label="目次">
+    <p>目次</p>
+    <ol>
+      <li><a href="#s1">1. ハーネスとは何なのか</a></li>
+      <li><a href="#s2">2. ハーネスを構成する要素</a>
+        <ol>
+          <li><a href="#s2-1">2.1 レイヤー別の構成要素（9層）</a></li>
+          <li><a href="#s2-2">2.2 tameの「3本柱→5層アーキ」</a></li>
+          <li><a href="#s2-3">2.3 動的な仕組み：ステアリングループ</a></li>
+          <li><a href="#s2-4">2.4 統治の視点：立法・司法・行政</a></li>
+        </ol>
+      </li>
+      <li><a href="#s3">3. ハーネスを考える上でのポイント</a></li>
+      <li><a href="#s4">4. その他の論点</a>
+        <ol>
+          <li><a href="#s4-1">4.1 定義の割れ：広義派 vs 狭義派</a></li>
+          <li><a href="#s4-2">4.2 なぜ今ハーネスが必要なのか</a></li>
+          <li><a href="#s4-3">4.3 実践パターン</a></li>
+          <li><a href="#s4-4">4.4 発展的トピック</a></li>
+        </ol>
+      </li>
+      <li><a href="#s5">5. 参照資料一覧</a></li>
+    </ol>
+  </nav>
+</header>
+
+<main>
+
+<h2 id="s1">1. ハーネスとは何なのか</h2>
+
+<p>
+結論を先に言い切る。<strong>ハーネスとは「AIモデル単体ではできないことを、モデルの外側の仕組み（コンテキスト・制約・検証・観測性）で補い、AIを安全かつ自律的に走らせるための環境設計」</strong>である。そしてハーネスエンジニアリングとは、その環境を意図的に設計・運用・改善し続ける営みを指す。
+</p>
+
+<p>
+この結論は、資料横断でほぼ共通して現れる「馬と馬具」の比喩によって裏づけられる。Claude Codeの開発者Boris Chernyの言葉として紹介される「モデルを直接使うことはできない。ハーネスを使う必要がある。Claudeは馬で、鞍のようなものが要る」（Claude Codeとハーネスについて考えてみる／Oikon）は象徴的であり、西岡賢一郎も「モデルを支え、暴走させずに走らせる周辺装備」と同じイメージで説明する（ハーネスエンジニアリング入門／西岡賢一郎）。非エンジニア向けの超入門資料でも「野生の馬（＝賢いが暴れるAI）に、鞍・手綱・ルートを与えて目的地まで安全に走らせる仕事」として同じ比喩が使われている（ハーネスエンジニアリング解説／clshinji）。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 -25 860 445" role="img" aria-labelledby="svg-horse-title svg-horse-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-horse-title">馬と馬具の比喩図</title>
+    <desc id="svg-horse-desc">賢いが暴れやすい馬（モデル）に、鞍（ルール層）・轡（権限設定）・手綱（フック／ガードレール）という馬具一式（ハーネス）を装着し、目的地（業務ゴール）まで安全に導く様子を表した図。</desc>
+    <defs>
+      <style>
+        .h-body{fill:var(--horse);stroke:var(--horse-dark);stroke-width:2;}
+        .h-dark{fill:var(--horse-dark);}
+        .h-tack{fill:var(--accent);stroke:var(--accent-dark);stroke-width:1.5;}
+        .h-lead{stroke:var(--muted);stroke-width:1.3;fill:none;stroke-dasharray:3 4;}
+        .h-lbl-b{font-size:16px;fill:var(--fg);font-weight:700;}
+        .h-lbl-s{font-size:12.5px;fill:var(--muted);}
+      </style>
+    </defs>
+
+    <!-- overall label (幅を控えめにして耳・手綱ラベル側と干渉させない) -->
+    <text x="350" y="24" text-anchor="middle" class="h-lbl-b" style="font-size:14px">馬具一式 ＝ ハーネス（能力を安全に引き出す装具）</text>
+
+    <!-- ground -->
+    <line x1="40" y1="360" x2="800" y2="360" stroke="var(--border)" stroke-width="2" stroke-dasharray="7 5"/>
+
+    <!-- tail -->
+    <path d="M262,215 C205,235 185,290 205,345" fill="none" class="h-body" stroke-width="14" stroke-linecap="round"/>
+
+    <!-- legs -->
+    <rect x="288" y="270" width="22" height="90" rx="10" class="h-body"/>
+    <rect x="338" y="270" width="22" height="90" rx="10" class="h-body"/>
+    <rect x="418" y="270" width="22" height="90" rx="10" class="h-body"/>
+    <rect x="458" y="270" width="22" height="90" rx="10" class="h-body"/>
+    <ellipse cx="299" cy="360" rx="14" ry="6" class="h-dark"/>
+    <ellipse cx="349" cy="360" rx="14" ry="6" class="h-dark"/>
+    <ellipse cx="429" cy="360" rx="14" ry="6" class="h-dark"/>
+    <ellipse cx="469" cy="360" rx="14" ry="6" class="h-dark"/>
+
+    <!-- body -->
+    <rect x="260" y="190" width="250" height="100" rx="50" class="h-body"/>
+
+    <!-- neck -->
+    <path d="M480,205 C520,150 545,120 585,105 L610,140 C575,150 550,180 515,225 Z" class="h-body"/>
+
+    <!-- head -->
+    <ellipse cx="630" cy="118" rx="50" ry="38" class="h-body"/>
+    <rect x="665" y="105" width="65" height="42" rx="18" class="h-body"/>
+    <polygon points="605,80 618,42 634,82" class="h-body"/>
+    <circle cx="638" cy="108" r="5" fill="var(--fg)"/>
+    <ellipse cx="722" cy="132" rx="6" ry="4" class="h-dark"/>
+
+    <!-- mane -->
+    <polygon points="498,150 512,132 520,152" class="h-dark"/>
+    <polygon points="515,133 529,115 537,135" class="h-dark"/>
+    <polygon points="532,117 546,99 554,119" class="h-dark"/>
+    <polygon points="550,105 562,88 570,107" class="h-dark"/>
+
+    <!-- saddle -->
+    <rect x="330" y="175" width="130" height="35" rx="12" class="h-tack"/>
+    <rect x="385" y="208" width="8" height="68" class="h-tack"/>
+
+    <!-- bridle -->
+    <line x1="615" y1="80" x2="662" y2="92" stroke="var(--accent-dark)" stroke-width="3"/>
+    <line x1="622" y1="90" x2="640" y2="140" stroke="var(--accent-dark)" stroke-width="3"/>
+    <circle cx="672" cy="132" r="6" class="h-tack"/>
+
+    <!-- reins -->
+    <path d="M672,132 C610,90 520,60 452,72" fill="none" stroke="var(--accent-dark)" stroke-width="3"/>
+    <circle cx="452" cy="72" r="8" fill="none" stroke="var(--accent-dark)" stroke-width="3"/>
+
+    <!-- route / goal -->
+    <line x1="800" y1="200" x2="800" y2="360" stroke="var(--muted)" stroke-width="3"/>
+    <polygon points="800,200 840,214 800,228" fill="var(--accent2)"/>
+    <text x="800" y="183" text-anchor="middle" class="h-lbl-b">目的地</text>
+    <text x="800" y="198" text-anchor="middle" class="h-lbl-s">（業務ゴール）</text>
+
+    <!-- model label -->
+    <path d="M215,148 L300,205" class="h-lead"/>
+    <text x="40" y="112" class="h-lbl-b">モデル（馬）</text>
+    <text x="40" y="132" class="h-lbl-s">賢いが、放って</text>
+    <text x="40" y="148" class="h-lbl-s">おくと暴れる</text>
+
+    <!-- saddle label -->
+    <path d="M350,175 L350,64" class="h-lead"/>
+    <text x="300" y="55" class="h-lbl-b">鞍＝ルール層</text>
+    <text x="300" y="71" class="h-lbl-s">（行動の土台を決める）</text>
+
+    <!-- rein label（帯部分はラベル・耳の双方から20px以上のクリアランスを確保するルート） -->
+    <path d="M452,72 C500,78 560,65 650,-5" class="h-lead"/>
+    <text x="655" y="-2" class="h-lbl-b">手綱＝フック</text>
+    <text x="655" y="14" class="h-lbl-s">（制御・ガードレール）</text>
+
+    <!-- bit label -->
+    <path d="M672,132 L690,248" class="h-lead"/>
+    <text x="655" y="264" class="h-lbl-b">轡＝権限設定</text>
+    <text x="655" y="280" class="h-lbl-s">（許可の範囲を決める）</text>
+  </svg>
+  </div>
+  <figcaption>
+    賢いが放っておくと暴れる「馬」＝モデル本体に対し、鞍（ルール・原則）・轡（権限設定）・手綱（フック／ガードレール）という「馬具一式」＝ハーネスを装着することで、目的地（業務ゴール）まで安全に導く。馬具は馬を痛めつける拘束具ではなく、馬の力を目的地まで届けるための装具である点が要点。
+    <span class="src">（Claude Codeとハーネスについて考えてみる／Oikon、ハーネスエンジニアリング入門／西岡賢一郎、ハーネスエンジニアリング解説／clshinji）</span>
+  </figcaption>
+</figure>
+
+<p>
+より技術的な定義も複数の登壇者から示されている。西岡はハーネスを「Claudeを呼ぶループ＋ツール呼び出しを実インフラに繋ぐ仕組み」であり、本質は「モデル単独ではできないことの“仮定”を符号化したもの」と定義する（ハーネスエンジニアリング入門）。梶川琢馬は「自律的なAI Agentの実現のために、LLMモデルの性能を最大限引き出すための環境を設計すること」（実践ハーネスエンジニアリング）、神谷亮平は語源に立ち返り「体や物を安全に固定し、力を効率よく伝えるためのベルト状の装具」から転じて「AIを安全に制御し、能力を効率よく発揮させるための環境整備活動」（ハーネスエンジニアリング×AI適応開発）とする。そして多くの資料が共通して引用するのが、LangChain（Vivek Trivedy）の定式である。
+</p>
+
+<div class="callout blue">
+  <strong>Agent = Model + Harness</strong><br>
+  <span class="quote">"If you're not the model, you're the harness."</span>
+  <br><span class="src-line">（ハーネスエンジニアリングとは？／KINOPEE、ハーネスエンジニアリングとは？を巡る各資料 ほか多数）</span>
+</div>
+
+<p>
+非エンジニア向け資料が結びとして掲げる定式も分かりやすい。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 760 190" role="img" aria-labelledby="svg-formula-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-formula-title">「AIの性能×ハーネス＝業務インパクト」の数式ビジュアル</title>
+    <defs>
+      <style>
+        .f-box{fill:var(--card);stroke:var(--border);stroke-width:2;}
+        .f-title{font-size:16px;font-weight:700;fill:var(--fg);}
+        .f-sub{font-size:11.5px;fill:var(--muted);}
+        .f-op{font-size:34px;font-weight:700;fill:var(--accent);}
+      </style>
+    </defs>
+    <rect x="16" y="45" width="200" height="110" rx="14" class="f-box"/>
+    <circle cx="66" cy="80" r="16" fill="none" stroke="var(--accent2)" stroke-width="3"/>
+    <path d="M56,80 q10,-14 20,0 M56,80 q10,14 20,0" stroke="var(--accent2)" stroke-width="2" fill="none"/>
+    <text x="46" y="118" class="f-title">AIの性能</text>
+    <text x="46" y="136" class="f-sub">（モデルという素材）</text>
+
+    <text x="240" y="112" text-anchor="middle" class="f-op">×</text>
+
+    <rect x="278" y="45" width="200" height="110" rx="14" class="f-box"/>
+    <rect x="325" y="70" width="30" height="30" rx="6" fill="none" stroke="var(--accent)" stroke-width="3"/>
+    <line x1="317" y1="85" x2="325" y2="85" stroke="var(--accent)" stroke-width="3"/>
+    <line x1="355" y1="85" x2="363" y2="85" stroke="var(--accent)" stroke-width="3"/>
+    <line x1="340" y1="70" x2="340" y2="62" stroke="var(--accent)" stroke-width="3"/>
+    <line x1="340" y1="100" x2="340" y2="108" stroke="var(--accent)" stroke-width="3"/>
+    <text x="308" y="118" class="f-title">ハーネス</text>
+    <text x="308" y="136" class="f-sub">（現場で使える形への仕立て）</text>
+
+    <text x="504" y="112" text-anchor="middle" class="f-op">＝</text>
+
+    <rect x="540" y="45" width="204" height="110" rx="14" class="f-box"/>
+    <polyline points="565,120 585,95 605,105 630,70" fill="none" stroke="var(--good)" stroke-width="3"/>
+    <polygon points="625,66 634,70 628,78" fill="var(--good)"/>
+    <text x="565" y="140" class="f-title">業務インパクト</text>
+  </svg>
+  </div>
+  <figcaption>
+    AIは「素材」に過ぎず、それを現場で使える形に仕立てる「ハーネス」の巧拙が競争力の差になる、という超入門資料の結論。
+    <span class="src">（ハーネスエンジニアリング解説／clshinji）</span>
+  </figcaption>
+</figure>
+
+<p>
+Oikonは、この「ハーネス」がどこに位置するかを実務的に「4層構造」で整理している。<strong>Prompt Eng.（指示を作り込む）→ Context Eng.（見せる情報を管理する）→ Harness Eng.（モデルを動かす仕組み全体）→ Loop Eng.（ループ自体を書く）</strong>という段階であり、この整理では「Claude Code自体がハーネス」だとされる（Claude Codeとハーネスについて考えてみる／Oikon）。西岡も類似の進化アークを示している。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 920 230" role="img" aria-labelledby="svg-evo-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-evo-title">AI活用の進化アーク：プロンプトエンジニアリングからループエンジニアリングへ</title>
+    <defs>
+      <marker id="arrow-evo" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+      </marker>
+      <style>
+        .e-box{fill:var(--card);stroke:var(--border);stroke-width:2;}
+        .e-box-main{fill:var(--bg-alt);stroke:var(--accent);stroke-width:3;}
+        .e-title{font-size:16px;font-weight:700;fill:var(--fg);}
+        .e-sub{font-size:11.5px;fill:var(--muted);}
+        .e-time{font-size:12px;fill:var(--accent2-dark);font-weight:700;}
+        .e-arrow{stroke:var(--muted);stroke-width:2.5;fill:none;marker-end:url(#arrow-evo);}
+      </style>
+    </defs>
+
+    <rect x="30" y="70" width="190" height="100" rx="12" class="e-box"/>
+    <text x="50" y="105" class="e-title">Prompt Eng.</text>
+    <text x="50" y="126" class="e-sub">指示の作り込み</text>
+    <text x="50" y="144" class="e-sub">（Few-shot／CoT）</text>
+    <text x="125" y="200" text-anchor="middle" class="e-time">〜2024</text>
+
+    <path d="M222,120 L258,120" class="e-arrow"/>
+
+    <rect x="260" y="70" width="190" height="100" rx="12" class="e-box"/>
+    <text x="280" y="105" class="e-title">Context Eng.</text>
+    <text x="280" y="126" class="e-sub">見せる情報の設計</text>
+    <text x="280" y="144" class="e-sub">（コンパクション等）</text>
+    <text x="355" y="200" text-anchor="middle" class="e-time">2025/9</text>
+
+    <path d="M452,120 L488,120" class="e-arrow"/>
+
+    <rect x="490" y="65" width="200" height="110" rx="12" class="e-box-main"/>
+    <text x="510" y="102" class="e-title">Harness Eng.</text>
+    <text x="510" y="123" class="e-sub">モデルを動かす</text>
+    <text x="510" y="141" class="e-sub">仕組み全体（本題）</text>
+    <text x="590" y="200" text-anchor="middle" class="e-time">2025/11</text>
+
+    <path d="M692,120 L728,120" class="e-arrow"/>
+
+    <rect x="730" y="70" width="180" height="100" rx="12" class="e-box"/>
+    <text x="750" y="105" class="e-title">Loop Eng.</text>
+    <text x="750" y="126" class="e-sub">ループ自体を</text>
+    <text x="750" y="144" class="e-sub">書く（meta-harness）</text>
+    <text x="820" y="200" text-anchor="middle" class="e-time">2026/4〜</text>
+  </svg>
+  </div>
+  <figcaption>
+    西岡・Oikon両者が示す「進化アーク」。プロンプト → コンテキスト → ハーネス → ループの順で、AIをどう動かすかという設計対象そのものが外側に広がってきた、という段階整理（発表者独自の整理であり、モデル提供元が公式に段階論として打ち出しているわけではない点に留意）。
+    <span class="src">（ハーネスエンジニアリング入門／西岡賢一郎、Claude Codeとハーネスについて考えてみる／Oikon）</span>
+  </figcaption>
+</figure>
+
+<p>
+なお「どこまでをハーネスに含めるか」の力点は論者によって割れており、これは無理に一致させるべきではない資料横断の最大の論点である。この対立の詳細は4章で扱う。まずは、定義の揺れを前提としつつ、実務上ほぼ共通して挙がる「構成要素」を見ていく。
+</p>
+
+<h2 id="s2">2. ハーネスを構成する要素</h2>
+
+<p>
+定義は割れていても、「ハーネスが何でできているか」を挙げると、資料横断でかなりの部分が一致する。以下、静的な構成要素（レイヤー）と、それらを動かす動的な仕組み（ループ・統治構造）に分けて整理する。
+</p>
+
+<h3 id="s2-1">2.1 レイヤー別の構成要素（9層）</h3>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 760 650" role="img" aria-labelledby="svg-layers-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-layers-title">ハーネスを構成する9つのレイヤーの積層図</title>
+    <defs>
+      <style>
+        .l-a{ fill: var(--layer-a); stroke:var(--accent2); stroke-width:1.5; }
+        .l-b{ fill: var(--layer-b); stroke:var(--accent); stroke-width:1.5; }
+        .l-name{ font-size:16px; font-weight:700; fill:var(--fg); }
+        .l-purpose{ font-size:12px; fill:var(--muted); }
+        .l-num{ font-size:13px; font-weight:700; fill:#fff; }
+      </style>
+    </defs>
+
+    <!-- L9 top .. L1 bottom -->
+    <g>
+      <rect x="40" y="42" width="680" height="58" rx="10" class="l-a"/>
+      <circle cx="27" cy="71" r="15" fill="var(--accent2)"/><text x="27" y="76" text-anchor="middle" class="l-num">9</text>
+      <text x="60" y="66" class="l-name">学習・自己改善層</text>
+      <text x="60" y="86" class="l-purpose">失敗や気づきを仕組みに書き戻し、ハーネス自体を成長させる（rules更新／feedback_log.md）</text>
+    </g>
+    <g>
+      <rect x="40" y="108" width="680" height="58" rx="10" class="l-b"/>
+      <circle cx="27" cy="137" r="15" fill="var(--accent)"/><text x="27" y="142" text-anchor="middle" class="l-num">8</text>
+      <text x="60" y="132" class="l-name">観測性・監査層</text>
+      <text x="60" y="152" class="l-purpose">何が起きたかを後から追跡・再現できるようにする（audit.log／events.jsonl／report.md）</text>
+    </g>
+    <g>
+      <rect x="40" y="174" width="680" height="58" rx="10" class="l-a"/>
+      <circle cx="27" cy="203" r="15" fill="var(--accent2)"/><text x="27" y="208" text-anchor="middle" class="l-num">7</text>
+      <text x="60" y="198" class="l-name">検証・評価（フィードバック）層</text>
+      <text x="60" y="218" class="l-purpose">出力の正しさ・使えるかを機械的／多角的に確認する（lint／型／テスト／LLM judge）</text>
+    </g>
+    <g>
+      <rect x="40" y="240" width="680" height="58" rx="10" class="l-b"/>
+      <circle cx="27" cy="269" r="15" fill="var(--accent)"/><text x="27" y="274" text-anchor="middle" class="l-num">6</text>
+      <text x="60" y="264" class="l-name">アーキテクチャ制約層</text>
+      <text x="60" y="284" class="l-purpose">「そもそも間違った書き方ができない」設計にする（型・依存方向の強制・レイヤード）</text>
+    </g>
+    <g>
+      <rect x="40" y="306" width="680" height="58" rx="10" class="l-a"/>
+      <circle cx="27" cy="335" r="15" fill="var(--accent2)"/><text x="27" y="340" text-anchor="middle" class="l-num">5</text>
+      <text x="60" y="330" class="l-name">フック・ガードレール層</text>
+      <text x="60" y="350" class="l-purpose">ツール実行の前後を決定論的にブロック／検証する（PreToolUse／PostToolUse／Stop）</text>
+    </g>
+    <g>
+      <rect x="40" y="372" width="680" height="58" rx="10" class="l-b"/>
+      <circle cx="27" cy="401" r="15" fill="var(--accent)"/><text x="27" y="406" text-anchor="middle" class="l-num">4</text>
+      <text x="60" y="396" class="l-name">エージェント・MCP層</text>
+      <text x="60" y="416" class="l-purpose">責務を分離し、外部ツール・データソースに安全に接続する（Subagents／MCP）</text>
+    </g>
+    <g>
+      <rect x="40" y="438" width="680" height="58" rx="10" class="l-a"/>
+      <circle cx="27" cy="467" r="15" fill="var(--accent2)"/><text x="27" y="472" text-anchor="middle" class="l-num">3</text>
+      <text x="60" y="462" class="l-name">スキル・コマンド層</text>
+      <text x="60" y="482" class="l-purpose">手順とドメイン知識をポータブルに包み、必要な時だけ段階的にロードする（SKILL.md／Slash Commands）</text>
+    </g>
+    <g>
+      <rect x="40" y="504" width="680" height="58" rx="10" class="l-b"/>
+      <circle cx="27" cy="533" r="15" fill="var(--accent)"/><text x="27" y="538" text-anchor="middle" class="l-num">2</text>
+      <text x="60" y="528" class="l-name">コンテキスト・メモリ層</text>
+      <text x="60" y="548" class="l-purpose">セッションを跨いだ記憶と局所文脈の分離でトークンを節約し推論精度を保つ（MEMORY.md）</text>
+    </g>
+    <g>
+      <rect x="40" y="570" width="680" height="58" rx="10" class="l-a"/>
+      <circle cx="27" cy="599" r="15" fill="var(--accent2)"/><text x="27" y="604" text-anchor="middle" class="l-num">1</text>
+      <text x="60" y="594" class="l-name">ルール／原則層（土台）</text>
+      <text x="60" y="614" class="l-purpose">AIの行動原則・役割・禁止事項を事前に固定する＝feedforward（CLAUDE.md／AGENTS.md）</text>
+    </g>
+  </svg>
+  </div>
+  <figcaption>
+    資料横断で共通して挙がる9つの構成要素を、土台（ルール／原則層）から積み上げるイメージで示した図。実際には並列に機能する要素も多いが、下位ほど「事前に固定される規範」、上位ほど「実行後の学習・改善」に近い性質を持つ。
+    <span class="src">（AIエージェント時代のハーネスエンジニアリング Claude Code実装編／ため、Agent Skillsがハーネスの垣根を超える日／Gota、実践ハーネスエンジニアリング／梶川琢馬、ハーネスエンジニアリング×AI適応開発／神谷亮平、ほか多数の統合）</span>
+  </figcaption>
+</figure>
+
+<div class="table-scroll">
+<table>
+<caption>表1：ハーネスを構成する9つのレイヤーと目的</caption>
+<thead>
+<tr><th>レイヤー</th><th>目的（何のためにあるか）</th><th>代表的な実装・ファイル</th><th>主な言及資料</th></tr>
+</thead>
+<tbody>
+<tr><td>ルール／原則層</td><td>AIの行動原則・役割・禁止事項を事前に固定する（feedforward）</td><td>CLAUDE.md／AGENTS.md／copilot-instructions.md／Kiro Steering</td><td>多数（Oikon、tame、平野孝明、gota、yuuuka 他）</td></tr>
+<tr><td>コンテキスト・メモリ層</td><td>セッションを跨いだ記憶、局所文脈の分離でトークンを節約し推論精度を保つ</td><td>MEMORY.md、agents/*.md（局所文脈）、段階的開示</td><td>ため（tame）、Hirosato Gamo</td></tr>
+<tr><td>スキル・コマンド層</td><td>手順とドメイン知識をポータブルに包み、必要な時だけ段階的にロードする</td><td>Agent Skills（SKILL.md）、Slash Commands、Agent Hooks</td><td>Gota、坂上晴信</td></tr>
+<tr><td>エージェント・MCP層</td><td>責務を分離し、外部ツール・データソースに安全に接続する</td><td>Subagents、MCP、Planner／Builder／Evaluator等の役割分担</td><td>梶川琢馬、gota</td></tr>
+<tr><td>フック・ガードレール層</td><td>ツール実行の前後を決定論的にブロック／検証する</td><td>PreToolUse／PostToolUse／Stop hook、permissions allow/deny</td><td>西岡賢一郎、ため、平野孝明</td></tr>
+<tr><td>アーキテクチャ制約層</td><td>「そもそも間違った書き方ができない」設計にする（構造で守る）</td><td>型システム、依存方向の強制（deptrac等）、レイヤードアーキテクチャ</td><td>梶川琢馬、神谷亮平</td></tr>
+<tr><td>検証・評価（フィードバック）層</td><td>出力の正しさ・使えるかを機械的／多角的に確認する</td><td>lint／型チェック／テスト／E2E／LLM judge／uxaudit</td><td>gota、ため</td></tr>
+<tr><td>観測性・監査層</td><td>何が起きたかを後から追跡・再現できるようにする</td><td>audit.log、report.md、events.jsonl、Braintrust連携</td><td>西岡賢一郎、nrs、r-kagaya</td></tr>
+<tr><td>学習・自己改善層</td><td>失敗や気づきを仕組みに書き戻し、ハーネス自体を成長させる</td><td>rules更新、feedback_log.md、パターンDB、Self-Refinement</td><td>池上涼平、r-kagaya</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="s2-2">2.2 tameの「3本柱→5層アーキ」</h3>
+
+<p>
+この整理は資料ごとに呼び方が違うだけで骨格は近い。ため（為安圭介）は前作で「コンテキスト管理／アーキテクチャ制約とガードレール／品質評価と多角的フィードバック」の<strong>3本柱</strong>を提示し（AIエージェント時代のハーネスエンジニアリングとは）、続編ではそれを<strong>5層アーキテクチャ</strong>（ルール層／コンテキスト層／フック層／コマンド・スキル層／エージェント・MCP層）というファイル群にまで具体化した（AIエージェント時代のハーネスエンジニアリング Claude Code実装編）。梶川琢馬も「コンテキスト設計／アーキテクチャ制約とガードレール／品質評価ループ」という同型の3本柱を示している（実践ハーネスエンジニアリング）。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 780 420" role="img" aria-labelledby="svg-map35-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-map35-title">tameによる「概念編の3本柱」から「実装編の5層アーキテクチャ」への対応図</title>
+    <defs>
+      <style>
+        .m-l{ fill:var(--bg-alt); stroke:var(--accent2); stroke-width:2; }
+        .m-r{ fill:var(--bg-alt); stroke:var(--accent); stroke-width:2; }
+        .m-t{ font-size:15px; font-weight:700; fill:var(--fg); }
+        .m-h{ font-size:14px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .m-link{ stroke:var(--muted); stroke-width:1.4; opacity:0.65; fill:none; }
+      </style>
+    </defs>
+    <text x="140" y="20" class="m-h">3本柱（概念編）</text>
+    <text x="640" y="20" class="m-h">5層アーキテクチャ（実装編）</text>
+
+    <path class="m-link" d="M250,90 C400,90 400,67 530,67"/>
+    <path class="m-link" d="M250,90 C400,90 400,135 530,135"/>
+    <path class="m-link" d="M250,212 C400,212 400,67 530,67"/>
+    <path class="m-link" d="M250,212 C400,212 400,203 530,203"/>
+    <path class="m-link" d="M250,334 C400,334 400,203 530,203"/>
+    <path class="m-link" d="M250,334 C400,334 400,339 530,339"/>
+
+    <rect x="30" y="45" width="220" height="90" rx="12" class="m-l"/>
+    <text x="45" y="95" class="m-t">① コンテキスト管理</text>
+
+    <rect x="30" y="167" width="220" height="90" rx="12" class="m-l"/>
+    <text x="45" y="205" class="m-t">② アーキ制約と</text>
+    <text x="45" y="223" class="m-t">　ガードレール</text>
+
+    <rect x="30" y="289" width="220" height="90" rx="12" class="m-l"/>
+    <text x="45" y="327" class="m-t">③ 品質評価と</text>
+    <text x="45" y="345" class="m-t">　フィードバック</text>
+
+    <rect x="530" y="40" width="220" height="55" rx="10" class="m-r"/>
+    <text x="545" y="72" class="m-t">①ルール層</text>
+
+    <rect x="530" y="108" width="220" height="55" rx="10" class="m-r"/>
+    <text x="545" y="140" class="m-t">②コンテキスト層</text>
+
+    <rect x="530" y="176" width="220" height="55" rx="10" class="m-r"/>
+    <text x="545" y="208" class="m-t">③フック層</text>
+
+    <rect x="530" y="244" width="220" height="55" rx="10" class="m-r"/>
+    <text x="545" y="276" class="m-t">④コマンド・スキル層</text>
+
+    <rect x="530" y="312" width="220" height="55" rx="10" class="m-r"/>
+    <text x="545" y="344" class="m-t">⑤エージェント・MCP層</text>
+  </svg>
+  </div>
+  <figcaption>
+    概念編で示された「3本柱」が、実装編では5つの具体的なファイル群（層）に落とし込まれている対応関係。線は主な対応関係を示す（例：③品質評価とフィードバックは、フック層のPostToolUse検証とエージェント・MCP層のレビュー担当の両方に対応）。
+    <span class="src">（AIエージェント時代のハーネスエンジニアリングとは／AIエージェント時代のハーネスエンジニアリング Claude Code実装編／ため）</span>
+  </figcaption>
+</figure>
+
+<p>池上涼平は同様の骨格を「コンテキスト／アクション／フィードバック／運用」の4設計軸として整理している（新規プロダクトを高速で生み出すハーネスエンジニアリング）。</p>
+
+<h3 id="s2-3">2.3 動的な仕組み：ステアリングループ</h3>
+
+<p>
+構成要素を並べるだけでは「ハーネスが生きた仕組みであること」が見えない。nrs（成瀬允宣）とBirgitta Böckelerの整理は、この動的な側面を最もよく捉えている。
+</p>
+
+<ul class="plain">
+  <li><strong>フィードフォワード（動く前に方向づける）</strong>：誰として何を目的に動くか明示する／背景知識と完了条件を事前に渡す／使える手段（ツール・権限）を必要な範囲に絞る。</li>
+  <li><strong>フィードバック（動いた後に自己修正を促す）</strong>：出力を検査しやすい形で受け取る／異なる観点から複数回チェックする／改善が停滞したら別の手立てに切り替える。</li>
+</ul>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 600 600" role="img" aria-labelledby="svg-loop-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-loop-title">フィードフォワードとフィードバックのステアリングループ図</title>
+    <defs>
+      <marker id="arrow-loop" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--accent2)"/>
+      </marker>
+      <style>
+        .lp-box{ fill:var(--card); stroke:var(--accent2); stroke-width:2.5; }
+        .lp-title{ font-size:16px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .lp-sub{ font-size:11.5px; fill:var(--muted); text-anchor:middle; }
+        .lp-arrow{ stroke:var(--accent2); stroke-width:2.5; fill:none; marker-end:url(#arrow-loop); }
+        .lp-center{ font-size:14px; font-weight:700; fill:var(--accent); text-anchor:middle; }
+      </style>
+    </defs>
+
+    <path class="lp-arrow" d="M360,100 C440,110 480,160 500,260"/>
+    <path class="lp-arrow" d="M500,340 C480,440 440,480 360,500"/>
+    <path class="lp-arrow" d="M240,500 C160,480 120,440 100,340"/>
+    <path class="lp-arrow" d="M100,260 C120,160 160,110 240,100"/>
+
+    <rect x="230" y="40" width="140" height="70" rx="14" class="lp-box"/>
+    <text x="300" y="70" class="lp-title">フィードフォワード</text>
+    <text x="300" y="90" class="lp-sub">（動く前に方向づけ）</text>
+
+    <rect x="460" y="265" width="140" height="70" rx="14" class="lp-box"/>
+    <text x="530" y="295" class="lp-title">実行</text>
+    <text x="530" y="315" class="lp-sub">（エージェント）</text>
+
+    <rect x="230" y="490" width="140" height="70" rx="14" class="lp-box"/>
+    <text x="300" y="520" class="lp-title">フィードバック</text>
+    <text x="300" y="540" class="lp-sub">（動いた後に検査）</text>
+
+    <rect x="20" y="265" width="140" height="70" rx="14" class="lp-box"/>
+    <text x="90" y="295" class="lp-title">調整</text>
+    <text x="90" y="315" class="lp-sub">（ハーネスを学習）</text>
+
+    <text x="300" y="295" class="lp-center">ステアリング</text>
+    <text x="300" y="313" class="lp-center">ループ</text>
+  </svg>
+  </div>
+  <figcaption>
+    「フィードフォワード（事前の方向づけ）→エージェント実行→フィードバック（事後の検査）→結果→ハーネスを調整」というループを回し続けることが、ハーネスエンジニアリングの動的な本体である。nrsはTAKT（OSS）での4つの実例（ファセット更新／ワークフロー更新／ループモニター追加／タスク分解の導入）を通じて、「追えるから改善に戻せる。改善に戻せるからループが回る」と述べる。
+    <span class="src">（実践ハーネスエンジニアリング～ステアリングループを実例から読み解く／nrs、Python開発環境にハーネス適用を検討する／yuuuka経由でBirgitta Böckeler紹介）</span>
+  </figcaption>
+</figure>
+
+<p>
+gota（beyond-spec-usable）が実装した4subagentハーネス（Planner→Builder→Evaluator→UX Reviewer）も、この構造を体現した実例である。Plannerが検証シナリオ（WHAT）を先に切り、Builderが縦に一本コアフローを通し、Evaluator・UX Reviewerが多軸スコアで合否判定する――これは「フィードフォワードで方向づけ、フィードバックで検証し直す」ループそのものである。
+</p>
+
+<h3 id="s2-4">2.4 統治の視点：立法・司法・行政</h3>
+
+<p>
+外山英幸（ビズリーチ）は、ハーネスを構成する仕組みを「誰が何を決めるか」という統治の視点で捉え直す独自のモデルを提示している（AI駆動開発が変える、大規模開発の前提）。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 760 300" role="img" aria-labelledby="svg-gov-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-gov-title">立法AI・司法AI・行政AIの三権分立モデルと、汎用ハーネスがカバーできる範囲を示す図</title>
+    <defs>
+      <style>
+        .g-box{ fill:var(--card); stroke:var(--border); stroke-width:2; }
+        .g-t{ font-size:16px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .g-s{ font-size:12px; fill:var(--muted); text-anchor:middle; }
+      </style>
+    </defs>
+    <rect x="30" y="50" width="220" height="130" rx="12" class="g-box"/>
+    <text x="140" y="82" class="g-t">立法AI</text>
+    <text x="140" y="102" class="g-s">（ルール）</text>
+    <text x="140" y="128" class="g-s">何が正しいかを</text>
+    <text x="140" y="146" class="g-s">定義する</text>
+    <text x="140" y="164" class="g-s">＝ルールのSSOT</text>
+
+    <rect x="270" y="50" width="220" height="130" rx="12" class="g-box"/>
+    <text x="380" y="82" class="g-t">司法AI</text>
+    <text x="380" y="102" class="g-s">（検証）</text>
+    <text x="380" y="128" class="g-s">適合しているかを</text>
+    <text x="380" y="146" class="g-s">裁く</text>
+    <text x="380" y="164" class="g-s">＝contracts／guards</text>
+
+    <rect x="510" y="50" width="220" height="130" rx="12" fill="none" stroke="var(--accent2)" stroke-width="3"/>
+    <text x="620" y="82" class="g-t">行政AI</text>
+    <text x="620" y="102" class="g-s">（実行）</text>
+    <text x="620" y="128" class="g-s">実際に実行する</text>
+    <text x="620" y="146" class="g-s">＝workflow／agent</text>
+
+    <rect x="500" y="200" width="240" height="34" rx="8" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-dasharray="5 4"/>
+    <text x="620" y="223" class="g-s">＝汎用ハーネスが担える範囲</text>
+
+    <text x="380" y="270" class="g-s" font-weight="700">立法（ルール）と司法（検証）は、プロダクト・組織ごとに自社で作るしかない</text>
+  </svg>
+  </div>
+  <figcaption>
+    外山英幸のモデル。汎用ハーネスが担えるのは「行政」（実行環境・文脈管理・検証ループ）までであり、「立法」（プロダクトドメイン依存のルール）と「司法」（フェーズ依存のチェック）は自社で作るしかない、という指摘は、後述する「汎用ハーネスと自社ハーネスの境界」の議論に直結する。
+    <span class="src">（AI駆動開発が変える、大規模開発の前提／外山英幸）</span>
+  </figcaption>
+</figure>
+
+<h2 id="s3">3. ハーネスを考える上でのポイント</h2>
+
+<p>
+複数資料に共通して現れる設計原則を統合すると、大きく4つにまとめられる。
+</p>
+
+<h3>3.1 モデル進化への追従：足すより剥がす</h3>
+
+<p>
+西岡賢一郎は「ハーネスはモデル進化で陳腐化する」（"Harnesses encode assumptions that go stale as models improve."）ことを明確な原則として掲げ、次の4原則を提示する（ハーネスエンジニアリング入門）。
+</p>
+
+<div class="card-grid">
+  <div class="card"><h4><span class="num">1</span>最小権限</h4>危険なツール呼び出しを事前に止める。本番DB事故を技術的にゼロにする。</div>
+  <div class="card"><h4><span class="num">2</span>可観測</h4>何が起きたか後から再現できる。金融・医療・公共では監査要件そのもの。</div>
+  <div class="card"><h4><span class="num">3</span>失敗前提</h4>1つ落ちても全体は死なない（cattle-not-pets）。緑でなければ終われない仕組みにする。</div>
+  <div class="card"><h4><span class="num">4</span>足し算ではなく引き算</h4>半年ごとにhooksを読み直し、不要なものを消す（剥がす運用）。</div>
+</div>
+
+<p>
+個別のhookは陳腐化するが、「外側で支える」設計スキル自体は陳腐化しない――「剥がす目」を持ち続けることが西岡の一番のメッセージである。
+</p>
+
+<h3>3.2 目的ファースト・優先順位づけ</h3>
+
+<p>
+Gotaは、ハーネスを足す前に踏むべき4ステップと、その優先順位を示す（目的ファーストのハーネス設計）。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 700 300" role="img" aria-labelledby="svg-priority-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-priority-title">「構造で守る＞テストで守る＞指示で補う」という優先順位のピラミッド図</title>
+    <defs>
+      <style>
+        .py-t{ font-size:15px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .py-s{ font-size:11.5px; fill:var(--muted); text-anchor:middle; }
+      </style>
+    </defs>
+    <polygon points="350,20 470,90 230,90" fill="var(--accent2)" opacity="0.85"/>
+    <text x="350" y="60" class="py-t" fill="#fff">設計／型／</text>
+    <text x="350" y="78" class="py-t" fill="#fff">依存方向</text>
+
+    <polygon points="230,90 470,90 520,160 180,160" fill="var(--accent2)" opacity="0.65"/>
+    <text x="350" y="130" class="py-t" fill="#fff">scaffolding</text>
+
+    <polygon points="180,160 520,160 570,230 130,230" fill="var(--accent)" opacity="0.55"/>
+    <text x="350" y="200" class="py-t">test</text>
+
+    <polygon points="130,230 570,230 620,290 80,290" fill="var(--accent)" opacity="0.3"/>
+    <text x="350" y="265" class="py-t">指示（CLAUDE.md／skill／review agent）</text>
+
+    <text x="655" y="55" class="py-s" text-anchor="start">優先度：高</text>
+    <text x="655" y="275" class="py-s" text-anchor="start">優先度：低</text>
+  </svg>
+  </div>
+  <figcaption>
+    「違反がそもそも書けない構造」で守れないか、を最初に問う。指示（プロンプト・ルールファイル）は評価しにくく放っておくと溜まるため、最後の手段として最小限に留める、という優先順位。
+    <span class="src">（目的ファーストのハーネス設計～ハーネスの変更容易性を高めるための優先順位～／Gota、ハーネスエンジニアリングの概要と設計思想／渋谷優介、Claude Codeとハーネスについて考えてみる／Oikon）</span>
+  </figcaption>
+</figure>
+
+<ol class="plain">
+  <li>業務目的を言語化する（何を守る／守らない／人が介入するか）</li>
+  <li>構造で守れないか問う（設計／型／依存方向 ＞ scaffolding ＞ test ＞ 指示、の優先順位）</li>
+  <li>指示で補う（CLAUDE.md／skill／review agentは最小限に）</li>
+  <li>削れる状態で運用する（小さく始め、失敗駆動で足し、目的で削る）</li>
+</ol>
+
+<p>
+渋谷優介の設計思想（Principles・Verification・Hooksの設定＝自由度を下げる施策から着手し、Skillsの設定・パラメータチューニングは後回しにする方が難易度が低い）もこの優先順位と整合する（ハーネスエンジニアリングの概要と設計思想）。Oikonの「まず内部ハーネス＋モデルの素の実力を使い倒し、足りない分だけ外部ハーネスを小さくポータブルに足す」という原則も同じ方向を向く。
+</p>
+
+<h3>3.3 汎用化・密結合の罠（失敗事例からの教訓）</h3>
+
+<div class="callout warn">
+  Gotaは自身の失敗を率直に共有している（ハーネスエンジニアリングをやりすぎた話）。「様々なソフトウェア開発に対応できるハーネス」を目指して範囲を拡張した結果、テンプレート・hook・verify・tests・policyが同時に絡み合う密結合に陥り、<strong>Script 25,000行・Markdown 10,000行・Hooks 1,500行</strong>にまで肥大化。1回の全体テストに1時間かかり、修正の成否評価すら不能になった。並列実装が生む「境界のドリフト」「仕様のドリフト」「依存関係のドリフト」という3つの異常も報告されている。教訓は「ハーネスでなんでもやろうとすると、エージェントを制御するための仕組み自体が制御不能になる」ことであり、目的ごとに小さく分ける（Planning／Execution／Verification／Adaptation Agentの分離）ことが再発防止策として示される。
+</div>
+
+<h3>3.4 統治・責任構造としての設計</h3>
+
+<p>
+外山は、ハーネス設計の議論を「AI実行の統治（Governance）」の問題として捉え直し、ADR・Wiki等の「書かれている」だけの状態と、Agentが参照し違反すれば止まる「効いている」状態を峻別すべきだと主張する（AI駆動開発が変える、大規模開発の前提）。神谷亮平も、OpenAIの短時間マージ運用は「ハーネスの作り込み」だけでなく「適切な妥協点を許容する組織的判断」があってはじめて成立するとし、自社で決めるべき3つの問い――<strong>品質の保証範囲・人間の関与の線引き・実行可能な環境づくり</strong>――を、仕組み・プロセス・体制を一体で見直す「責任構造の再設計」として提示する（ハーネスエンジニアリング×AI適応開発）。
+</p>
+
+<h2 id="s4">4. その他の論点</h2>
+
+<h3 id="s4-1">4.1 定義の割れ：広義派 vs 狭義派</h3>
+
+<p>
+論者によって「どこまでをハーネスに含めるか」の力点は明確に割れている。これは無理に一致させるべきではなく、資料横断で見えてきた最大の論点でもある。
+</p>
+
+<ul class="plain">
+  <li><strong>広義派</strong>（Chase＝LangChain、Chawla）：モデル以外の全てがハーネス。ツール実行・メモリ・サブエージェント・ガードレール・オーケストレーションまで包括し、「コンテキスト設計はハーネスの一構成要素」と位置づける。</li>
+  <li><strong>狭義派</strong>（Martin Fowler／Birgitta Böckeler）：逆に「コンテキストの中の特殊形」としてハーネスを位置づけ、feedforward（guides）とfeedback（sensors）の制御理論として扱う。すなわちコンテキスト⊃ハーネスであり、包含関係が逆転する。</li>
+  <li><strong>運用哲学派</strong>（Mitchell Hashimoto）：ハーネスは設計物というより「失敗するたびにAGENTS.mdへルールを1行足し、同じミスを二度とさせない」累積的な運用プロセスそのもの。</li>
+  <li><strong>スケール駆動派</strong>（OpenAI／Ryan Lopopolo）：3人・5ヶ月・100万行規模、大部分をAIが生成したという事例を起点に、「プロンプトでもコンテキストでも解けない、多段ステップ・自律実行・並列特有の故障モードを解くもの」という動機づけで語る。</li>
+</ul>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 820 460" role="img" aria-labelledby="svg-def-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-def-title">「ハーネス⊃コンテキスト」派と「コンテキスト⊃ハーネス」派の包含関係を対比する図</title>
+    <defs>
+      <style>
+        .d-t{ font-size:15px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .d-l{ font-size:13.5px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .d-s{ font-size:11px; fill:var(--muted); text-anchor:middle; }
+      </style>
+    </defs>
+    <text x="200" y="28" class="d-t">広義派：ハーネス ⊃ コンテキスト ⊃ プロンプト</text>
+    <circle cx="200" cy="245" r="170" fill="var(--ring1)" opacity="0.18" stroke="var(--ring1)" stroke-width="2"/>
+    <circle cx="200" cy="245" r="110" fill="var(--ring2)" opacity="0.28" stroke="var(--ring2)" stroke-width="2"/>
+    <circle cx="200" cy="245" r="55" fill="var(--ring3)" opacity="0.55" stroke="var(--ring3)" stroke-width="2"/>
+    <text x="200" y="100" class="d-l">ハーネス</text>
+    <text x="200" y="155" class="d-l">コンテキスト</text>
+    <text x="200" y="249" class="d-l" fill="#fff">プロンプト</text>
+    <text x="200" y="435" class="d-s">（Harrison Chase／Avi Chawla）</text>
+
+    <line x1="410" y1="45" x2="410" y2="420" stroke="var(--border)" stroke-width="2" stroke-dasharray="6 5"/>
+
+    <text x="620" y="28" class="d-t">狭義派：コンテキスト ⊃ ハーネス</text>
+    <circle cx="620" cy="245" r="170" fill="var(--ring2)" opacity="0.2" stroke="var(--ring2)" stroke-width="2"/>
+    <circle cx="620" cy="245" r="95" fill="var(--ring3)" opacity="0.45" stroke="var(--ring3)" stroke-width="2"/>
+    <text x="620" y="100" class="d-l">コンテキスト</text>
+    <text x="620" y="240" class="d-l">ハーネス</text>
+    <text x="620" y="260" class="d-s">(guides／sensors)</text>
+    <text x="620" y="435" class="d-s">（Martin Fowler／Birgitta Böckeler）</text>
+  </svg>
+  </div>
+  <figcaption>
+    同じ「ハーネス」という語を使いながら、包含関係がまるごと逆転しているのが最大の論点。KINOPEEが指摘するように「日本に紹介する際は、どちらの意味で語られているかを毎回明示する必要がある」。
+    <span class="src">（ハーネスエンジニアリングとは？／KINOPEE、コンテキスト/ハーネスエンジニアリングの現在／Gamo、Python開発環境にハーネス適用を検討する／yuuuka）</span>
+  </figcaption>
+</figure>
+
+<p>
+KINOPEEは、日本語圏の議論を読み解くための5つの流派を提示している（ハーネスエンジニアリングとは？）。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表2：ハーネスエンジニアリングの5つの流派</caption>
+<thead><tr><th>流派</th><th>代表者</th><th>中核主張</th></tr></thead>
+<tbody>
+<tr><td>Chase派（広義・分類論）</td><td>Harrison Chase（LangChain）</td><td>モデル以外のすべてがハーネス。"If you're not the model, you're the harness."</td></tr>
+<tr><td>Hashimoto派（運用哲学）</td><td>Mitchell Hashimoto（HashiCorp）</td><td>失敗したら環境を再設計せよ。AGENTS.mdへの累積的なルール追加そのものがハーネスエンジニアリング</td></tr>
+<tr><td>Fowler派（制御理論）</td><td>Martin Fowler／Böckeler</td><td>コンテキスト設計の特殊形（コンテキスト⊃ハーネス）。guides（feedforward）とsensors（feedback）の両輪</td></tr>
+<tr><td>Chawla派（同心円モデル）</td><td>Avi Chawla</td><td>プロンプト⊂コンテキスト⊂ハーネスの三重同心円。LLM=CPU／コンテキスト=RAM／ハーネス=OSという比喩</td></tr>
+<tr><td>Codex派（スケール駆動）</td><td>Ryan Lopopolo（OpenAI Codex）</td><td>"Agents aren't hard; the Harness is hard." スケールで壊れる問題への回答という動機づけ</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+yuuukaも独立に6提唱者を「ユーザーハーネス」（コーディングエージェントを使う側が組む文脈・制約・レビュー）と「ビルダーハーネス」（エージェント基盤そのものを作る側の設計）の2軸で整理している（Python開発環境にハーネス適用を検討する）。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表3：yuuukaによる提唱者6名の整理</caption>
+<thead><tr><th>提唱者</th><th>定義・キーワード</th><th>立場</th></tr></thead>
+<tbody>
+<tr><td>Mitchell Hashimoto</td><td>ミスを繰り返さない仕組み、フィードバックループ</td><td>ユーザー</td></tr>
+<tr><td>Ryan Lopopolo（OpenAI）</td><td>環境全体の設計、"Humans steer. Agents execute."</td><td>ビルダー</td></tr>
+<tr><td>Prithvi Rajasekaran（Anthropic）</td><td>Planner–Generator–Evaluator、長時間タスク設計</td><td>ビルダー</td></tr>
+<tr><td>Vivek Trivedy（LangChain）</td><td>Agent = Model + Harness</td><td>ビルダー</td></tr>
+<tr><td>Birgitta Böckeler（おすすめ）</td><td>Guides＋Sensors、ステアリングループ／3カテゴリ</td><td>ユーザー</td></tr>
+<tr><td>nrs（成瀬允宣）</td><td>モデルの外側で制御・誘導・検証する仕組みの総称</td><td>ユーザー／ビルダー</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+この分類の実務的な意味は、ユーザーハーネスとビルダーハーネスを区別することにある。この2つを混同すると「なぜ自社でOpenAIと同じ運用ができないのか」という誤った比較に陥りやすい（外山・神谷亮平の指摘とも符合）。
+</p>
+
+<h3 id="s4-2">4.2 なぜ今ハーネスが必要なのか</h3>
+
+<div class="card-grid">
+  <div class="card">
+    <h4>(1) 人間の確認がボトルネック化</h4>
+    AIエージェントはコードを大量かつ高速に生成できるが、人間の理解・判断・QAの速度は急には増えない。「これからのSDLCの希少資源は人間の時間と注意力」であり、ボトルネックは「書くこと」から「読むこと・確かめること」へ移る。外山はこれを「HITL（Human in the Loop）」構造の限界として整理し、ハーネスは開発速度を上げても、それだけでは<strong>HITLのまま速くなるだけ</strong>だと指摘する。
+    <div class="src-line">（ハーネスエンジニアリング×AI適応開発／神谷亮平、AI駆動開発が変える、大規模開発の前提／外山英幸）</div>
+  </div>
+  <div class="card">
+    <h4>(2) 「動く」だけでは価値に到達しない</h4>
+    仕様通り動くコードを書かせる技術は急速に進歩したが、「動く」と「使える」は別問題。gotaは「動くけど使えない」の4類型（伝わらない・ぼやける・見つからない・始まらない）を挙げ、Anthropic社内でも出荷物の7割以上がPRDなしで「使えるかは触るまで分からない」現場感覚を紹介する。
+    <div class="src-line">（beyond-spec-usable／gota）</div>
+  </div>
+  <div class="card">
+    <h4>(3) 属人性・再現性の欠如</h4>
+    「The 70% problem」（非エンジニアは70%まで速く到達できるが残り30%が進まない）や、ハーバード大学・BCGの調査による「居眠り運転」現象（高精度AIへの過信でチェックが手抜きになり成績が下がる）が紹介される。神谷亮平は「7万行規模のSaaSを2人月・従来比50〜56倍」の実績を「あなただからできたのでは」と問われたことで属人性に気づき、「誰でも・どんな組織でも再現できる仕組み」への転換を迫られたと述べる。
+    <div class="src-line">（AI駆動で進化する開発プロセス／佐藤智樹、ハーネスエンジニアリング×AI適応開発／神谷亮平）</div>
+  </div>
+</div>
+
+<p>
+r-kagayaも、同じデザインシステムを参照していてもコーディングエージェントや人によって選ぶコンポーネントがずれる「人ガチャ・AIガチャ」現象を課題として挙げている（エンジニアにデザインハーネスを）。これらの背景により、ハーネスエンジニアリングは「AIをどう使うか」の技術論を超えて、<strong>「人間の介入をどこに、どれだけ残すか」を設計する組織的な問い</strong>へと接続していく。
+</p>
+
+<h3 id="s4-3">4.3 実践パターン</h3>
+
+<h4>ファイル・ツール横断の実装対応表</h4>
+
+<p>
+ためは、ハーネスの成果物が具体的な「ファイル」であることを強調し、5層をそれぞれ対話で生成できると説明する。平野孝明は、これをClaude CodeとGitHub Copilotの双方に対応づけている。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表4：Claude CodeとGitHub Copilotのハーネス実装対応表</caption>
+<thead><tr><th>種別</th><th>Claude Code</th><th>GitHub Copilot</th></tr></thead>
+<tbody>
+<tr><td>ルール定義</td><td>CLAUDE.md</td><td>copilot-instructions.md</td></tr>
+<tr><td>追加ルール</td><td>.claude/rules</td><td>.github/instructions</td></tr>
+<tr><td>スキル</td><td>.claude/skills</td><td>.github/skills</td></tr>
+<tr><td>設定・フック</td><td>.claude/settings.json</td><td>.github/hooks</td></tr>
+<tr><td>コマンド</td><td>.claude/commands</td><td>.github/prompts</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+平野は、ハーネスを「初期コンテキスト型」（CLAUDE.md・skills・agentsで最初に方向を示す）と「遅延ロード型」（rules・skills・hooksでズレを事後修正する）の2種に分け、共通化・汎用化を狙うなら遅延ロード型の方が難易度が低いと結論づける（Copilot／Claude Code両方で使えるスキル・ハーネスの紹介）。
+</p>
+
+<h4>多層防御によるレビュー負荷の低減</h4>
+
+<p>
+複数の実務者が、コンテキスト→型→静的解析→テスト→AIレビュー→人間レビューという多層防御の構図を共有している。梶川琢馬は型システム→静的解析→テスト（ユニット＋E2E＋VRT）→AIレビュー→人間レビューの順に問題を自動検出し、CIが通っただけで「完了」と宣言させずChrome DevTools MCPで実ブラウザ動作まで確認させる（実践ハーネスエンジニアリング）。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 260" role="img" aria-labelledby="svg-funnel-title" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg-funnel-title">型システムから人間レビューまでの多層防御ファネル図</title>
+    <defs>
+      <marker id="arrow-funnel" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+      </marker>
+      <style>
+        .fn-box{ stroke:var(--accent2); stroke-width:2; }
+        .fn-t{ font-size:12.5px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .fn-arrow{ stroke:var(--muted); stroke-width:2; marker-end:url(#arrow-funnel); }
+      </style>
+    </defs>
+    <rect x="20" y="70" width="150" height="160" rx="10" class="fn-box" fill="var(--ring1)" opacity="0.55"/>
+    <text x="95" y="155" class="fn-t">型システム</text>
+
+    <line x1="172" y1="150" x2="188" y2="150" class="fn-arrow"/>
+
+    <rect x="190" y="85" width="150" height="130" rx="10" class="fn-box" fill="var(--ring1)" opacity="0.45"/>
+    <text x="265" y="153" class="fn-t">静的解析</text>
+    <text x="265" y="170" class="fn-t" font-weight="400" font-size="11">(lint)</text>
+
+    <line x1="342" y1="150" x2="358" y2="150" class="fn-arrow"/>
+
+    <rect x="360" y="97" width="150" height="106" rx="10" class="fn-box" fill="var(--ring2)" opacity="0.5"/>
+    <text x="435" y="150" class="fn-t">テスト</text>
+    <text x="435" y="167" class="fn-t" font-weight="400" font-size="11">(ユニット/E2E)</text>
+
+    <line x1="512" y1="150" x2="528" y2="150" class="fn-arrow"/>
+
+    <rect x="530" y="107" width="150" height="86" rx="10" class="fn-box" fill="var(--ring3)" opacity="0.45"/>
+    <text x="605" y="153" class="fn-t">AIレビュー</text>
+
+    <line x1="682" y1="150" x2="698" y2="150" class="fn-arrow"/>
+
+    <rect x="700" y="115" width="150" height="70" rx="10" class="fn-box" fill="var(--ring3)" opacity="0.7"/>
+    <text x="775" y="155" class="fn-t">人間レビュー</text>
+  </svg>
+  </div>
+  <figcaption>
+    決定論的なチェック（型・静的解析・テスト）で機械的に検出できる問題を手前で減らすほど、確率的な判断（AIレビュー・人間レビュー）に回る負荷が下がる、という多層防御の考え方。
+    <span class="src">（実践ハーネスエンジニアリング／梶川琢馬、新規プロダクトを高速で生み出すハーネスエンジニアリング／池上涼平、ハーネスエンジニアリング×AI適応開発／神谷亮平）</span>
+  </figcaption>
+</figure>
+
+<p>
+池上涼平は「事前に書かせない（CLAUDE.md／rules）→書きにくくする（権限分離・型）→動かして検出（実DBテスト）→マージ前に止める（CI）→botに1次レビュー（CodeRabbit）→人間レビュー」の6層を運用し、同じ指摘を2度繰り返さないためレビュー指摘をrulesへ書き戻すskillを運用する。神谷亮平は<code>generated/</code>（自動生成・編集禁止）と<code>custom/</code>（AIがビジネスロジックのみ書く・編集許可）を分離し、宣言的SQLスキーマからのコード生成パイプラインで「単一のsource of truth」を保つ。
+</p>
+
+<p>
+Böckelerの整理では、これらの要素は「Computational（決定論的）」と「Inferential（確率論的）」という2つの性質に分けて設計できる（yuuuka経由で紹介）。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表5：Computational（決定論的）とInferential（確率論的）の対比</caption>
+<thead><tr><th>観点</th><th>Computational（決定論的）</th><th>Inferential（確率論的）</th></tr></thead>
+<tbody>
+<tr><td>実行主体</td><td>CPU・高速・信頼性高い</td><td>GPU/NPU・低速・非決定論的</td></tr>
+<tr><td>特徴</td><td>安価に繰り返し実行可能、結果が確実</td><td>意味的判断が可能、非決定論的</td></tr>
+<tr><td>フィードフォワード例</td><td>LSP・型チェッカー、スクリプト</td><td>AGENTS.md・Skills、コーディング規約</td></tr>
+<tr><td>フィードバック例</td><td>テスト・linter・ruff、構造解析・型チェック</td><td>AIコードレビュー、LLM as judge</td></tr>
+</tbody>
+</table>
+</div>
+
+<h4>ハーネステンプレートとステアリングループの実演／仕様駆動開発／スキルファースト／Python環境</h4>
+
+<p>
+nrsのTAKT（OSS）は、ハーネスを「ワークフロー（ステップの有限状態機械）」と「ファセット（プロンプトの部品：Persona／Knowledge／Instruction／Output Contract／Policy）」の組み合わせとして表現し、<code>workflow.yaml</code>とファセットに改善を書き戻すことでハーネステンプレートとして成熟させていく（2.3節参照）。
+</p>
+
+<p>
+Gota（旧「ClaudeCodeで仕様駆動開発を実現するために！」）は、AWS Kiroの仕様駆動開発（Specs／Agent Hooks／Steering）をClaude Codeで再現し、Steering＝CLAUDE.md、Agent Hooks＝Claude Code Hooksという対応関係を示す。渋谷優介は仕様駆動開発を上流工程（要望→要求→要件）にまで拡張し、「What」だけでなく「Why・Why not」までコンテキストに含めることの重要性を提案する（仕様駆動開発を実現する上流工程におけるAIエージェント活用）。吉田真吾は、AWSのAI-DLC（Inception／Construction／Operations）をチーム開発の文脈に接続し、「守破離」モデル（守：基礎トレーニング／破：チームアグリーメント再構築／離：自社ハーネス開発）を示す（チームで実現する高品質・安全なAI駆動開発実践）。
+</p>
+
+<p>
+坂上晴信（TOKIUM）は「業務PJ型」に対し、個人プロジェクトでの検証を通じて「スキルファースト」という別解を示す（スキルファーストで作るAIの自走環境）。やりたいことを全部書き出し、それが全て「スキルの組み合わせ」で実行できるようハーネスを構想し、PR1件ごとに振り返りスキルで自己改善させた結果、<strong>1,753行のMarkdownと200+のハーネス関連ドキュメント・約70件のPR</strong>がほぼ指示なしで生成された。結論は「枯れた技術が相手ならルール・規約ファースト、日々進化し非定型入力もカバーできるAIならスキルファーストが有効」という使い分けである。
+</p>
+
+<p>
+yuuukaは、フィードフォワード（<code>uv venv</code>による環境隔離、<code>uv.lock</code>による依存固定、AGENTS.md）とフィードバック（<code>ruff</code>・<code>pyright</code>・<code>pytest</code>・AIコードレビュー）を組み合わせた具体的なPython環境ハーネスを提案し、自プロジェクトの棚卸しでは「ガイド側は整備済みだがPermissionsのallow/denyやSkills/Subagentsなどセンサー側が手薄」という結果を共有している（Python開発環境にハーネス適用を検討する）。
+</p>
+
+<h3 id="s4-4">4.4 発展的トピック</h3>
+
+<h4>デザインハーネス</h4>
+
+<p>
+r-kagayaは、デザイナー不在のスタートアップでエンジニア＋コーディングエージェントがUIデザインを担う際の課題（「それっぽさ」止まりの判断力欠如、最低基準の不在、人ガチャ・AIガチャ）に対し、<strong>デザインハーネス</strong>という概念を提示する（エンジニアにデザインハーネスを）。AIへの委任には「offloading（判断は自分が持ち、作り方だけAIに渡す）」と「surrender（AIの出力がそのまま出力になる）」の分岐があり、デザインハーネスはoffloadingを実現するものだと位置づける。「“Done” is a claim, not proof（完了しましたは自己申告であり証拠ではない）」という指摘は、ハーネスが成果物を後から採点するのではなく、そこに至る手順・観察・判定・検証のループを事前に規定するものだ、という点を象徴する。
+</p>
+
+<h4>Agent Skillsによるポータブル化</h4>
+
+<p>
+Gotaは、Agent Skillsが2025年10月にAnthropicから発表され、2025年12月18日にOpen Standardとして公開されたことで、Codex・GitHub Copilot Agent・Cursor等が続々対応した経緯を紹介する（Agent Skillsがハーネスの垣根を超える日）。SKILL.md1枚（YAML Frontmatterに<code>name</code>・<code>description</code>）だけで「手順」と「コンテキスト」をエージェント非依存でポータブルに渡せる点が核心であり、Progressive Disclosure（検出→アクティベーション→実行）によりコンテキストを段階的に開示する。特定エージェントへのロックインを避けるため「ハーネスのカスタマイズより先にSkillsで構築する」というリセット提案がなされる一方、Supply Chain Attack・Indirect Prompt Injection・Shadow AIといった特有のセキュリティリスクにも注意が促されている。
+</p>
+
+<h4>マネージド実行基盤（Managed Agents）との違い</h4>
+
+<p>
+西岡は、ハーネス設計の次の段階として「ハーネスを載せるホステッドサービス」＝Managed Agents（meta-harness）を位置づける（ハーネスエンジニアリング入門）。r-kagayaも、モデル・モデルプロバイダーの進化がハーネスの一部を陳腐化させうる可能性に言及し、「モデルやマネージドサービスの進化によって消えづらいレイヤーに投資する」ことを今後の方針として掲げる（ハーネスエンジニアリングにどう向き合うか）。外山は、汎用harnessは構造的に「行政（実行）」までしか担えず、統治（立法・司法）は自社で作るしかないと明確に線引きする（2.4節参照）。
+</p>
+
+<h4>ハーネス自体がプロダクトになる：HaaS</h4>
+
+<p>
+池上涼平は、「AIエージェント＝Model（賢さ）＋Harness（環境）」という等式のもと、モデル自体は汎用LLMを使いながら、周辺のコンテキスト・ツール・UI・安全性を売る<strong>HaaS（Harness as a Service）</strong>という発展的視点を提示する（新規プロダクトを高速で生み出すハーネスエンジニアリング）。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表6：HaaS（Harness as a Service）の分野別プロダクト例</caption>
+<thead><tr><th>分野</th><th>代表的プロダクト</th></tr></thead>
+<tbody>
+<tr><td>コーディング</td><td>Cursor／Copilot／Devin</td></tr>
+<tr><td>レビュー</td><td>CodeRabbit</td></tr>
+<tr><td>デザイン／プロトタイピング</td><td>v0／Bolt.new／Lovable</td></tr>
+<tr><td>業界特化</td><td>Harvey／Hebbia</td></tr>
+<tr><td>業務自動化</td><td>Sierra／Salesforce Agentforce</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>「これからのAIプロダクトの正体は、ハーネス（かも？）」と池上は結ぶ。</p>
+
+<h4>Self-improve／メタハーネスへの萌芽</h4>
+
+<p>
+r-kagayaは、決定論的ステップとエージェント的自由を組み合わせたハイブリッドオーケストレーション（Claude Agent SDK＋TypeScript）を構築し、Braintrustへのログ送信による定量評価基盤の整備、エラー履歴のメモリ化など、ハーネス自体を自動改善する「Self-improve」に挑戦している（ハーネスエンジニアリングにどう向き合うか）。将来的な方向性として、LLM自身が制約を発見しハーネスを生成・改善するMeta-Harness（Stanford）やAutoHarness（Google DeepMind）にも言及されている。
+</p>
+
+<div class="callout blue">
+  <strong>今後の展望として押さえておきたい論点（総まとめ8章より）</strong>
+  <ul class="plain" style="margin-top:0.6rem;">
+    <li>ハーネスだけでは「人間が律速点である」という構造（HITL）は変わらない。真に問うべきは「AI実行をどう統治するか」（外山）。</li>
+    <li>評価・計測（Eval）への投資不足。「ハーネスは効いているかわからない」という難しさ（r-kagaya）。Four Keys／SPACE指標の改善とは別問題（渋谷優介）。</li>
+    <li>ハーネスの対象範囲は開発・テスト工程に偏りがちで、要件定義・運用は一般にスコープ外（渋谷優介）。</li>
+    <li>「作る力」から「見極める力」への価値シフト。ハーネスで開発が速くなった先に、何を作るべきかの判断が新たなボトルネックになる（鈴木和真、tame）。</li>
+    <li>汎用ハーネスと自社ハーネスの境界線。許容できる失敗の幅が狭い領域では、他社の運用をそのまま輸入できない（神谷亮平、吉田真吾の「守破離」）。</li>
+    <li>定義の対立（4.1節）は今後も解消されない可能性が高い（KINOPEE）。</li>
+  </ul>
+</div>
+
+<h2 id="s5">5. 参照資料一覧</h2>
+
+<p><code>参考資料/MD/</code> 配下の27本の登壇資料要約を横断的に参照した（本ページの土台である「ハーネスエンジニアリング総まとめ」に準拠）。</p>
+
+<ol class="plain">
+  <li>AI駆動開発が変える、大規模開発の前提（外山英幸／ビズリーチ）</li>
+  <li>AI駆動で進化する開発プロセス〜クラスメソッドでの実践と成功事例〜（佐藤智樹／クラスメソッド）</li>
+  <li>ハーネスエンジニアリング入門（西岡賢一郎／DataInformed）</li>
+  <li>Claude Codeとハーネスについて考えてみる（Oikon）</li>
+  <li>ClaudeCodeで仕様駆動開発を実現するために！（Gota）</li>
+  <li>仕様通り動くの先へ。Claude Codeで「使える」を検証する（gota）</li>
+  <li>作る力から、見極める力へ〜AI時代に広がるエンジニアの価値と役割〜（鈴木和真／マイベスト）</li>
+  <li>コンテキスト/ハーネスエンジニアリングの現在（Hirosato Gamo／Microsoft）</li>
+  <li>"スキルファースト"で作るAIの自走環境（坂上晴信／TOKIUM）</li>
+  <li>チームで実現する高品質・安全なAI駆動開発実践（吉田真吾／ジェネラティブエージェンツ）</li>
+  <li>ハーネスエンジニアリングの概要と設計思想（渋谷優介／Algomatic）</li>
+  <li>ハーネスエンジニアリングをやりすぎた話〜そのハーネスは解体された〜（Gota）</li>
+  <li>ハーネスエンジニアリングとは？〜5つの流派：実装が先、命名は後〜（KINOPEE）</li>
+  <li>仕様駆動開発を実現する上流工程におけるAIエージェント活用（渋谷優介／Algomatic）</li>
+  <li>実践ハーネスエンジニアリング（梶川琢馬／TechBowl）</li>
+  <li>新規プロダクトを高速で生み出すハーネスエンジニアリング（池上涼平／グッドパッチ）</li>
+  <li>ハーネスエンジニアリング×AI適応開発（神谷亮平／Shunkan AI）</li>
+  <li>実践ハーネスエンジニアリング：ステアリングループを実例から読み解く（nrs／成瀬允宣）</li>
+  <li>AIエージェント時代のハーネスエンジニアリングとは（ため／為安圭介）</li>
+  <li>AIエージェント時代のハーネスエンジニアリング Claude Code実装編（ため／為安圭介）</li>
+  <li>ハーネスエンジニアリングにどう向き合うか〜ルールファイルを超えて開発プロセスを設計する〜（r-kagaya）</li>
+  <li>エンジニアにデザインハーネスを〜デザインプロセスを規定するためのハーネス〜（r-kagaya）</li>
+  <li>Agent Skillsがハーネスの垣根を超える日（Gota）</li>
+  <li>Copilot／Claude Code両方で使えるスキル・ハーネスの紹介（平野孝明）</li>
+  <li>Python開発環境にハーネス適用を検討する（yuuuka／PyLadies Tokyo）</li>
+  <li>目的ファーストのハーネス設計〜ハーネスの変更容易性を高めるための優先順位〜（Gota）</li>
+  <li>ハーネスエンジニアリング解説（clshinji）</li>
+</ol>
+
+<p class="src-line">
+本ページは <code>ハーネスエンジニアリング総まとめ.md</code>（27資料横断統合ドキュメント）を主軸に、必要に応じて <code>参考資料/MD/</code> 配下の個別要約を参照して図解・具体例の裏取りを行い作成した。内容はMDに記載された事実の範囲に忠実であり、記載のない事実の創作は行っていない。
+</p>
+
+<p><a class="backtotop" href="#s1">目次に戻る</a></p>
+
+</main>
+
+<footer>
+  <p>本HTMLは「ハーネスエンジニアリング総まとめ.md」および「参考資料/MD/」配下の個別要約を土台に作成した、完全自己完結型のビジュアル解説資料である（外部CDN・外部フォント・外部画像への依存なし。図はすべてインラインSVG）。</p>
+</footer>
+
+</body>
+</html>
