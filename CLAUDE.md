@@ -8,12 +8,14 @@
 |---|---|
 | `CC研_運営/` | 研究会の運営・進め方・To-Be/ギャップ資料（公式寄りの土台文書） |
 | `personal_doc/` | 個人の整理メモ・登壇資料サマリー。`分科会インセプションデッキ/` に4分科会（①AI-Ready基盤 ②AI駆動開発プロセス ③品質保証 ④人と組織）の編成資料とデッキ |
-| `参考資料/` | 登壇スライド等のPDF原本 |
-| `参考資料/MD/` | 参考資料PDFの構造化Markdown要約（PDFと同名） |
+| `参考資料/` | 登壇スライド等のPDF原本（出典ごとにサブディレクトリで管理） |
+| `参考資料/AWS Summit Japan 2026/` | AWS Summit Japan 2026 のセッション資料PDF、配下 `MD/` に同PDFの構造化Markdown要約（PDFと同名） |
+| `参考資料/speakers Deck/` | Speaker Deck から収集した登壇資料PDF、配下 `MD/` に同PDFの構造化Markdown要約（PDFと同名） |
+| `参考資料/summary/` | 出典を横断したまとめ資料 |
 
 ## 作業規約
 
-- **PDF→Markdown変換**: `参考資料/` のPDFをMD化する際は `pdf-to-markdown` skill の規約に従う（出力は `参考資料/MD/` に同名 `.md`、既存は再作成しない、構造化要約スタイル）。
+- **PDF→Markdown変換**: `参考資料/` のPDFをMD化する際は `pdf-to-markdown` skill の規約に従う（出力は当該PDFと同じディレクトリの `MD/` サブディレクトリに同名 `.md`、既存は再作成しない、構造化要約スタイル）。
 - **コミット/プッシュ**: ユーザーは作業内容の事前確認を求めない。まとまった単位で**自律的に commit & push してよい**。コミットは新規作成（amendしない）、メッセージ末尾に `Co-Authored-By: Claude ...` トレーラを付ける。リモートは `origin`（GitHub: Ponthai-project/ccken）、デフォルトブランチ `main`。
 
 ## 環境メモ（Windows）
