@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-DLC と ハーネス — AWS Summit Japan 2026 セッション資料 14 件の横断整理</title>
+<style>
+  :root{
+    --bg:#faf8f5;
+    --bg-alt:#f1ece2;
+    --fg:#2b2621;
+    --muted:#6b6259;
+    --border:#ddd3c0;
+    --card:#ffffff;
+    --accent:#a8622f;
+    --accent-dark:#7a431c;
+    --accent2:#3b5a7a;
+    --accent2-dark:#28405a;
+    --good:#3f7d4f;
+    --warn:#a5433a;
+    --code-bg:#efe9dc;
+    --layer-a:#dbe6ee;
+    --layer-b:#ecdfcd;
+    --stripe:#f4efe6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1b1815;
+      --bg-alt:#242019;
+      --fg:#eae4da;
+      --muted:#b5ab9c;
+      --border:#4a4136;
+      --card:#221e19;
+      --accent:#d68a4c;
+      --accent-dark:#f0a868;
+      --accent2:#7ea3c9;
+      --accent2-dark:#a8c6e6;
+      --good:#6fbf83;
+      --warn:#e08a80;
+      --code-bg:#2b241c;
+      --layer-a:#28323d;
+      --layer-b:#3a3226;
+      --stripe:#231f19;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html,body{
+    background:var(--bg);
+    color:var(--fg);
+    margin:0;
+    padding:0;
+    overflow-x:hidden;
+  }
+  body{
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo, sans-serif;
+    line-height:1.85;
+    font-size:16px;
+  }
+  main{
+    max-width:960px;
+    margin:0 auto;
+    padding: 1.2rem 1.2rem 4rem;
+  }
+  header.hero{
+    max-width:960px;
+    margin:0 auto;
+    padding: 2.4rem 1.2rem 1rem;
+  }
+  h1{
+    font-size:1.75rem;
+    margin:0 0 0.6rem;
+    line-height:1.5;
+  }
+  h1 .sub{
+    display:block;
+    font-size:1rem;
+    color:var(--muted);
+    font-weight:500;
+    margin-top:0.5rem;
+  }
+  p.lead{
+    font-size:1.05rem;
+    color:var(--fg);
+    max-width:46em;
+  }
+  h2{
+    font-size:1.45rem;
+    margin-top:3rem;
+    padding-bottom:0.5rem;
+    border-bottom:3px solid var(--accent);
+    scroll-margin-top: 1rem;
+  }
+  h3{
+    font-size:1.15rem;
+    margin-top:2.2rem;
+    color:var(--fg);
+    border-left:6px solid var(--accent2);
+    padding-left:0.6rem;
+    scroll-margin-top: 1rem;
+  }
+  h4{
+    font-size:1rem;
+    margin-top:1.6rem;
+  }
+  a{ color:var(--accent2-dark); }
+  a:hover{ color:var(--accent); }
+
+  nav.toc{
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:1.2rem 1.4rem;
+    margin-top:1.6rem;
+  }
+  nav.toc p{ margin:0 0 0.6rem; font-weight:700; }
+  nav.toc ol{
+    margin:0;
+    padding-left:1.3rem;
+    columns: 2;
+    column-gap: 2rem;
+  }
+  nav.toc li{ margin-bottom:0.35rem; break-inside: avoid; font-size:0.95rem; }
+  nav.toc ol ol{ columns:1; padding-left:1.1rem; margin-top:0.2rem; }
+
+  figure{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:1rem 1rem 0.9rem;
+    margin:1.8rem 0;
+  }
+  figure .svgwrap{
+    width:100%;
+    overflow-x:auto;
+  }
+  figure svg{
+    display:block;
+    width:100%;
+    height:auto;
+    min-width:520px;
+  }
+  figcaption{
+    font-size:0.92rem;
+    color:var(--muted);
+    margin-top:0.7rem;
+    line-height:1.7;
+  }
+  figcaption .src{
+    display:block;
+    margin-top:0.3rem;
+    font-size:0.83rem;
+  }
+
+  .table-scroll{
+    overflow-x:auto;
+    margin:1.2rem 0;
+    border:1px solid var(--border);
+    border-radius:10px;
+  }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:640px;
+    font-size:0.92rem;
+  }
+  caption{
+    caption-side: top;
+    text-align:left;
+    font-weight:700;
+    padding: 0.6rem 0.8rem 0.2rem;
+    color:var(--fg);
+  }
+  th, td{
+    border:1px solid var(--border);
+    padding:0.55rem 0.75rem;
+    text-align:left;
+    vertical-align:top;
+  }
+  th{ background:var(--bg-alt); }
+  tr:nth-child(even) td{ background: var(--stripe); }
+
+  .callout{
+    border-left:5px solid var(--accent);
+    background:var(--bg-alt);
+    padding:0.9rem 1.1rem;
+    border-radius:0 10px 10px 0;
+    margin:1.3rem 0;
+  }
+  .callout.blue{ border-left-color:var(--accent2); }
+  .callout.warn{ border-left-color:var(--warn); }
+  .callout p:first-child{ margin-top:0; }
+  .callout p:last-child{ margin-bottom:0; }
+  .callout .ttl{
+    display:block;
+    font-weight:700;
+    margin-bottom:0.4rem;
+    color:var(--fg);
+  }
+  .quote{ font-style:italic; }
+
+  .readme{
+    border:2px solid var(--warn);
+    background:var(--bg-alt);
+    border-radius:14px;
+    padding:1.2rem 1.4rem;
+    margin-top:1.6rem;
+  }
+  .readme .ttl{
+    display:block;
+    font-weight:700;
+    font-size:1.05rem;
+    color:var(--warn);
+    margin-bottom:0.6rem;
+  }
+  .readme ul{ margin:0; padding-left:1.3rem; }
+  .readme li{ margin-bottom:0.5rem; }
+
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+    gap:1rem;
+    margin:1.4rem 0;
+  }
+  .card{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:1rem 1.1rem;
+    background:var(--card);
+  }
+  .card h4{ margin-top:0; }
+  .card .num{
+    display:inline-block;
+    width:1.6em; height:1.6em;
+    line-height:1.6em;
+    text-align:center;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    font-weight:700;
+    margin-right:0.4em;
+    font-size:0.9em;
+  }
+
+  .src-line{
+    font-size:0.85rem;
+    color:var(--muted);
+  }
+
+  code, .code{
+    font-family: ui-monospace, Consolas, "SF Mono", monospace;
+    background:var(--code-bg);
+    padding:0.1em 0.35em;
+    border-radius:4px;
+    font-size:0.9em;
+  }
+
+  footer{
+    max-width:960px;
+    margin:2rem auto 3rem;
+    padding: 1.2rem;
+    color:var(--muted);
+    font-size:0.85rem;
+    border-top:1px solid var(--border);
+  }
+
+  .backtotop{
+    display:inline-block;
+    margin-top:0.5rem;
+    font-size:0.85rem;
+  }
+
+  ul.plain{ padding-left:1.4rem; }
+  ul.plain li{ margin-bottom:0.4rem; }
+  ol.plain{ padding-left:1.4rem; }
+  ol.plain li{ margin-bottom:0.4rem; }
+
+  .interp{
+    display:inline-block;
+    font-size:0.76rem;
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:0.05em 0.5em;
+    margin-left:0.35em;
+    color:var(--muted);
+    font-weight:700;
+    white-space:nowrap;
+  }
+
+  .pillbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    margin: 0.8rem 0 1.2rem;
+  }
+  .pill{
+    background:var(--bg-alt);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:0.25rem 0.8rem;
+    font-size:0.85rem;
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>AI-DLC と ハーネス
+    <span class="sub">— AWS Summit Japan 2026 セッション資料 14 件の横断整理 —</span>
+  </h1>
+  <p class="lead">
+    AI駆動開発ライフサイクル（AI-DLC）の全体像、ハーネスの構成要素、エンタープライズにおける実装事例を、AWS Summit Japan 2026 の公開セッション資料 14 件のみを典拠として横断整理したものである。
+  </p>
+
+  <div class="readme" id="readme">
+    <span class="ttl">本資料の読み方</span>
+    <ul>
+      <li>本資料は AWS Summit Japan 2026 の公開セッション資料 <strong>14 件のみ</strong>を典拠とする。各記述にはセッションID（例：AIM221）を付し、原典に当たれるようにしている。</li>
+      <li><strong>ハーネスに言及する資料は14件中3件のみ</strong>（AIM213／AIM203／PRT213-S）である。第2部はこの3件が全ての土台であり、業界一般のハーネス論を代表するものではない点に留意されたい。</li>
+      <li>本資料に登場する<strong>数値は各社の自己申告値</strong>であり、測定条件・対象範囲が異なるため単純比較はできない。</li>
+      <li>AIM146（アスクル）・PRT213-S（KDDIアイレット）は<strong>図版主体の資料</strong>であり、テキストとして読み取れた情報が限られる。該当箇所ではその旨を明記している。</li>
+    </ul>
+  </div>
+
+  <nav class="toc" aria-label="目次">
+    <p>目次</p>
+    <ol>
+      <li><a href="#part1">第1部　AI-DLC とは何か</a>
+        <ol>
+          <li><a href="#p1-1">1-1. 出発点：AIを入れたのに速くならない</a></li>
+          <li><a href="#p1-2">1-2. なぜ二つのアプローチは行き詰まったか</a></li>
+          <li><a href="#p1-3">1-3. 定義</a></li>
+          <li><a href="#p1-4">1-4. 中核サイクル</a></li>
+          <li><a href="#p1-5">1-5. 3フェーズ・9ステージ</a></li>
+          <li><a href="#p1-6">1-6. 人間側の作法：モブワーク</a></li>
+          <li><a href="#p1-7">1-7. AI-DLC Workflows</a></li>
+          <li><a href="#p1-8">1-8. Operationフェーズ</a></li>
+          <li><a href="#p1-9">1-9. Lessons Learned：9つの教訓</a></li>
+          <li><a href="#p1-10">1-10. 影：AI-DLCだけでは解けない問題</a></li>
+        </ol>
+      </li>
+      <li><a href="#part2">第2部　ハーネスとは何か、その構成要素</a>
+        <ol>
+          <li><a href="#p2-1">2-1. 前置き：この14件におけるハーネスの位置</a></li>
+          <li><a href="#p2-2">2-2. AIM213：Agent = Model + Harness</a></li>
+          <li><a href="#p2-3">2-3. AIM203：ユーザーハーネス</a></li>
+          <li><a href="#p2-4">2-4. PRT213-S：運用管理の対象としてのハーネス</a></li>
+          <li><a href="#p2-5">2-5. 統合：ハーネスの構成要素</a></li>
+          <li><a href="#p2-6">2-6. なぜハーネスが要るのか</a></li>
+        </ol>
+      </li>
+      <li><a href="#part3">第3部　エンタープライズ事例と、ハーネスの工夫</a>
+        <ol>
+          <li><a href="#p3-1">3-1. 事例の横断比較</a></li>
+          <li><a href="#p3-2">3-2. 二つの道</a></li>
+          <li><a href="#p3-3">3-3. 東京海上日動システムズ</a></li>
+          <li><a href="#p3-4">3-4. デジタル庁</a></li>
+          <li><a href="#p3-5">3-5. アスクル</a></li>
+          <li><a href="#p3-6">3-6. トランスコスモス</a></li>
+          <li><a href="#p3-7">3-7. KDDIアイレット</a></li>
+          <li><a href="#p3-8">3-8. 事例から読み取れるハーネスの工夫</a></li>
+        </ol>
+      </li>
+      <li><a href="#musubi">結び</a></li>
+      <li><a href="#refs">参照資料一覧</a></li>
+    </ol>
+  </nav>
+</header>
+
+<main>
+
+<h2 id="part1">第1部　AI-DLC とは何か</h2>
+
+<h3 id="p1-1">1-1. 出発点：AIを入れたのに速くならない</h3>
+
+<p>
+AI-DLCという方法論は、「AIツールを導入したのに、思ったほど速くならない」という広く共有された違和感から出発している。複数のセッションが、この違和感を裏づける調査を引用する。
+</p>
+
+<ul class="plain">
+  <li>Thoughtworks Insights：AIをソフトウェア開発に導入しても生産性向上は<strong>10〜15%程度</strong>にとどまる（AIM221）</li>
+  <li>METR.org（2025年初頭）：<strong>開発者がAIツールを使うと、使わない場合より19%時間がかかる</strong>。しかも本人は「20%速くなった」と認識している（AIM221／AIM223）</li>
+  <li>McKinsey 2025：対象組織の65%が生成AIを継続使用するも、<strong>EBITに貢献した企業は5%未満</strong>（AIM223）</li>
+  <li>Bain 2025 / DORA 2025：個人生産性の向上とデリバリー安定性にはトレードオフがある（AIM223）</li>
+</ul>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 300" role="img" aria-labelledby="svg1-title svg1-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg1-title">生産性のパラドックスを示す4つの調査結果</title>
+    <desc id="svg1-desc">Thoughtworks・METR・McKinsey・DORA/Bainの4つの調査結果を並べ、AI導入だけでは生産性が上がらないことを示す図。</desc>
+    <defs>
+      <style>
+        .p1-card{ fill:var(--card); stroke:var(--border); stroke-width:2; }
+        .p1-card-hi{ fill:var(--bg-alt); stroke:var(--warn); stroke-width:3; }
+        .p1-title{ font-size:13px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .p1-num{ font-size:27px; font-weight:700; text-anchor:middle; }
+        .p1-sub{ font-size:11px; fill:var(--muted); text-anchor:middle; }
+        .p1-gap{ font-size:11.5px; font-weight:700; fill:var(--accent2-dark); text-anchor:middle; }
+      </style>
+    </defs>
+
+    <rect x="20" y="30" width="190" height="210" rx="12" class="p1-card"/>
+    <text x="115" y="55" class="p1-title">Thoughtworks</text>
+    <text x="115" y="71" class="p1-title">Insights</text>
+    <text x="115" y="118" class="p1-num" fill="var(--accent2-dark)">10〜15%</text>
+    <text x="115" y="150" class="p1-sub">AI導入による生産性向上は</text>
+    <text x="115" y="167" class="p1-sub">この程度にとどまる</text>
+
+    <rect x="230" y="30" width="190" height="210" rx="12" class="p1-card-hi"/>
+    <text x="325" y="52" class="p1-title">METR.org</text>
+    <text x="325" y="68" class="p1-title">（2025年初頭）</text>
+    <text x="325" y="108" class="p1-num" fill="var(--warn)">▲19%</text>
+    <text x="325" y="130" class="p1-sub">AI使用時、使わない場合</text>
+    <text x="325" y="146" class="p1-sub">より19%時間がかかる</text>
+    <text x="325" y="169" class="p1-gap">本人は「+20%速い」と認識</text>
+    <text x="325" y="186" class="p1-sub">（この認識ギャップが本資料の掴み）</text>
+
+    <rect x="440" y="30" width="190" height="210" rx="12" class="p1-card"/>
+    <text x="535" y="60" class="p1-title">McKinsey 2025</text>
+    <text x="535" y="118" class="p1-num" fill="var(--accent2-dark)">5%未満</text>
+    <text x="535" y="150" class="p1-sub">65%が生成AI継続使用も</text>
+    <text x="535" y="167" class="p1-sub">EBIT貢献企業は5%未満</text>
+
+    <rect x="650" y="30" width="190" height="210" rx="12" class="p1-card"/>
+    <text x="745" y="52" class="p1-title">DORA 2025 /</text>
+    <text x="745" y="68" class="p1-title">Bain 2025</text>
+    <text x="745" y="122" class="p1-num" font-size="20" fill="var(--accent2-dark)">トレードオフ</text>
+    <text x="745" y="152" class="p1-sub">個人生産性の向上と</text>
+    <text x="745" y="169" class="p1-sub">デリバリー安定性の間に</text>
+
+    <text x="450" y="278" text-anchor="middle" font-size="17" font-weight="700" fill="var(--accent)">「ツールを入れただけでは、速くならない」</text>
+  </svg>
+  </div>
+  <figcaption>
+    4つの調査が共通して示すのは、AIツールの単純導入だけでは生産性は上がらないという事実。特にMETRの調査は、実際には19%遅くなっているにもかかわらず、本人は20%速くなったと認識しているという落差を示しており、この認識ギャップこそがAI-DLCという方法論が必要とされる出発点になっている。
+    <span class="src">（典拠：AIM221／AIM223）</span>
+  </figcaption>
+</figure>
+
+<p>
+AIM221 はこれを<strong>「AIソフトウェア生産性のパラドックス」</strong>と呼ぶ。AIM223 は同じ現象を<strong>「AI活用のパラドックス」</strong>と呼び、現場の感覚として「個人単位では向上しているがプロジェクト全体は向上していない」「速くなったと感じているが実際は遅くなっている」「コード作成は速くなったが品質の相談が増えた」の3点を挙げる。
+</p>
+
+<h3 id="p1-2">1-2. なぜ二つのアプローチは行き詰まったか</h3>
+
+<p>
+AIM221 は、現場が採ってきた2つのアプローチを対比し、どちらも行き詰まると論じる。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表：AI-Managed と AI-Assisted の対比（AIM221）</caption>
+<thead><tr><th></th><th>AI-Managed</th><th>AI-Assisted</th></tr></thead>
+<tbody>
+<tr><td>考え方</td><td>AIが自律的に構築・保守し、人間の関与は最小限またはゼロ</td><td>開発者が知的な重労働を担い、AIを狭いタスク（要件・設計・実装の一部）に適用</td></tr>
+<tr><td>課題</td><td>「めったに機能しない」「信頼できない」「説明できない」「開発者がコードと“つながらない”」</td><td>SDLC全体で見るとアジリティ向上は限定的。「コーディングで節約した時間はSDLCの他の部分でまだ失われている」</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+AI-DLC は、この二択のどちらでもない第三の道として提示される。要点は<strong>AIを開発プロセスの中心的な協力者に位置付ける</strong>（AIM222）一方で、<strong>最終的な監督責任は人間が保持する</strong>（AIM221／AIM223）という組み合わせにある。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 400" role="img" aria-labelledby="svg2-title svg2-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg2-title">AI-Managed・AI-Assisted・AI-DLCの三項対比</title>
+    <desc id="svg2-desc">人の関与がゼロに近いAI-Managed、人が重労働を担うAI-Assisted、AIを中心的協力者としつつ監督責任は人間が持つAI-DLCの3方式を比較する図。</desc>
+    <defs>
+      <style>
+        .c2-box{ fill:var(--bg-alt); stroke:var(--border); stroke-width:2; }
+        .c2-box-hi{ fill:var(--bg-alt); stroke:var(--accent); stroke-width:3; }
+        .c2-lbl{ font-size:10.5px; fill:var(--muted); text-anchor:middle; }
+        .c2-title{ font-size:16px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .c2-title-hi{ font-size:16px; font-weight:700; fill:var(--accent); text-anchor:middle; }
+        .c2-h{ font-size:12px; font-weight:700; fill:var(--fg); }
+        .c2-b{ font-size:11px; fill:var(--muted); }
+      </style>
+    </defs>
+
+    <text x="150" y="18" class="c2-lbl" font-weight="700">行き詰まった道</text>
+    <text x="745" y="18" class="c2-lbl" font-weight="700">第三の道</text>
+
+    <rect x="20" y="30" width="260" height="340" rx="12" class="c2-box"/>
+    <text x="150" y="65" class="c2-title">AI-Managed</text>
+    <text x="40" y="100" class="c2-h">考え方</text>
+    <text x="40" y="122" class="c2-b">人の関与は最小限〜ゼロ。</text>
+    <text x="40" y="140" class="c2-b">AIが自律的に構築・保守</text>
+    <line x1="40" y1="160" x2="260" y2="160" stroke="var(--border)" stroke-width="1.5"/>
+    <text x="40" y="185" class="c2-h">課題</text>
+    <text x="40" y="207" class="c2-b">「めったに機能しない」</text>
+    <text x="40" y="225" class="c2-b">「信頼できない」</text>
+    <text x="40" y="243" class="c2-b">「説明できない」</text>
+    <text x="40" y="261" class="c2-b">「開発者がコードと</text>
+    <text x="40" y="279" class="c2-b">つながらない」</text>
+
+    <rect x="300" y="30" width="260" height="340" rx="12" class="c2-box"/>
+    <text x="430" y="65" class="c2-title">AI-Assisted</text>
+    <text x="320" y="100" class="c2-h">考え方</text>
+    <text x="320" y="122" class="c2-b">人が知的重労働を担い、</text>
+    <text x="320" y="140" class="c2-b">AIは狭いタスクに適用</text>
+    <line x1="320" y1="160" x2="540" y2="160" stroke="var(--border)" stroke-width="1.5"/>
+    <text x="320" y="185" class="c2-h">課題</text>
+    <text x="320" y="207" class="c2-b">SDLC全体では</text>
+    <text x="320" y="225" class="c2-b">アジリティ向上は限定的。</text>
+    <text x="320" y="247" class="c2-b">節約した時間は</text>
+    <text x="320" y="265" class="c2-b">他の部分でまだ失われる</text>
+
+    <rect x="600" y="30" width="280" height="340" rx="12" class="c2-box-hi"/>
+    <text x="740" y="65" class="c2-title-hi">AI-DLC</text>
+    <text x="620" y="100" class="c2-h">考え方</text>
+    <text x="620" y="122" class="c2-b">AIを中心的な協力者に、</text>
+    <text x="620" y="140" class="c2-b">監督責任は人間が保持</text>
+    <line x1="620" y1="160" x2="860" y2="160" stroke="var(--border)" stroke-width="1.5"/>
+    <text x="620" y="185" class="c2-h">要点</text>
+    <text x="620" y="210" class="c2-b" fill="var(--accent)" font-weight="700">プロセス全体を</text>
+    <text x="620" y="228" class="c2-b" fill="var(--accent)" font-weight="700">AIネイティブに</text>
+  </svg>
+  </div>
+  <figcaption>
+    AI-Managed（人の関与がほぼゼロ）とAI-Assisted（AIは狭いタスクのみ）はいずれも行き詰まりを見せる中、AI-DLCはAIを中心的な協力者としつつ最終的な監督責任は人間が保持するという組み合わせで、第三の道として提示されている。
+    <span class="src">（典拠：AIM221／AIM222）</span>
+  </figcaption>
+</figure>
+
+<h3 id="p1-3">1-3. 定義</h3>
+
+<div class="callout">
+  <span class="quote">「ツール、ロール、セレモニーを整合させ、複雑で大規模なシステム構築に対応できる、チームのためのAIネイティブな方法論」</span>
+  <div class="src-line">（AIM221）</div>
+</div>
+
+<p>
+DVT452 はこれを「大規模で複雑なシステム構築において、ツール・役割・プロセスが最適に整合するように設計されたAIネイティブな開発方法論」と表現する。AIM223 は「AIが開発プロセスを計画・タスク分解・アーキテクチャ提案などを通じて制御し、開発者は検証・意思決定・監督の最終的な責任を保持する」と噛み砕く。
+</p>
+
+<p>
+<strong>方法論であって、ツールではない点</strong>が重要である。AIM222 は本セッションで「AIエージェントによる全自動開発」は話さないと明言している。
+</p>
+
+<h3 id="p1-4">1-4. 中核サイクル：プラン ⇨ レビュー ⇨ 実行 ⇨ レビュー</h3>
+
+<p>
+AI-DLC の全てを貫く構造がこのサイクルである（AIM221／AIM222／DVT452 が共通して提示する）。
+</p>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 800 680" role="img" aria-labelledby="svg3-title svg3-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg3-title">中核サイクル：プラン⇨レビュー⇨実行⇨レビュー</title>
+    <desc id="svg3-desc">人とAIが交互に手番を持ちながら計画・レビュー・実行を繰り返す7ステップの円環フロー図。人の手番は青系、AIの手番は暖色系で色分けしている。</desc>
+    <defs>
+      <marker id="arrow-cyc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+      </marker>
+      <style>
+        .cy-human{ fill:var(--layer-a); stroke:var(--accent2); stroke-width:2; }
+        .cy-ai{ fill:var(--layer-b); stroke:var(--accent); stroke-width:2; }
+        .cy-txt{ font-size:12.5px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .cy-arrow{ stroke:var(--muted); stroke-width:2; fill:none; marker-end:url(#arrow-cyc); }
+        .cy-center{ font-size:15px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .cy-center-s{ font-size:11px; fill:var(--muted); text-anchor:middle; }
+      </style>
+    </defs>
+
+    <text x="400" y="20" text-anchor="middle" font-size="13" fill="var(--muted)">人とAIが交互に手番を持つ7ステップの反復サイクル</text>
+
+    <path class="cy-arrow" d="M428.6,95.5 Q530.2,79.7 581.1,168.9"/>
+    <path class="cy-arrow" d="M616.8,213.7 Q692.5,283.3 654.4,378.7"/>
+    <path class="cy-arrow" d="M641.7,434.5 Q634.5,537.1 536.2,566.8"/>
+    <path class="cy-arrow" d="M484.6,591.7 Q400,650 315.4,591.7"/>
+    <path class="cy-arrow" d="M263.8,566.8 Q165.5,537.1 158.3,434.5"/>
+    <path class="cy-arrow" d="M145.6,378.7 Q107.5,283.3 183.2,213.7"/>
+    <path class="cy-arrow" d="M219,168.9 Q269.8,79.7 371.4,95.5"/>
+
+    <rect x="315" y="70" width="170" height="60" rx="12" class="cy-human"/>
+    <text x="400" y="94" class="cy-txt">① 人が意図・企画を渡す</text>
+    <text x="400" y="112" class="cy-txt" font-size="10.5" font-weight="400" fill="var(--muted)">（人）</text>
+
+    <rect x="510" y="164" width="170" height="60" rx="12" class="cy-ai">
+    </rect>
+    <text x="595" y="188" class="cy-txt">② AIが計画を作成</text>
+    <text x="595" y="206" class="cy-txt" font-size="10.5" font-weight="400" fill="var(--muted)">（AI）</text>
+
+    <rect x="558" y="375" width="170" height="60" rx="12" class="cy-human"/>
+    <text x="643" y="399" class="cy-txt">③ 人が計画をレビュー</text>
+    <text x="643" y="417" class="cy-txt" font-size="10.5" font-weight="400" fill="var(--muted)">（人）</text>
+
+    <rect x="423" y="545" width="170" height="60" rx="12" class="cy-ai"/>
+    <text x="508" y="569" class="cy-txt">④ AIが計画を修正</text>
+    <text x="508" y="587" class="cy-txt" font-size="10.5" font-weight="400" fill="var(--muted)">（AI）</text>
+
+    <rect x="206" y="545" width="171" height="60" rx="12" class="cy-human"/>
+    <text x="291.5" y="565" class="cy-txt">⑤ 人が修正計画を</text>
+    <text x="291.5" y="583" class="cy-txt">レビュー・承認（人）</text>
+
+    <rect x="71" y="375" width="171" height="60" rx="12" class="cy-ai"/>
+    <text x="156" y="399" class="cy-txt">⑥ AIが計画を実行</text>
+    <text x="156" y="417" class="cy-txt" font-size="10.5" font-weight="400" fill="var(--muted)">（AI）</text>
+
+    <rect x="119" y="164" width="171" height="60" rx="12" class="cy-human"/>
+    <text x="204.5" y="188" class="cy-txt">⑦ 人が結果をレビュー</text>
+    <text x="204.5" y="206" class="cy-txt" font-size="10.5" font-weight="400" fill="var(--muted)">（人）</text>
+
+    <text x="400" y="345" class="cy-center">プラン ⇨ レビュー ⇨</text>
+    <text x="400" y="365" class="cy-center">実行 ⇨ レビュー</text>
+    <text x="400" y="390" class="cy-center-s">①→⑦を反復するのが本体</text>
+    <rect x="330" y="405" width="14" height="14" class="cy-human"/>
+    <text x="352" y="416" class="cy-center-s" text-anchor="start">人の手番</text>
+    <rect x="430" y="405" width="14" height="14" class="cy-ai"/>
+    <text x="452" y="416" class="cy-center-s" text-anchor="start">AIの手番</text>
+  </svg>
+  </div>
+  <figcaption>
+    「人が意図・企画を渡す→AIが計画を作成→人が計画をレビュー→AIが計画を修正→人が修正計画をレビュー・承認→AIが計画を実行→人が結果をレビュー」の反復こそがAI-DLCの本体である。DVT452 は、Operationフェーズもこれと同一の構造だと指摘する。すなわち「AIが能動的に分析→推奨アクションの提案と実行→人間が検証／承認」は、このサイクルの運用版にほかならない。
+    <span class="src">（典拠：AIM221／AIM222／DVT452）</span>
+  </figcaption>
+</figure>
+
+<h3 id="p1-5">1-5. 3フェーズ・9ステージ</h3>
+
+<p>
+AI-DLC は<strong>Inception（着想）→ Construction（構築）→ Operation（運用）</strong>の3フェーズからなる。各ステージが次のステージのためのより豊かなコンテキストを構築する「適応的」な流れになっている（AIM221）。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表：AI-DLC の3フェーズ・9ステージ（AIM221）</caption>
+<thead><tr><th>フェーズ</th><th>ステージ</th></tr></thead>
+<tbody>
+<tr><td>Inception</td><td>1. 既存コードのコンテキストを構築<br>2. ユーザーストーリーで意図を明確化<br>3. 作業単位で計画<br>4. ドメインモデル（コンポーネントモデル）</td></tr>
+<tr><td>Construction</td><td>5. アーキテクチャコンポーネントを追加<br>6. コードとテストを生成<br>7. IaCでデプロイしてテスト</td></tr>
+<tr><td>Operation</td><td>8. IaCで本番環境へデプロイ<br>9. インシデントを管理</td></tr>
+</tbody>
+</table>
+</div>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 940 400" role="img" aria-labelledby="svg4-title svg4-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg4-title">AI-DLCの3フェーズ・9ステージ</title>
+    <desc id="svg4-desc">Inception・Construction・Operationの3フェーズを矢印で連結し、各フェーズ内のステージを列挙した図。</desc>
+    <defs>
+      <marker id="arrow-ph" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+      </marker>
+      <style>
+        .ph-box{ fill:var(--card); stroke:var(--accent2); stroke-width:2; }
+        .ph-head{ fill:var(--accent2); }
+        .ph-headtxt{ font-size:15px; font-weight:700; fill:#fff; text-anchor:middle; }
+        .ph-stage{ font-size:11.5px; fill:var(--fg); }
+        .ph-arrow{ stroke:var(--muted); stroke-width:2.5; marker-end:url(#arrow-ph); }
+      </style>
+    </defs>
+
+    <rect x="20" y="20" width="280" height="360" rx="12" class="ph-box"/>
+    <rect x="20" y="20" width="280" height="46" rx="12" class="ph-head"/>
+    <rect x="20" y="44" width="280" height="22" class="ph-head"/>
+    <text x="160" y="49" class="ph-headtxt">Inception（着想）</text>
+    <text x="40" y="100" class="ph-stage">① 既存コードのコンテキストを</text>
+    <text x="40" y="118" class="ph-stage">　構築</text>
+    <text x="40" y="150" class="ph-stage">② ユーザーストーリーで</text>
+    <text x="40" y="168" class="ph-stage">　意図を明確化</text>
+    <text x="40" y="200" class="ph-stage">③ 作業単位で計画</text>
+    <text x="40" y="232" class="ph-stage">④ ドメインモデル</text>
+    <text x="40" y="250" class="ph-stage">　（コンポーネントモデル）</text>
+
+    <line x1="300" y1="200" x2="336" y2="200" class="ph-arrow"/>
+
+    <rect x="340" y="20" width="260" height="360" rx="12" class="ph-box"/>
+    <rect x="340" y="20" width="260" height="46" rx="12" class="ph-head"/>
+    <rect x="340" y="44" width="260" height="22" class="ph-head"/>
+    <text x="470" y="49" class="ph-headtxt">Construction（構築）</text>
+    <text x="360" y="100" class="ph-stage">⑤ アーキテクチャ</text>
+    <text x="360" y="118" class="ph-stage">　コンポーネントを追加</text>
+    <text x="360" y="150" class="ph-stage">⑥ コードとテストを生成</text>
+    <text x="360" y="182" class="ph-stage">⑦ IaCでデプロイして</text>
+    <text x="360" y="200" class="ph-stage">　テスト</text>
+
+    <line x1="600" y1="200" x2="636" y2="200" class="ph-arrow"/>
+
+    <rect x="640" y="20" width="280" height="360" rx="12" class="ph-box"/>
+    <rect x="640" y="20" width="280" height="46" rx="12" class="ph-head"/>
+    <rect x="640" y="44" width="280" height="22" class="ph-head"/>
+    <text x="780" y="49" class="ph-headtxt">Operation（運用）</text>
+    <text x="660" y="100" class="ph-stage">⑧ IaCで本番環境へ</text>
+    <text x="660" y="118" class="ph-stage">　デプロイ</text>
+    <text x="660" y="150" class="ph-stage">⑨ インシデントを管理</text>
+
+    <text x="470" y="360" text-anchor="middle" font-size="11" fill="var(--muted)">各ステージが次のステージのためのより豊かなコンテキストを構築する「適応的」な流れ</text>
+  </svg>
+  </div>
+  <figcaption>
+    Inception → Construction → Operation の3フェーズ・9ステージ。
+    AIM223 はステージの割り振りをやや異なる形（ドメインモデルをConstruction側に置く）で示しており、<strong>ステージ番号の厳密な帰属は資料により揺れる</strong>点に注意されたい。
+    <span class="src">（典拠：AIM221。AIM223 と微差あり）</span>
+  </figcaption>
+</figure>
+
+<p>
+AIM222 はフェーズをより平易に「INCEPTION（全体構想）／CONSTRUCTION（実際の構築）／OPERATION（運用）」と説明する。
+</p>
+
+<h3 id="p1-6">1-6. 人間側の作法：モブワーク</h3>
+
+<p>
+AI-DLC が方法論たるゆえんは、AIの使い方だけでなく<strong>人間の働き方を規定している</strong>点にある。
+</p>
+
+<ul class="plain">
+  <li><strong>モブエラボレーション（Inception）</strong>：運用担当・開発者・ビジネスアナリスト・プロダクトマネージャ・QAなどステークホルダー全員で企画・要件定義・アーキテクチャ設計を実施する。ラピッドプロトタイピングでモックアップを数分で作りその場でデモし、合意形成する（AIM221／AIM222）</li>
+  <li><strong>モブコンストラクション（Construction）</strong>：開発者とステークホルダーの混成チームで、開発者だけではできない意思決定をその場で実施する（AIM221／AIM222）</li>
+</ul>
+
+<p>
+AIM222 は「AI-DLC = AIの利用を前提としたモブワーク」と位置づけ、なぜモブなのかを3点で説明する。①AIの高速作業に即応できる態勢が要る　②リアルタイムの共同作業により人間側にも豊かなコンテキストが共有される　③ジュニア人材が意思決定を間近で体験する技能伝承の場になる。
+</p>
+
+<p>
+セッション設計の実務的助言として「1セッション2〜4時間、大きな画面で共有」「<strong>レビュー疲れ</strong>に注意」（AIM222）が挙げられている点も現場的で示唆に富む。
+</p>
+
+<p>
+AIM221 は、従来のSDLCが「テスト待ち・レビュー待ち・環境セットアップ待ち・承認待ち」という<strong>待ち時間の塊</strong>であったと指摘する。モブワークはこの待ちを消すための仕掛けである。
+</p>
+
+<h3 id="p1-7">1-7. AI-DLC Workflows：方法論を実行可能にする仕組み</h3>
+
+<p>
+方法論を実際のコーディングエージェントに載せる実体が<strong>AI-DLC Workflows</strong>（2025年8月GitHub公開）である。DVT452 が最も詳しい。
+</p>
+
+<ul class="plain">
+  <li><strong>V1.0</strong>：ツール非依存の適応的ワークフロー（3フェーズ＋事前定義ステージ）。主要なコーディングエージェントをサポートする。<strong>世界中の300以上の顧客が検証済みで、平均2〜5倍のリリース速度</strong>を実現しているとされる。課題は、運用にSaaSを使う場合や業界固有の標準がある場合の個別最適。</li>
+  <li>V1.0 → V2.0 の3つの学び：
+    <ol class="plain">
+      <li>構成の粒度を細かくする → <strong>スキル単位で構成する</strong></li>
+      <li>AIに「正しさの基準」を与える → <strong>検証仕様を明示的に定義する</strong></li>
+      <li>エージェントのネイティブ機能を活かす → <strong>ツール固有の最適化</strong></li>
+    </ol>
+  </li>
+  <li>V2.0 の各ステージは3要素で構成される：
+    <ul class="plain">
+      <li><strong>生成</strong>：参照・生成すべきものに関する宣言的な<strong>指示</strong></li>
+      <li><strong>検証</strong>：定性的検証の<strong>指示</strong> ＋ 決定論的検証のための<strong>スクリプト/コード</strong></li>
+      <li><strong>自己学習</strong>：人間の判断を学習し蒸留する</li>
+    </ul>
+  </li>
+  <li>V2.0 は「拡張可能でコンポーザブルなツール非依存のステージライブラリ」を土台に、<strong>Claude Code・Kiro 固有のエージェントワークフローへと変換され、CI/CDと評価を含む形でパッケージ化</strong>される。</li>
+</ul>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 980 380" role="img" aria-labelledby="svg8-title svg8-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg8-title">AI-DLC Workflows V1.0からV2.0への進化</title>
+    <desc id="svg8-desc">V1.0のツール非依存ワークフローが、3つの学びを経てV2.0のステージ構造（生成・検証・自己学習）へと進化し、Claude CodeやKiro固有のワークフローに変換される様子を示す図。</desc>
+    <defs>
+      <marker id="arrow-v" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+      </marker>
+      <style>
+        .v8-box{ fill:var(--card); stroke:var(--border); stroke-width:2; }
+        .v8-box-hi{ fill:var(--bg-alt); stroke:var(--accent); stroke-width:3; }
+        .v8-t{ font-size:15px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .v8-s{ font-size:11px; fill:var(--muted); text-anchor:middle; }
+        .v8-l{ font-size:11px; fill:var(--fg); text-anchor:start; }
+        .v8-arrow{ stroke:var(--muted); stroke-width:2.5; marker-end:url(#arrow-v); }
+      </style>
+    </defs>
+
+    <rect x="20" y="80" width="220" height="220" rx="12" class="v8-box"/>
+    <text x="130" y="112" class="v8-t">V1.0</text>
+    <text x="130" y="140" class="v8-s">ツール非依存</text>
+    <text x="130" y="156" class="v8-s">3フェーズ＋事前定義ステージ</text>
+    <text x="130" y="188" class="v8-s" font-weight="700" fill="var(--accent2-dark)">300以上の顧客で検証</text>
+    <text x="130" y="204" class="v8-s" font-weight="700" fill="var(--accent2-dark)">平均2〜5倍のリリース速度</text>
+    <text x="130" y="238" class="v8-s">課題：SaaS運用・業界固有</text>
+    <text x="130" y="254" class="v8-s">標準での個別最適</text>
+
+    <line x1="242" y1="190" x2="270" y2="190" class="v8-arrow"/>
+
+    <rect x="274" y="70" width="230" height="240" rx="12" class="v8-box" fill="var(--bg-alt)"/>
+    <text x="389" y="98" class="v8-t" font-size="13">3つの学び</text>
+    <text x="294" y="130" class="v8-l">① スキル単位で構成する</text>
+    <text x="294" y="164" class="v8-l">② 検証仕様を明示的に</text>
+    <text x="294" y="182" class="v8-l">　定義する</text>
+    <text x="294" y="216" class="v8-l">③ ツール固有の最適化</text>
+
+    <line x1="506" y1="190" x2="534" y2="190" class="v8-arrow"/>
+
+    <rect x="538" y="50" width="230" height="280" rx="12" class="v8-box-hi"/>
+    <text x="653" y="80" class="v8-t" fill="var(--accent)">V2.0 ステージ構造</text>
+    <text x="558" y="112" class="v8-l" font-weight="700">生成</text>
+    <text x="558" y="128" class="v8-l">＝宣言的な指示</text>
+    <text x="558" y="158" class="v8-l" font-weight="700">検証</text>
+    <text x="558" y="174" class="v8-l">＝指示＋決定論的スクリプト</text>
+    <text x="558" y="204" class="v8-l" font-weight="700">自己学習</text>
+    <text x="558" y="220" class="v8-l">＝人間の判断を蒸留</text>
+    <text x="653" y="255" class="v8-s">拡張可能・コンポーザブルな</text>
+    <text x="653" y="271" class="v8-s">ツール非依存のステージライブラリ</text>
+
+    <line x1="770" y1="190" x2="798" y2="190" class="v8-arrow"/>
+
+    <rect x="802" y="80" width="160" height="220" rx="12" class="v8-box"/>
+    <text x="882" y="115" class="v8-t" font-size="13">実装形態へ</text>
+    <text x="822" y="150" class="v8-l">Claude Code・Kiro</text>
+    <text x="822" y="166" class="v8-l">固有のワークフローへ</text>
+    <text x="822" y="182" class="v8-l">変換</text>
+    <text x="822" y="216" class="v8-l">CI/CD・評価込みで</text>
+    <text x="822" y="232" class="v8-l">パッケージ化</text>
+  </svg>
+  </div>
+  <figcaption>
+    V1.0（ツール非依存の適応的ワークフロー）が3つの学びを経て、V2.0では各ステージが「生成・検証・自己学習」の3要素で構成されるようになり、最終的にClaude CodeやKiro固有のワークフローへと変換される。
+    <span class="src">（典拠：DVT452）</span>
+  </figcaption>
+</figure>
+
+<div class="callout blue">
+  <span class="ttl">本資料の解釈として明示する点</span>
+  <p>DVT452 は「ハーネス」の語を一度も使っていない。しかし「宣言的な指示 ＋ 決定論的な検証スクリプト ＋ ツール固有形態への変換」というV2.0の構造は、第2部で見るハーネスの構成要素とほぼ一対一で対応する。同じものを別の語彙で語っていると読むことは可能だが、資料がそう述べているわけではない。<span class="interp">本資料の解釈</span></p>
+</div>
+
+<h3 id="p1-8">1-8. Operationフェーズ：運用こそAI-DLCの試金石（DVT452）</h3>
+
+<p>
+AI-DLCホワイトペーパー "AI-Driven Development Lifecycle (AI-DLC) Method Definition" の記述（DVT452登壇者による拙訳）：
+</p>
+
+<div class="callout">
+  <p class="quote">
+    AI-DLCのOperationフェーズは、システムのデプロイ、オブザーバビリティ、メンテナンスを中心とし、AIを活用して運用効率を高めます。AIはメトリクス、ログ、トレースなどのテレメトリデータを能動的に分析し、パターンの検出、異常の特定、潜在的なSLA違反の予測を行うことで、プロアクティブな問題解決を可能にします。さらに、AIは事前定義されたインシデントランブックと連携し、リソースのスケーリング、パフォーマンスチューニング、障害の分離といった実行可能な推奨アクションを提案し、開発者の承認を得た上でその解決策を実行します。開発者は検証役として機能し、AIが生成したインサイトや提案アクションがSLAおよびコンプライアンス要件に適合していることを確認します。
+  </p>
+  <div class="src-line">（DVT452）</div>
+</div>
+
+<p>DVT452 の主張で特に見るべきは以下である。</p>
+
+<ul class="plain">
+  <li><strong>「運用は開発の後に始まるのか？」という問い</strong>。オブザーバビリティの計装方針やSLA・パフォーマンス・セキュリティ等の非機能要件は、Inception段階から「ベースラインの要求」として組み込む必要がある。</li>
+  <li><strong>Operationフェーズの始め方は3段階</strong>：①既存の運用に乗せる（利用中のCI/CD、契約済みのオブザーバビリティツールを活用）→ ②今できていないことをAIで改善する（SAST/SCA/DAST等の自動化、ランブックの整理）→ ③AIを活用した運用（AIOps）へ。<strong>いきなりAIOpsを目指すな</strong>、というのが実務的な含意である。</li>
+  <li>独自提案として<strong>リスクストーミング × カオスエンジニアリング</strong>：リスクストーミング（Simon Brown提唱。6カテゴリ＝Scalability／Availability／Performance／Security／Data Integrity／Recoverability で洗い出し、影響度×発生確率でスコアリング）でリスクを抽出し、カオスエンジニアリング（principlesofchaos.org の定義「本番環境での不安定な状況を耐えられるという自信を構築するために実施する実験の規律」）で検証する。</li>
+  <li><strong>自動化バイアスへの対抗</strong>という視点が秀逸である。リスクストーミングの「サイレントフェーズ」による構造化された発散は、AI生成物をつい信じてしまう心理傾向への対抗策として機能する。カオスエンジニアリングは「未知」を「既知」に変える仕掛けとして機能する。</li>
+  <li>デモは「Unicorn Market」（AI-DLCで開発されたマイクロサービス構成のデモサイト）。</li>
+</ul>
+
+<h3 id="p1-9">1-9. Lessons Learned：AI-DLC実践の9つの教訓（AIM221）</h3>
+
+<div class="card-grid">
+  <div class="card"><h4><span class="num">1</span>コンテキストウィンドウを慎重に管理</h4>無関係な情報が含まれていないか、最後にリセットしたのはいつか。</div>
+  <div class="card"><h4><span class="num">2</span>既存システムでもうまくいく</h4>大規模コードベースをそのまま入力せず、事前に意味を要約したリッチなコンテキストを構築する。</div>
+  <div class="card"><h4><span class="num">3</span>既存のコード例を模倣させる</h4>リファレンスコードベースは事細かな指示より強力なコンテキストになる。</div>
+  <div class="card"><h4><span class="num">4</span>強い意味を持つトークンを使う</h4>AIはコードでなく意味で推論する。</div>
+  <div class="card"><h4><span class="num">5</span>パッチ修正より書き直しの方が速いか検討</h4></div>
+  <div class="card"><h4><span class="num">6</span>AIをシニアエンジニアと同じようには信頼しない</h4>「アイディア豊富なインターン」と捉えて監督する。</div>
+  <div class="card"><h4><span class="num">7</span>実験への姿勢</h4>まずやってみて、素早く失敗し、失敗から学ぶ。</div>
+  <div class="card"><h4><span class="num">8</span>AIとの協働を学ぶには実践経験が大切</h4></div>
+  <div class="card"><h4><span class="num">9</span>最終的なコードの所有者は人間</h4>「コミットログに著者として載るのはあなたの名前です」。</div>
+</div>
+
+<h3 id="p1-10">1-10. 影：AI-DLCだけでは解けない問題（AIM223）</h3>
+
+<p>
+AI-DLC を礼賛だけで終わらせないために、AIM223 の指摘を必ず入れておく。<strong>この節が本資料の批評性を担保する。</strong>
+</p>
+
+<p>
+AIM223 は DORA 2025 Report を引き、<strong>AIは組織の強みも弱みも等しく増幅させる（Mirror Effect）</strong>と論じる。レビュー文化が弱いままAIでコーディングを加速すれば、レビューできる人が過負荷・不足し、レビュー品質が低下・滞留し、責任を引き受ける人がいなくなる。マルチエージェント利用での不調はプロンプトの問題ではなく<strong>組織構造の問題</strong>であり、不調はその「鏡」である。
+</p>
+
+<p>パラドックスの背後にある2要因：</p>
+
+<ul class="plain">
+  <li><strong>要因A：スキル侵食の悪循環</strong>（Rinta-Kahila et al. 2023, JAIS）— 自動化依存 → 業務への注意が減少し出力の評価能力が低下 → 達成による自己満足 → 本人のスキルが低下 →（再び自動化依存へ）。<strong>システムが正常に動いている限り、この悪循環は顕在化しない。</strong></li>
+  <li><strong>要因B：オーナーシップの欠如</strong>（Pierce, Kostova &amp; Dirks 2001, AMR）— 心理的オーナーシップは①コントロール ②深い知識 ③自己投入 の3経路から生まれる。「そのコードを書いたのはAIです」「設計妥当性は未確認です」ではこの3経路が満たされない。</li>
+</ul>
+
+<p>
+事例：<strong>いえらぶGROUP</strong>が「AI禁止令」を4か月出した。要因Aの可視化＝PRレビューコメントが830件に到達。要因Bの内省＝「これが正解なんだと疑わず、そのまま使っていた」。4か月かけて段階的に解禁し、基礎体力（型・設計判断・調べる力）を強化した。執行役員の結論「<strong>自分でできないことは、AIにやらせても判断できない</strong>」、エンジニアの結論「<strong>最後に責任を持って意思決定するのは自分</strong>」。
+</p>
+
+<p>
+AIM223 の処方箋は<strong>「意図的な非効率」とAI-DLCの両輪</strong>である。意図的な非効率＝効率化からあえて外す工程を組織に残す設計思想。AI-DLCで組織の弱点を映し出し、意図的な非効率でその弱点を埋める。「意図的な非効率は、AIから離れるためではなく、<strong>AIを使い続けるための仕掛け</strong>」。
+</p>
+
+<h2 id="part2">第2部　ハーネスとは何か、その構成要素</h2>
+
+<h3 id="p2-1">2-1. 前置き：この14件におけるハーネスの位置</h3>
+
+<p>
+<strong>正直に書いておく。</strong> ハーネスの語が登場するのは14件中3件のみである。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表：ハーネスに言及する3セッションと扱いの厚さ</caption>
+<thead><tr><th>セッション</th><th>扱い</th></tr></thead>
+<tbody>
+<tr><td><strong>AIM213</strong>（東京海上日動システムズ）</td><td>独立セクションを設けて体系的に定義。最も厚い</td></tr>
+<tr><td><strong>AIM203</strong>（デジタル庁）</td><td>Martin Fowler を引用し「ユーザーハーネス」として構成要素を列挙</td></tr>
+<tr><td><strong>PRT213-S</strong>（KDDIアイレット）</td><td>1箇所のみ。「指示・ハーネス・ツール使用ログを可視化し改善」</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+そして重要な事実として、<strong>AI-DLC本体を解説する AIM221・AIM222・DVT452 には「ハーネス」の語が一度も現れない</strong>。ハーネスは AI-DLC の公式語彙ではなく、<strong>それを実践する事業会社側から立ち上がってきた語</strong>である、という構図が見て取れる。この非対称性そのものが、この14件を横断して読んだ最大の発見である。
+</p>
+
+<h3 id="p2-2">2-2. AIM213：Agent = Model + Harness</h3>
+
+<p>
+東京海上日動システムズは、ハーネスを次の一文で定義する。
+</p>
+
+<div class="callout">
+  <p class="quote">「AIの出力品質を決めるのはモデルではなく、モデルを取り巻く環境（ハーネス）の設計品質。当社はこれを組織資産として整え、どのチームが案件に取り組んでも一定以上の高い品質を担保する。」</p>
+  <div class="src-line">（AIM213）</div>
+</div>
+
+<p>構造は次の通り。</p>
+
+<pre class="code" style="display:block;padding:0.8rem 1rem;overflow-x:auto;">Agent（例：Kiro）= Model + Harness
+Harness = 内部ハーネス + 外部ハーネス</pre>
+
+<ul class="plain">
+  <li><strong>Model</strong>：LLM（Claude等）＝思考エンジン</li>
+  <li><strong>内部ハーネス</strong>：Kiro標準機能 — プロンプト管理／ファイル操作／ツール呼出／対話履歴</li>
+  <li><strong>外部ハーネス</strong>：AI駆動開発用の社内プラットフォーム。次の4要素で構成：
+    <ol class="plain">
+      <li><strong>仕様書テンプレート</strong> — 「期待する出力の型」をAIに与える</li>
+      <li><strong>検証スクリプト</strong> — スキーマ・整合性を機械的にチェック</li>
+      <li><strong>ワークフロー定義</strong> — 工程の順序と承認ゲートを規定</li>
+      <li><strong>AIレビューエージェント</strong> — 別のAIが業務観点で生成物を検査</li>
+    </ol>
+  </li>
+</ul>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 600" role="img" aria-labelledby="svg5-title svg5-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg5-title">Agent = Model + Harness の階層構造</title>
+    <desc id="svg5-desc">Agentの中にModelとHarnessがあり、HarnessはKiro標準機能である内部ハーネスと、AI駆動開発用の社内プラットフォームである外部ハーネスに分かれる入れ子の階層図。外部ハーネスは仕様書テンプレート・検証スクリプト・ワークフロー定義・AIレビューエージェントの4要素で構成される。</desc>
+    <defs>
+      <style>
+        .h5-outer{ fill:none; stroke:var(--border); stroke-width:2; stroke-dasharray:6 5; }
+        .h5-model{ fill:var(--bg-alt); stroke:var(--accent2); stroke-width:2; }
+        .h5-harness{ fill:none; stroke:var(--border); stroke-width:2; }
+        .h5-inner{ fill:var(--bg-alt); stroke:var(--muted); stroke-width:2; }
+        .h5-outerh{ fill:var(--layer-b); stroke:var(--accent); stroke-width:3; }
+        .h5-t{ font-size:16px; font-weight:700; fill:var(--fg); }
+        .h5-t-hi{ font-size:16px; font-weight:700; fill:var(--accent); }
+        .h5-s{ font-size:11.5px; fill:var(--muted); }
+        .h5-l{ font-size:12px; fill:var(--fg); }
+      </style>
+    </defs>
+
+    <rect x="20" y="20" width="860" height="560" rx="16" class="h5-outer"/>
+    <text x="40" y="50" class="h5-t">Agent（例：Kiro）</text>
+
+    <rect x="55" y="75" width="790" height="90" rx="12" class="h5-model"/>
+    <text x="75" y="105" class="h5-t">Model</text>
+    <text x="75" y="130" class="h5-s">LLM（Claude等）＝思考エンジン</text>
+
+    <rect x="55" y="185" width="790" height="375" rx="12" class="h5-harness"/>
+    <text x="75" y="215" class="h5-t">Harness</text>
+
+    <rect x="85" y="235" width="345" height="300" rx="10" class="h5-inner"/>
+    <text x="105" y="265" class="h5-l" font-weight="700">内部ハーネス</text>
+    <text x="105" y="284" class="h5-s">（Kiro標準機能）</text>
+    <text x="105" y="335" class="h5-l">・プロンプト管理</text>
+    <text x="105" y="360" class="h5-l">・ファイル操作</text>
+    <text x="105" y="385" class="h5-l">・ツール呼出</text>
+    <text x="105" y="410" class="h5-l">・対話履歴</text>
+
+    <rect x="460" y="235" width="345" height="300" rx="10" class="h5-outerh"/>
+    <text x="480" y="265" class="h5-t-hi">外部ハーネス</text>
+    <text x="480" y="284" class="h5-s">（AI駆動開発用の社内プラットフォーム）</text>
+    <text x="480" y="335" class="h5-l">・仕様書テンプレート</text>
+    <text x="480" y="360" class="h5-l">・検証スクリプト</text>
+    <text x="480" y="385" class="h5-l">・ワークフロー定義</text>
+    <text x="480" y="410" class="h5-l">・AIレビューエージェント</text>
+  </svg>
+  </div>
+  <figcaption>
+    Agent = Model + Harness、Harness = 内部ハーネス + 外部ハーネス という東京海上日動システムズの整理。内部ハーネスはKiro標準機能、外部ハーネスはAI駆動開発用の社内プラットフォームである。内部ハーネスはツールベンダー提供のため利用企業は手を出しにくく、外部ハーネスこそ組織が自ら設計できる領域であり競争力の置き場所になる、という読み筋は本資料の解釈である。<span class="interp">本資料の解釈</span>
+    <span class="src">（典拠：AIM213 p27〜28相当）</span>
+  </figcaption>
+</figure>
+
+<p>
+この整理の要点は2つ。第一に、<strong>内部と外部を分けた</strong>こと。内部ハーネスはKiro標準機能、外部ハーネスはAI駆動開発用の社内プラットフォームである。内部ハーネスはツールベンダーが提供するものであるため利用企業には手が出しにくく、手を入れられるのは外部ハーネスであり、そこが<strong>組織の競争力の置き場所</strong>になる——という読み筋は本資料の解釈である。<span class="interp">本資料の解釈</span> 第二に、ハーネスを<strong>組織資産</strong>と位置づけたこと。属人的なプロンプト運用に頼らず<span class="interp">本資料の解釈</span>、「どのチームが案件に取り組んでも一定以上の品質」を担保する仕組みとして設計されている、という点はAIM213の記述に基づく。
+</p>
+
+<p>
+なお同社は推進体制「AI駆動開発全体推進事務局」の活動項目に<strong>「Z. 最新動向の研究・調査：ハーネス／モデル進化への追従」</strong>を掲げており、ハーネスを継続的な追跡対象として制度に組み込んでいる。
+</p>
+
+<h3 id="p2-3">2-3. AIM203：ユーザーハーネス（デジタル庁）</h3>
+
+<p>
+デジタル庁は、Martin Fowler の記事を明示的に典拠として引く。
+</p>
+
+<div class="callout blue">
+  参考文献：「Harness engineering for coding agent users」<br>
+  <a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">https://martinfowler.com/articles/harness-engineering.html</a>
+  <div class="src-line">（AIM203）</div>
+</div>
+
+<p>そこからハーネスエンジニアリングを<strong>2つの機構</strong>に整理する。</p>
+
+<ul class="plain">
+  <li><strong>フィードフォワード</strong>：エージェントの行動を方向づける機構</li>
+  <li><strong>フィードバック</strong>：エージェントの動作後に状況を監視し、自己修正を支援する機構</li>
+</ul>
+
+<p>
+この2機構は第1部で見た「プラン⇨レビュー⇨実行⇨レビュー」と重なる。<strong>方向づけと自己修正の対</strong>という捉え方は、AI-DLCの中核サイクルの言い換えとも読める（これは本資料の解釈であり、資料の主張ではない）。<span class="interp">本資料の解釈</span>
+</p>
+
+<p>
+その上で「<strong>ユーザーハーネス</strong>」という観点で品質向上の仕組みの整備を開始しており、構成要素は次の通り（LLM = Claude Opus/Sonnet with Bedrock、AIコーディングエージェント or SDK = Claude Code / Claude Agent SDK / Kiro 等の<strong>上に</strong>位置づけられる）。
+</p>
+
+<ul class="plain">
+  <li>プロジェクトごとの<strong>Memory / Skills / MCP</strong></li>
+  <li><strong>CSPやSaaS側提供の Skills / MCP</strong>の活用</li>
+  <li><strong>Linter / Formatter / Feature Test / Security Test</strong></li>
+  <li><strong>実行環境、外部環境へのアクセス権限</strong></li>
+</ul>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 820 480" role="img" aria-labelledby="svg6-title svg6-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg6-title">ユーザーハーネスのレイヤースタック</title>
+    <desc id="svg6-desc">LLMを最下層、AIコーディングエージェントまたはSDKを中層、ユーザーハーネスを最上層とする3層のスタック図。ユーザーハーネス層はMemory/Skills/MCP、CSP・SaaS提供のSkills/MCP、Linter/Formatter/Feature Test/Security Test、実行環境・アクセス権限の4要素で構成される。</desc>
+    <defs>
+      <style>
+        .st6-bottom{ fill:var(--bg-alt); stroke:var(--border); stroke-width:2; }
+        .st6-mid{ fill:var(--layer-a); stroke:var(--accent2); stroke-width:2; }
+        .st6-top{ fill:var(--layer-b); stroke:var(--accent); stroke-width:3; }
+        .st6-t{ font-size:15px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .st6-t-hi{ font-size:16px; font-weight:700; fill:var(--accent); text-anchor:middle; }
+        .st6-s{ font-size:11.5px; fill:var(--muted); text-anchor:middle; }
+        .st6-l{ font-size:12px; fill:var(--fg); }
+      </style>
+    </defs>
+
+    <rect x="40" y="390" width="740" height="70" rx="10" class="st6-bottom"/>
+    <text x="410" y="420" class="st6-t">LLM</text>
+    <text x="410" y="440" class="st6-s">（Claude Opus / Sonnet with Bedrock）</text>
+
+    <rect x="40" y="300" width="740" height="70" rx="10" class="st6-mid"/>
+    <text x="410" y="330" class="st6-t">AIコーディングエージェント or SDK</text>
+    <text x="410" y="350" class="st6-s">（Claude Code／Claude Agent SDK／Kiro 等）</text>
+
+    <rect x="40" y="30" width="740" height="250" rx="12" class="st6-top"/>
+    <text x="410" y="60" class="st6-t-hi">ユーザーハーネス</text>
+    <text x="65" y="95" class="st6-l">・プロジェクトごとの Memory／Skills／MCP</text>
+    <text x="65" y="130" class="st6-l">・CSP・SaaS提供の Skills／MCP の活用</text>
+    <text x="65" y="165" class="st6-l">・Linter／Formatter／Feature Test／Security Test</text>
+    <text x="65" y="200" class="st6-l">・実行環境、外部環境へのアクセス権限</text>
+    <text x="410" y="245" class="st6-s">2つの機構：フィードフォワード（方向づけ）／フィードバック（自己修正支援）</text>
+    <text x="410" y="262" class="st6-s">出典：Martin Fowler「Harness engineering for coding agent users」</text>
+  </svg>
+  </div>
+  <figcaption>
+    LLM（最下層）、AIコーディングエージェント or SDK（中層）の上に、ユーザーハーネス（最上層）が位置づけられる。ユーザーハーネスはフィードフォワード（行動を方向づける機構）とフィードバック（動作後に監視し自己修正を支援する機構）の2機構として整理される。
+    <span class="src">（典拠：AIM203 p26 / p27 / p31相当）</span>
+  </figcaption>
+</figure>
+
+<p>各要素の中身（AIM203 が具体的に語っている点。実装の勘所として価値が高い）：</p>
+
+<ul class="plain">
+  <li><strong>Memory</strong>：常時／状況に応じて与えるプロンプトを管理。ユーザー定義部分とエージェント側自動設定部分がある</li>
+  <li><strong>Agent Skills</strong>：独自知識となるプロンプトやプログラムをまとめて実行。設計書生成、ログからの障害調査などで型化可能。<code>skill-creator</code> スキルで作成・テスト可能</li>
+  <li><strong>MCP Server</strong>：AIエージェントと外部情報を接続。自律的な調査・外部操作を期待する場合に有用</li>
+  <li><strong>Linter / Formatter</strong>：インデントやコードが満たすべき構造、階層ごとのコード間依存関係の逸脱防止を<strong>決定論的に</strong>定義</li>
+  <li><strong>Unit / Integ Test</strong>：機能面の仕様を定義。<strong>AIエージェント任せだと不要なテストが増大する</strong>ため、効果的かどうかとシンプル化を並行検討</li>
+  <li><strong>Security Test</strong>：AIエージェントによる検査と決定論的チェックツールを併用</li>
+  <li>CSP/SaaS提供のものとして<strong>Agent Toolkit for AWS</strong>（AWSサービス利用に必要なツール・知識・安全対策を提供するスキル）、<strong>AWS Knowledge MCP Server</strong>（最新情報取得でハルシネーション抑制）、<strong>claude-code-guide サブエージェント</strong>（エージェント自身についての質問時のハルシネーション抑制）が挙がる</li>
+</ul>
+
+<p>
+<strong>実装上の要諦</strong>として、これらの仕組みを<strong>ローカルとCI/CD環境の両方に実装</strong>し、常に定期的に検査が走る状態を維持すること、CI/CDを組んでいない場合は最低限のガードレールとして<strong>AIエージェントのHook機能</strong>で検査を共通化すること、が述べられている。
+</p>
+
+<p>
+整備できたユーザーハーネスは<strong>GCAS DevStack</strong>から利用可能にし、全体の品質向上を目指す方針。つまり<strong>ハーネスを共通基盤として配布する</strong>構想である。
+</p>
+
+<h3 id="p2-4">2-4. PRT213-S：運用管理の対象としてのハーネス</h3>
+
+<p>
+KDDIアイレットは、独自のAIMS（AI Management System）運用管理フレームワークの5段階サイクルの中で、<strong>「指示・ハーネス・ツール使用ログを可視化し改善」</strong>と述べる。ハーネスの語はこの1箇所のみで、定義も構成要素も語られない。
+</p>
+
+<p>
+ただし着眼点として記録しておく価値はある。ここでのハーネスは<strong>設計対象ではなく観測対象</strong>として現れている。指示とツール使用ログと並置され、テレメトリとして収集・可視化される。<strong>ハーネスは作って終わりではなく、効いているかを測る対象でもある</strong>という視点は、AIM213・AIM203 にはないものである。
+</p>
+
+<h3 id="p2-5">2-5. 統合：ハーネスの構成要素</h3>
+
+<div class="callout blue">
+  <span class="ttl">本資料の解釈であることを明示する</span>
+  <p>以下の対応表および4層の整理は、3件の記述を横断して本資料が独自に突き合わせたものである。<span class="interp">本資料の解釈</span></p>
+</div>
+
+<p>3件の記述を突き合わせると、呼び名は違えど同じ機能が繰り返し現れる。</p>
+
+<div class="table-scroll">
+<table>
+<caption>表：AIM213 と AIM203 の機能対応（本資料の整理）</caption>
+<thead><tr><th>機能</th><th>AIM213（東京海上）</th><th>AIM203（デジタル庁）</th></tr></thead>
+<tbody>
+<tr><td><strong>AIに型を与える</strong></td><td>仕様書テンプレート</td><td>Memory / Skills</td></tr>
+<tr><td><strong>機械的に検証する</strong></td><td>検証スクリプト</td><td>Linter / Formatter / Test群</td></tr>
+<tr><td><strong>工程と承認を規定する</strong></td><td>ワークフロー定義</td><td>（GCAS DevStack／CI-CD、Hook機能）</td></tr>
+<tr><td><strong>AIにAIを検査させる</strong></td><td>AIレビューエージェント</td><td>Security Test（AIエージェントによる検査）</td></tr>
+<tr><td><strong>外部と繋ぐ</strong></td><td>（内部ハーネスのツール呼出）</td><td>MCP／実行環境・アクセス権限</td></tr>
+<tr><td><strong>ツール標準機能</strong></td><td>内部ハーネス</td><td>AIコーディングエージェント or SDK の層</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>ここから、ハーネスの構成要素を<strong>4つの層</strong>として整理できる（本資料の整理）。</p>
+
+<div class="callout warn">
+  <span class="ttl">注記（必読）</span>
+  <p>以下の図7は<strong>本資料が14件の資料を横断して独自に整理したもの</strong>であり、<strong>いずれかの資料にこの4層が示されているわけではない</strong>。</p>
+</div>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 820 420" role="img" aria-labelledby="svg7-title svg7-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg7-title">ハーネスの構成要素4層（本資料独自の統合整理）</title>
+    <desc id="svg7-desc">方向づけ層・検証層・統制層・接続権限層の4層に整理したハーネスの構成要素図。本資料が14件の資料を横断して独自に作成した整理であり、いずれかの資料に直接示されている図ではない。</desc>
+    <defs>
+      <style>
+        .l7-a{ fill:var(--layer-a); stroke:var(--accent2); stroke-width:1.5; }
+        .l7-b{ fill:var(--layer-b); stroke:var(--accent); stroke-width:1.5; }
+        .l7-name{ font-size:15px; font-weight:700; fill:var(--fg); }
+        .l7-sub{ font-size:11.5px; fill:var(--muted); }
+      </style>
+    </defs>
+
+    <rect x="40" y="20" width="740" height="85" rx="10" class="l7-a"/>
+    <text x="60" y="48" class="l7-name">1. 方向づけ層（フィードフォワード）</text>
+    <text x="60" y="70" class="l7-sub">仕様書テンプレート／Memory／Skills</text>
+    <text x="60" y="90" class="l7-sub">「何を、どういう型で作るか」をAIに与える</text>
+
+    <rect x="40" y="115" width="740" height="85" rx="10" class="l7-b"/>
+    <text x="60" y="143" class="l7-name">2. 検証層（フィードバック）</text>
+    <text x="60" y="165" class="l7-sub">検証スクリプト／Linter・Formatter／テスト群／AIレビューエージェント</text>
+    <text x="60" y="185" class="l7-sub">「正しいか」を機械的・多角的に判定する</text>
+
+    <rect x="40" y="210" width="740" height="85" rx="10" class="l7-a"/>
+    <text x="60" y="238" class="l7-name">3. 統制層</text>
+    <text x="60" y="260" class="l7-sub">ワークフロー定義／承認ゲート／Hook／CI/CD</text>
+    <text x="60" y="280" class="l7-sub">「どの順で、誰が承認するか」を規定する</text>
+
+    <rect x="40" y="305" width="740" height="85" rx="10" class="l7-b"/>
+    <text x="60" y="333" class="l7-name">4. 接続・権限層</text>
+    <text x="60" y="355" class="l7-sub">MCP／実行環境／アクセス権限</text>
+    <text x="60" y="375" class="l7-sub">「何に触れてよいか」を規定する</text>
+  </svg>
+  </div>
+  <figcaption>
+    <strong>本図は14件の資料を横断した本資料独自の整理であり、いずれかの資料にこの4層が示されているわけではない。</strong>
+    <span class="src">（典拠：AIM213／AIM203 を本資料が統合）</span>
+  </figcaption>
+</figure>
+
+<div class="callout blue">
+  <p><strong>重要な観察（本資料の解釈）</strong> <span class="interp">本資料の解釈</span>：この4層は、DVT452 が語る AI-DLC Workflows V2.0 のステージ3要素（生成＝宣言的な指示／検証＝指示＋決定論的スクリプト／自己学習）と符合する。方法論側は「Workflows」と呼び、事業会社側は「ハーネス」と呼んでいるが、<strong>両者は同じ問題——AIに何をどう作らせ、どう検証し、誰が承認するか——を扱っている</strong>と読める。ただし繰り返すが、資料がそう述べているわけではない。</p>
+</div>
+
+<h3 id="p2-6">2-6. なぜハーネスが要るのか</h3>
+
+<p>
+AIM213 の一文がすべてを言い切っている。<strong>「AIの出力品質を決めるのはモデルではなく、モデルを取り巻く環境（ハーネス）の設計品質」</strong>。
+</p>
+
+<p>
+第1部で見たパラドックス——AIを入れても速くならない——への一つの答えがここにある。モデルは共通で、誰でも同じものを使える。差がつくのはハーネスであり、それは組織が自ら設計し、資産として蓄積するほかない。AIM203 が「必要なのはスーパーPOではなく、<strong>誰でも再現できる仕組みづくり</strong>」と述べ、そのために「AIエージェントを効率的に使える環境の整備」という土台から始めると宣言しているのは、まさにこの認識に立っている。
+</p>
+
+<h2 id="part3">第3部　エンタープライズ事例と、ハーネスの工夫</h2>
+
+<h3 id="p3-1">3-1. 事例の横断比較</h3>
+
+<div class="callout warn">
+  <span class="ttl">注記（必読）</span>
+  <p><strong>数値は各社の自己申告であり測定条件が異なる。単純比較はできない。</strong></p>
+</div>
+
+<div class="table-scroll">
+<table>
+<caption>表：8件のエンタープライズ事例の横断比較</caption>
+<thead>
+<tr><th>企業／組織</th><th>セッション</th><th>方法論</th><th>適用領域</th><th>報告された効果</th><th>ハーネスへの言及</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>東京海上日動システムズ</td><td>AIM213</td>
+<td>東京海上流AI-DLC（AWS提唱AI-DLCを自社カスタマイズ）＋「AI駆動な開発」の2本立て</td>
+<td>ワークショップ4チーム約40名、26年度に基幹系含む約10案件</td>
+<td>ワークショップでスピード約10倍（2〜3か月→1.5日）、生産性約3倍（26時間→9時間）</td>
+<td>●あり（最厚）。Agent = Model + Harness、内部／外部ハーネス</td>
+</tr>
+<tr>
+<td>アスクル</td><td>AIM146</td>
+<td>AI-DLC（人とAIが共創する意思決定サイクル）</td>
+<td>ランサム復旧と並行した商品担当業務改革</td>
+<td>開発期間50%短縮（12ヵ月→6ヵ月）、商品掲載スピード2倍、需要分析〜提案の意思決定が2週間→3時間。クラウド移行1週間（オンプレ3か月）、AI活用で安全に再構築2週間（従来3か月）</td>
+<td>—なし</td>
+</tr>
+<tr>
+<td>デジタル庁</td><td>AIM203</td>
+<td>AI-DLCの語は使わず、AIコーディングエージェント活用環境の整備</td>
+<td>ガバメントクラウド、小規模・限定ドメインから</td>
+<td>PO＋エンジニアの従来見積り720H前後→120H前後＋LLM利用料約20万円</td>
+<td>○あり。Fowler引用、ユーザーハーネス</td>
+</tr>
+<tr>
+<td>KDDIアイレット</td><td>PRT213-S</td>
+<td>AIDD＋AIMS（AI Management System）</td>
+<td>医療（SaMD）。ヘルスインタビュー／メディレコ</td>
+<td>開発期間79%短縮（24ヶ月→5ヶ月）、開発体制47%削減（17人→9人）、開発者生産性約300%向上、運用保守工数約63%削減</td>
+<td>△1箇所のみ（観測対象として）</td>
+</tr>
+<tr>
+<td>トランスコスモス</td><td>AIM310</td>
+<td>Waterfall Boost（独自。AI-DLCの語は使わない）</td>
+<td>エンタープライズ向け受託開発</td>
+<td>Todoアプリ実験で15.5人日→2.0人日（-87%）。Waterfall Boost全体で10〜32%の工数削減</td>
+<td>—なし</td>
+</tr>
+<tr>
+<td>MIXI（みてね）</td><td>AIM222</td>
+<td>AI-DLC体験会</td>
+<td>ステッカーのレコメンド機能等</td>
+<td>開発速度が当初見積りの2〜3倍、平均購入回数15%向上</td>
+<td>—なし</td>
+</tr>
+<tr>
+<td>MonotaRO</td><td>AIM222</td>
+<td>AI-DLC Unicorn Gym（3日間30名4チーム）</td>
+<td>要件定義〜実装</td>
+<td>4テーマすべて想定範囲内に到達、CSAT 4.87/5.0、参加者実感値で60〜75%の工数削減ポテンシャル</td>
+<td>—なし</td>
+</tr>
+<tr>
+<td>サイバーエージェント</td><td>AIM221</td>
+<td>AI-DLC＋モブエラボレーション</td>
+<td>「効果おまかせAI」（運用型広告の自動最適化）</td>
+<td>開発速度 平均+102.9%／中央値+87.5%、10スプリント継続で直近は初期比200%+を安定維持。開発者40%削減体制下</td>
+<td>—なし</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="p3-2">3-2. 二つの道：AI-DLC を採る／独自路線を行く</h3>
+
+<p>
+この14件を並べると、エンタープライズが分かれ道に立っていることが見える。<strong>この対比が第3部の骨である。</strong>
+</p>
+
+<p>
+<strong>AI-DLC を採った側</strong>（東京海上日動システムズ、アスクル、MIXI、MonotaRO、サイバーエージェント）は、モブワークによる<strong>上流の作り替え</strong>に踏み込んだ。ビジネスオーナーと開発者を同席させ、意思決定そのものを高速化する。東京海上のスプリント「2週間 → 1日（Bolt）」はその象徴である。
+</p>
+
+<p>
+<strong>独自路線を行った側</strong>（トランスコスモスの Waterfall Boost、KDDIアイレットの AIMS）は、<strong>既存プロセスの骨格を保ったまま</strong>AIを組み込んだ。Waterfall Boost は Phase1要件定義〜Phase7保守運用というウォーターフォールの段階を維持し、各Phaseに Procedural Agent（開発をリード）／QA Agent（品質を担保）／Coding Agent（開発標準化を推進）の3層を差し込む。「Vibesのノリを取り除いて企業ユースに耐えられるように」というのが同社の言葉である。
+</p>
+
+<div class="callout warn">
+  <span class="ttl">注記</span>
+  <p>DVT324「Kiro と Amazon の文化から学ぶ AI 駆動開発の型」は、冒頭で「以下は話しません」として<strong>AI-DLC を明示的に除外</strong>し、独自の「Design for Evaluation」を展開する。AI-DLC は AWS が推す方法論ではあるが、<strong>AWS のセッションでさえ一枚岩ではない</strong>。</p>
+</div>
+
+<figure>
+  <div class="svgwrap">
+  <svg viewBox="0 0 900 560" role="img" aria-labelledby="svg10-title svg10-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="svg10-title">二つの道：AI-DLCを採る／独自路線を行く</title>
+    <desc id="svg10-desc">「AIを入れても速くならない」という共通の出発点から、上流を作り替えるAI-DLCの道と、既存プロセスを保ってAIを差し込む独自路線の道の2つに分岐する図。東京海上日動システムズは両方を併走させている。</desc>
+    <defs>
+      <marker id="arrow-tp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/>
+      </marker>
+      <style>
+        .tp-top{ fill:var(--bg-alt); stroke:var(--border); stroke-width:2; }
+        .tp-a{ fill:var(--layer-b); stroke:var(--accent); stroke-width:2.5; }
+        .tp-b{ fill:var(--layer-a); stroke:var(--accent2); stroke-width:2.5; }
+        .tp-t{ font-size:15px; font-weight:700; fill:var(--fg); text-anchor:middle; }
+        .tp-l{ font-size:11.5px; fill:var(--fg); }
+        .tp-s{ font-size:11px; fill:var(--muted); }
+        .tp-arrow{ stroke:var(--muted); stroke-width:2.5; marker-end:url(#arrow-tp); fill:none; }
+      </style>
+    </defs>
+
+    <rect x="270" y="15" width="360" height="55" rx="10" class="tp-top"/>
+    <text x="450" y="48" class="tp-t">「AIを入れても速くならない」</text>
+
+    <path class="tp-arrow" d="M340,70 C280,100 230,110 230,140"/>
+    <path class="tp-arrow" d="M560,70 C640,100 670,110 670,140"/>
+
+    <rect x="40" y="140" width="380" height="280" rx="12" class="tp-a"/>
+    <text x="230" y="172" class="tp-t">道A：上流を作り替える＝AI-DLC</text>
+    <text x="60" y="200" class="tp-l">・モブワーク、オーナー同席</text>
+    <text x="60" y="225" class="tp-l">・スプリント 2週間 → 1日（Bolt）</text>
+    <text x="60" y="260" class="tp-s" font-weight="700">対象事例：</text>
+    <text x="60" y="280" class="tp-s">東京海上日動システムズ／アスクル／</text>
+    <text x="60" y="298" class="tp-s">MIXI／MonotaRO／サイバーエージェント</text>
+
+    <rect x="480" y="140" width="380" height="280" rx="12" class="tp-b"/>
+    <text x="670" y="172" class="tp-t">道B：既存プロセスを保持</text>
+    <text x="500" y="200" class="tp-l">・Waterfall Boost</text>
+    <text x="500" y="220" class="tp-l">　（Phase1〜7を維持し3Agentを差し込む）</text>
+    <text x="500" y="245" class="tp-l">・AIMS（AI Management System）</text>
+    <text x="500" y="278" class="tp-s" font-weight="700">対象事例：</text>
+    <text x="500" y="298" class="tp-s">トランスコスモス／KDDIアイレット</text>
+
+    <rect x="230" y="440" width="440" height="70" rx="12" class="tp-top"/>
+    <text x="450" y="465" class="tp-t" font-size="13">東京海上日動システムズは両方を併走</text>
+    <text x="450" y="486" class="tp-s">（①AI駆動な開発 7〜8件／②AI-DLC 2〜3件）</text>
+
+    <text x="450" y="535" text-anchor="middle" class="tp-s">DVT324 は AI-DLC を明示的に「話さない」と除外し、独自の Design for Evaluation を展開</text>
+  </svg>
+  </div>
+  <figcaption>
+    「AIを入れても速くならない」という共通の出発点から、上流を作り替えるAI-DLCの道（道A）と、既存プロセスを保ってAIを差し込む独自路線（道B）に分岐する。東京海上日動システムズは案件の性質に応じて両方を併走させている。
+    <span class="src">（典拠：AIM213／AIM310／PRT213-S／DVT324）</span>
+  </figcaption>
+</figure>
+
+<p>
+興味深いのは、東京海上日動システムズが<strong>両方を併走させている</strong>点である。「①東京海上流AI駆動な開発」（既存プロセスは活かし成果物はAIが作成。7〜8件、基幹系・大規模含む）と「②東京海上流AI-DLC」（オーナー同席で要件定義〜実装を1日で完結。2〜3件、デジタル案件想定）を案件の性質で使い分ける。<strong>どちらか一方ではなくポートフォリオとして持つ</strong>という判断は、他社にとって最も現実的な示唆かもしれない（本資料の解釈）。<span class="interp">本資料の解釈</span>
+</p>
+
+<h3 id="p3-3">3-3. 事例：東京海上日動システムズ — ハーネスを組織資産にする</h3>
+
+<p>
+AI-DLC とハーネスの<strong>両方を扱う唯一の資料</strong>であり、本資料の中心に据えるべき事例である。
+</p>
+
+<ul class="plain">
+  <li><strong>背景</strong>：2018年に長期戦略を立案しAWSを中核にクラウド推進。LIFTは7割完了、今後はSHIFT（クラウドネイティブ化）局面。「戦略的ロックイン」（スクラッチ開発領域はAWSに集約）という考え方を採り、その理由の一つに「<strong>AI駆動開発でも『共創』が成立する</strong>」を挙げる。</li>
+  <li><strong>AI駆動開発の定義</strong>：「<strong>AIがすべての成果物を作り、それに合わせて『プロセス・体制・成果物』を再定義する</strong>」。部分活用の限界（特定工程だけのAI導入は局所最適に留まる）を出発点とする。</li>
+  <li><strong>ワークショップ実績</strong>：2025年8月、AWSと共同で実施。日本国内3社目（<strong>金融業界初</strong>）、4チーム・総勢約40名、コーディングエージェントは Amazon Q Developer、期間1.5日。</li>
+  <li><strong>課題も率直に開示している</strong>（事例の信頼性を担保する点として必ず入れておく）：
+    <ul class="plain">
+      <li>ドキュメント・技術環境：<strong>Excel方眼紙や図表主体の設計書</strong>などLLMが構造を正確に読み取りにくい既存資産が大量に存在。コンテキストウィンドウの限界</li>
+      <li>人材・スキル：<strong>AI-DLCマスター（牽引人材）が社内にいない</strong></li>
+      <li>生成物の品質・レビュー：<strong>Markdown形式の大量ドキュメントを判断者が捌けない</strong>。AIが過剰な機能追加や意図しない変更を行うことも</li>
+      <li>UI/UX：AI-DLCで十分カバーされていない。テキストだけでUIを伝えるのは難しい</li>
+    </ul>
+  </li>
+  <li><strong>最大の課題</strong>：「<strong>『問い』のスピードに人が追いつく</strong>」。AIは問いを量産し、人はチームで議論・検証・判断する。この回転数が劇的に上がることが最大の課題であり、「特に<strong>ビジネスオーナー側の変革</strong>が最も大きなチャレンジ」と総括する。</li>
+  <li><strong>ハーネスの工夫</strong>：上記の課題に対する答えが外部ハーネスである。仕様書テンプレート（Excel方眼紙問題への対処）、検証スクリプト（品質の機械的担保）、ワークフロー定義（承認ゲート）、AIレビューエージェント（レビュー負荷の分散）——<strong>課題とハーネスの4要素がきれいに対応している</strong>（本資料の解釈）。<span class="interp">本資料の解釈</span> ハーネスを「組織資産として整え、どのチームが案件に取り組んでも一定以上の高い品質を担保する」という設計思想は、「AI-DLCマスターが社内にいない」という課題への構造的な回答でもある。</li>
+  <li><strong>位置づけ</strong>：AI駆動開発をウォーターフォール（計画駆動型）、アジャイル（適応駆動型）に並ぶ<strong>第3の開発手法</strong>と位置づけ、27年度の全社展開を目指す。</li>
+</ul>
+
+<h3 id="p3-4">3-4. 事例：デジタル庁 — ハーネスを共通基盤として配る</h3>
+
+<ul class="plain">
+  <li><strong>問題設定</strong>：「開発のボトルネックは<strong>実装から判断へ移動</strong>している」。判断待ち時間を減らすため、AIエージェントの環境整備が重要。</li>
+  <li><strong>効果検証</strong>：エンジニア出身のPOがAIコーディングエージェントで小規模機能を実装。従来見積り720H前後（576〜864H）に対し<strong>実験結果は120H前後＋LLM利用料約20万円</strong>。ただし「AIコーディングエージェントの導入により<strong>見積りはより困難になっている</strong>」という正直な但し書きが付く。</li>
+  <li><strong>再現条件</strong>：「自身で仕様調整やコード修正ができるエンジニアがいる場合に再現可能」。だからこそ「必要なのは<strong>スーパーPOではなく、誰でも再現できる仕組みづくり</strong>」であり、環境整備の土台づくりから始める。<strong>この論理の運びがハーネスへ直結している。</strong></li>
+  <li><strong>ガバメントクラウド固有の制約</strong>が、ハーネス設計に色濃く反映されている点が本事例の白眉である。
+    <ul class="plain">
+      <li><strong>データの国内完結</strong>：Bedrock はクロスリージョン推論プロファイルが既定のため、国内専用の推論プロファイルを指定し、AWS Organizations の<strong>SCP</strong>で国外リージョンでのLLM利用を制限</li>
+      <li><strong>学習利用の遮断</strong>：Organizations の設定でAIサービスの学習データ利用をオプトアウト。新規サービスも制限</li>
+      <li><strong>既存認証連携</strong>：IAM Identity Center と IAMロールを併用し長期アクセスキーなしで一時クレデンシャルを自動ローテート。Claude Code の <code>settings.json</code> / <code>.aws/config</code> に許可セットとスイッチ先IAMロールを記載し、起動時にアクセスポータルが自動で開く。推論時は <code>bedrock-inf</code> 権限を持つIAM Role経由でBedrockへ</li>
+      <li><strong>コスト把握</strong>：アプリケーション推論プロファイル＋コスト配分タグで利用者/LLM単位に分離。最新手法としてデータエクスポートのCUR 2.0形式で "Include caller identity (IAM principal) allocation data" をONにするだけで利用者単位分離が可能</li>
+    </ul>
+  </li>
+  <li><strong>ハーネスの工夫</strong>：整備したユーザーハーネスを<strong>GCAS DevStack</strong>から利用可能にし、全体の品質向上を目指す。<strong>ハーネスを個々のプロジェクトに任せず、共通基盤として配布する</strong>という発想は、多数の府省庁システムを抱える組織ならではの解であり、AIM213 の「組織資産」と響き合う（本資料の解釈）。<span class="interp">本資料の解釈</span> ただし「プロジェクトごとに必要なものは異なるためプロジェクトに委ねる方針だが、利用可能なスキル・MCPの制御は管理が別途必要なため<strong>検証中</strong>」と、配布と自由度のバランスに苦心している様子も率直に語られる。</li>
+  <li><strong>決定論への信頼</strong>：Linter/Formatter で「階層ごとのコード間依存関係の逸脱防止などを<strong>決定論的に</strong>定義」、Security Test で「AIエージェントによる検査と決定論的チェックが可能なツールを<strong>併用</strong>」。<strong>非決定論的なAIを、決定論的な仕掛けで挟む</strong>という思想が一貫している（本資料の解釈）。<span class="interp">本資料の解釈</span></li>
+</ul>
+
+<h3 id="p3-5">3-5. 事例：アスクル — 危機がAI-DLCを呼び込んだ</h3>
+
+<div class="callout warn">
+  <span class="ttl">注記</span>
+  <p>本セッション（AIM146）は<strong>図版主体の資料</strong>のため読み取れた情報は限られる。過度に語らないよう努めている。</p>
+</div>
+
+<ul class="plain">
+  <li>2025年10月19日、ランサムウェア感染を公表。ASKUL／ソロエルアリーナ／LOHACOの受注・出荷業務を停止。<strong>完全復旧まで3.5カ月</strong>。</li>
+  <li><strong>3つの判断軸</strong>：①被害の拡大防止 ②安全かつ安心な再開 ③一刻も早いサービス再開</li>
+  <li><strong>3つの意思決定</strong>：①対策本部設置（本部長をCEOとし各部に権限委譲）②サービス停止（ネットワーク遮断、透明性の高い情報開示）③<strong>自力で再構築</strong>（攻撃者とは接触せず＝企業倫理・再攻撃抑止、AWSクラウドへ移行）</li>
+  <li>発生4日目で「自力で再構築」の方針を確定。クラウド移行<strong>1週間</strong>（オンプレなら3か月）、AI活用で安全に再構築<strong>2週間</strong>（従来手法なら3か月）。新ネットワーク構築28日後、物流拠点の全面復旧108日後。</li>
+  <li><strong>転機の思想</strong>：「復旧作業で得られるのは、ただ、元に戻るだけ」という問題意識から、<strong>復旧と並行して限られた人員で新たな価値創造</strong>へ。復旧レベル0%→100%（システム復旧）→<strong>120%（新たな価値創造）</strong>というモデル。</li>
+  <li>アスクルにおける AI-DLC の理解は<strong>「人とAIが共創する意思決定サイクル」</strong>：「人が目的と仮説を指示 → AIが高速で調査/生成/提案 → 人が判断し方向を決める」のループ。「人間は方針決定に集中し、AI-DLCで判断速度の限界を突破する」。</li>
+  <li><strong>成果</strong>：商品担当の業務改革で開発期間50%短縮（12ヵ月→6ヵ月）、商品掲載スピード2倍。需要分析から提案までの意思決定が2週間→3時間。</li>
+  <li><strong>適用の拡大</strong>：従来は「方針決定」「課題発見」「解決策設計」まで人間のみが担い「価値提供」段階でAIが補助的に関与していたのに対し、AI-DLCでは<strong>方針決定の段階から人とAIが共同で取り組む</strong>というBefore/Afterが示される。</li>
+  <li><strong>ハーネスへの言及はない。</strong> 本事例で語られるのは意思決定サイクルのみで、仕組みの説明はない。CEO自らが語るセッションであり、<strong>経営の意思決定としてのAI-DLC</strong>という位置づけである（本資料の解釈）。<span class="interp">本資料の解釈</span></li>
+</ul>
+
+<h3 id="p3-6">3-6. 事例：トランスコスモス — 独自路線という選択</h3>
+
+<ul class="plain">
+  <li><strong>出発点</strong>：2025年2月の Andrej Karpathy 氏のX投稿（Vibes＝その場のノリのコーディング）。Todoアプリ実験で想定15.5人日→<strong>2.0人日（-87%）</strong>という「バイブコーディングの破壊力」を確認。</li>
+  <li>しかし<strong>「Vibesのノリのままだと大規模開発には使えない。組織的にAI駆動開発を利用するスキームを定義する必要がある」</strong>と総括し、<strong>Waterfall Boost</strong>を構築。</li>
+  <li><strong>3つのAgent群</strong>：Procedural Agent（AIが開発をリード／人の怠けを許さない）、QA Agent（AIが品質を担保。<strong>7人のペルソナAIによる「七賢者のドキュメントレビュー」</strong>をマルチLLMで実施）、Coding Agent（AIが開発標準化を推進。自社ポリシーに則ったコーディングと既存知財の再利用を促進し「<strong>エンジニアに意識をさせない開発標準化</strong>」を実現）。</li>
+  <li><strong>Agent Knowledge Base</strong>：各Agentが作業に必要な情報や次手順の確認のためアクセス。これまでの開発業務で培ったルール・規約・知財が登録されており、<strong>ルールがある限りAgentはエンジニアの指示よりKnowledge Baseの情報に必ず従う</strong>。</li>
+  <li><strong>効果</strong>：Waterfall Boost全体で10〜32%の工数削減（試算例。フェーズ別には55〜75%削減の記載もあるが、数値の対応関係は図版由来で判読しづらい箇所がある旨を付記しておく）。</li>
+  <li><strong>展開</strong>：Forward Deployed Engineer (FDE) の常駐＋AI駆動開発環境の提供という形でクライアントへ展開し、現場の改善要望を自社プロダクトへ還流させるサイクル。</li>
+  <li><strong>ハーネスへの言及はない。</strong> ただし<strong>Agent Knowledge Base と3つのAgent群は、AIM213 の外部ハーネス4要素と機能的にほぼ重なる</strong>（仕様書テンプレート≒ドキュメントテンプレート、AIレビューエージェント≒QA Agent、ワークフロー定義≒Procedural Agentの Phase ゲート、検証スクリプト≒Coding Agent のポリシー制御）。<strong>同じ問題に別の語彙で到達している好例</strong>と読める（これは本資料の解釈であり、資料はハーネスに言及していない）。<span class="interp">本資料の解釈</span></li>
+</ul>
+
+<h3 id="p3-7">3-7. 事例：KDDIアイレット — ハーネスを測る</h3>
+
+<div class="callout warn">
+  <span class="ttl">注記</span>
+  <p>本セッション（PRT213-S）は<strong>図版主体の資料</strong>のため情報は限られる。過度に語らないよう努めている。</p>
+</div>
+
+<ul class="plain">
+  <li>医療（SaMD）という高規制領域で、AIMS（AI Management System）に則った管理体制を構築。「評価」「説明・統制」「改善」のサイクルを回す。</li>
+  <li><strong>「開発で使うAIも、AIMSの基準で管理」</strong>という方針のもと5段階の管理サイクル：①AIDD（仕様・テスト・整合性駆動）で開発を体系化 ②全てのエージェントのテレメトリを収集 ③<strong>指示・ハーネス・ツール使用ログを可視化し改善</strong> ④IDPで開発者が迷わず安全なプロセスに乗れる ⑤AIMSの基準で作る過程も監査・管理下に</li>
+  <li><strong>ハーネスの工夫</strong>：ハーネスを<strong>テレメトリとして観測し、改善のループに乗せる</strong>という位置づけ。設計対象としてのハーネス（AIM213・AIM203）とは異なる角度であり、3件の中で唯一「ハーネスが効いているかをどう測るか」に踏み込んでいる（本資料の解釈）。<span class="interp">本資料の解釈</span></li>
+  <li>効果：開発期間79%短縮（24ヶ月→5ヶ月）、開発体制47%削減（17人→9人）、開発者生産性約300%向上（コミット数・Pull Request数から算出）、運用保守工数約63%削減。</li>
+</ul>
+
+<h3 id="p3-8">3-8. 事例から読み取れるハーネスの工夫（まとめ）</h3>
+
+<div class="callout blue">
+  <span class="ttl">本資料の解釈であることを明示する</span>
+  <p>3件＋機能的に重なる1件を並べると、ハーネスの工夫には4つの型が見える、というのは本資料の整理である。<span class="interp">本資料の解釈</span></p>
+</div>
+
+<div class="table-scroll">
+<table>
+<caption>表：ハーネスの工夫の4つの型（本資料の整理）</caption>
+<thead><tr><th>工夫の型</th><th>事例</th><th>要点</th></tr></thead>
+<tbody>
+<tr><td><strong>組織資産化</strong></td><td>東京海上日動システムズ</td><td>個人の職人芸ではなく、どのチームでも一定品質が出る仕組みへ。「AI-DLCマスターがいない」への構造的回答</td></tr>
+<tr><td><strong>共通基盤としての配布</strong></td><td>デジタル庁</td><td>GCAS DevStack から配る。多数の組織を抱える立場ならではの解。ただし自由度とのバランスは検証中</td></tr>
+<tr><td><strong>制約からの逆算</strong></td><td>デジタル庁</td><td>国内完結・学習遮断・認証・コスト把握という制約が、そのままハーネスの設計要件になる</td></tr>
+<tr><td><strong>観測と改善</strong></td><td>KDDIアイレット</td><td>ハーネスは作って終わりではない。テレメトリとして測り、改善ループに乗せる</td></tr>
+<tr><td>（参考）<strong>別語彙での到達</strong></td><td>トランスコスモス</td><td>ハーネスと呼ばずとも、Agent Knowledge Base と3Agent構成で同じ機能に到達している</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="musubi">結び</h2>
+
+<p><strong>この14件を横断して見えたことを、以下の3点で締める。</strong></p>
+
+<ol class="plain">
+  <li><strong>AI-DLC は「AIの使い方」ではなく「人の働き方」の方法論である。</strong> 3フェーズ9ステージよりも、プラン⇨レビュー⇨実行⇨レビューのサイクルと、それを可能にするモブワークこそが本体である。東京海上が「最大の課題はビジネスオーナー側の変革」と総括し、AIM222 が非エンジニアに向けて語ったことは、偶然ではない。</li>
+  <li><strong>ハーネスは AI-DLC の公式語彙ではなく、実践する事業会社側から立ち上がった語である。</strong> AI-DLC本体を解説する3件（AIM221／AIM222／DVT452）に「ハーネス」の語は一度も現れず、語るのは実装する側（東京海上、デジタル庁、KDDIアイレット）である。方法論が「何をすべきか」を語り、現場が「どう仕組みに落とすか」を語る——この分業が、Summit の資料群にそのまま現れている（本資料の解釈）。<span class="interp">本資料の解釈</span></li>
+  <li><strong>AI-DLC を採るかどうかは、方法論の優劣ではなく案件の性質の問題である。</strong> 東京海上が2つのスタイルを併走させ、トランスコスモスが独自路線を選び、DVT324 が AI-DLC を明示的に除外したという事実は、それを示している。</li>
+</ol>
+
+<h2 id="refs">参照資料一覧</h2>
+
+<p>
+本資料は <code>参考資料/AWS Summit Japan 2026/MD/</code> 配下14件のセッション要約のうち、本文中で実際に内容を引用・参照した10件のセッションIDを典拠として明示している。残り4件（下表外）はAgentCore／サーバーレス設計等、AI-DLC・ハーネスとは異なる主題であったため、本資料では引用していない。
+</p>
+
+<div class="table-scroll">
+<table>
+<caption>表：本資料が典拠として引用した10セッション</caption>
+<thead><tr><th>セッションID</th><th>タイトル</th><th>登壇者・組織</th></tr></thead>
+<tbody>
+<tr><td>AIM221</td><td>AI 駆動開発ライフサイクル (AI-DLC) のご紹介</td><td>吉村弘明／アマゾンウェブサービスジャパン</td></tr>
+<tr><td>AIM222</td><td>AI 駆動は上流工程にこそ活きる－非エンジニアにこそ知ってほしい、AI 駆動開発ライフサイクルによる上流工程の変革</td><td>嶺行伸／アマゾンウェブサービスジャパン</td></tr>
+<tr><td>AIM223</td><td>AI でコードは書けても、レビューできる人がいなくなる ― ソフトウェア開発における自動化のパラドックス</td><td>杉本晋吾／アマゾンウェブサービスジャパン</td></tr>
+<tr><td>DVT452</td><td>Operation Phase of AI-DLC －AI 駆動カオスエンジニアリングのすすめ－</td><td>金森政雄／アマゾンウェブサービスジャパン</td></tr>
+<tr><td>DVT324</td><td>Kiro と Amazon の文化から学ぶ AI 駆動開発の型</td><td>高野賢司／アマゾンウェブサービスジャパン</td></tr>
+<tr><td>AIM213</td><td>AI 駆動開発による開発者体験の変革</td><td>山下裕記／東京海上日動システムズ株式会社</td></tr>
+<tr><td>AIM203</td><td>ガバメントクラウドでの AI 駆動開発の設計と実践</td><td>佐藤智樹／デジタル庁</td></tr>
+<tr><td>AIM146</td><td>ランサム危機を転機にーアスクルが加速させた AI-DLC</td><td>吉岡晃／アスクル株式会社</td></tr>
+<tr><td>AIM310</td><td>AI 駆動開発 × 開発標準化で実現するエンタープライズ向けシステム開発の今と未来</td><td>所年雄／トランスコスモス株式会社</td></tr>
+<tr><td>PRT213-S</td><td>AI 駆動開発 × セキュアな医療インフラ －技術が叶える、データの民主化－ (sponsored by KDDI iret)</td><td>山田憲嗣（大阪大学）／中野葉月（KDDIアイレット株式会社）</td></tr>
+</tbody>
+</table>
+</div>
+
+<p class="src-line">
+本ページは <code>参考資料/AWS Summit Japan 2026/MD/</code> 配下の各セッション要約を横断的に参照して作成した。内容はMDに記載された事実の範囲に忠実であり、記載のない事実の創作は行っていない。本資料独自の整理・解釈である箇所には、その旨を明示するバッジまたは注記ボックスを付している。
+</p>
+
+<p><a class="backtotop" href="#readme">目次に戻る</a></p>
+
+</main>
+
+<footer>
+  <p>本HTMLは AWS Summit Japan 2026 の公開セッション資料14件のうち、本文で引用した10件の要約（<code>参考資料/AWS Summit Japan 2026/MD/</code> 配下）を土台に作成した、完全自己完結型のまとめ資料である（外部CDN・外部フォント・外部画像への依存なし。図はすべてインラインSVG）。</p>
+</footer>
+
+</body>
+</html>

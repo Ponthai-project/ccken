@@ -9,9 +9,15 @@
 | `CC研_運営/` | 研究会の運営・進め方・To-Be/ギャップ資料（公式寄りの土台文書） |
 | `personal_doc/` | 個人の整理メモ・登壇資料サマリー。`分科会インセプションデッキ/` に4分科会（①AI-Ready基盤 ②AI駆動開発プロセス ③品質保証 ④人と組織）の編成資料とデッキ |
 | `参考資料/` | 登壇スライド等のPDF原本（出典ごとにサブディレクトリで管理） |
-| `参考資料/AWS Summit Japan 2026/` | AWS Summit Japan 2026 のセッション資料PDF、配下 `MD/` に同PDFの構造化Markdown要約（PDFと同名） |
-| `参考資料/speakers Deck/` | Speaker Deck から収集した登壇資料PDF、配下 `MD/` に同PDFの構造化Markdown要約（PDFと同名） |
-| `参考資料/summary/` | 出典を横断したまとめ資料 |
+| `参考資料/AWS Summit Japan 2026/` | AWS Summit Japan 2026 のセッション資料PDF |
+| `参考資料/speakers Deck/` | Speaker Deck から収集した登壇資料PDF |
+
+各出典ディレクトリは以下の2つのサブディレクトリを持つ。
+
+| サブディレクトリ | 用途 |
+|---|---|
+| `MD/` | 同ディレクトリのPDFの構造化Markdown要約（PDFと同名） |
+| `summary/` | その出典の資料群を横断したまとめ資料（MD/HTML） |
 
 ## 作業規約
 
