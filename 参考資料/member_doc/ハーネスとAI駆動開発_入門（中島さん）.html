@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>「ハーネス」を理解する ― AI駆動開発とAI-DLCのいろは</title>
+<style>
+  :root{
+    --bg:#eef1ee;
+    --surface:#ffffff;
+    --surface-2:#e3e8e2;
+    --ink:#1c2422;
+    --muted:#5b6864;
+    --accent:#a06423;
+    --accent-ink:#7a4c19;
+    --accent-soft:#f1e3cd;
+    --accent2:#2f6b73;
+    --accent2-soft:#dcecec;
+    --line:#cfd6cd;
+    --line-strong:#aab5a6;
+    --shadow: 0 1px 2px rgba(28,36,34,.06), 0 6px 20px rgba(28,36,34,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#14191a;
+      --surface:#1c2224;
+      --surface-2:#232b2b;
+      --ink:#e9ece9;
+      --muted:#98a49d;
+      --accent:#dc9f52;
+      --accent-ink:#f0bd7e;
+      --accent-soft:#332a1a;
+      --accent2:#79b7c0;
+      --accent2-soft:#1f3336;
+      --line:#2c3634;
+      --line-strong:#404c48;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14191a; --surface:#1c2224; --surface-2:#232b2b; --ink:#e9ece9; --muted:#98a49d;
+    --accent:#dc9f52; --accent-ink:#f0bd7e; --accent-soft:#332a1a; --accent2:#79b7c0; --accent2-soft:#1f3336;
+    --line:#2c3634; --line-strong:#404c48; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"]{
+    --bg:#eef1ee; --surface:#ffffff; --surface-2:#e3e8e2; --ink:#1c2422; --muted:#5b6864;
+    --accent:#a06423; --accent-ink:#7a4c19; --accent-soft:#f1e3cd; --accent2:#2f6b73; --accent2-soft:#dcecec;
+    --line:#cfd6cd; --line-strong:#aab5a6; --shadow: 0 1px 2px rgba(28,36,34,.06), 0 6px 20px rgba(28,36,34,.05);
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Yu Gothic Medium","YuGothic","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+    line-height:1.9;
+    font-size:16px;
+  }
+  ::selection{ background: var(--accent-soft); color: var(--accent-ink); }
+  a{ color:var(--accent2); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover{ color:var(--accent); }
+  a:focus-visible, button:focus-visible{ outline: 2px solid var(--accent2); outline-offset: 3px; border-radius:2px; }
+
+  h1,h2,h3{
+    font-family:"YuMincho","Yu Mincho","Hiragino Mincho ProN","HiraMinProN-W6","Noto Serif JP",serif;
+    font-weight:600;
+    text-wrap:balance;
+    color:var(--ink);
+    margin:0;
+  }
+
+  .mono{
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+  }
+
+  .page{
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 40px 24px 100px;
+  }
+
+  /* ---------- Title block ---------- */
+  .titleblock{
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    border-radius: 6px;
+    overflow:hidden;
+    animation: riseIn .5s ease both;
+  }
+  @media (prefers-reduced-motion: reduce){ .titleblock{ animation:none; } }
+  @keyframes riseIn{ from{ opacity:0; transform: translateY(6px);} to{opacity:1; transform:none;} }
+
+  .titleblock-top{
+    padding: 30px 32px 26px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12.5px; letter-spacing:.08em;
+    color:var(--accent-ink);
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    background: var(--accent-soft);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+  .titleblock h1{
+    margin-top:14px;
+    font-size: clamp(26px, 4vw, 34px);
+    line-height:1.4;
+  }
+  .titleblock .subtitle{
+    margin-top:8px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .titleblock-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px,1fr));
+    font-size: 13.5px;
+  }
+  .tb-cell{
+    padding: 12px 18px;
+    border-right: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+  }
+  .tb-cell:last-child{ border-right:none; }
+  .tb-cell .k{
+    display:block; color:var(--muted); font-size:11px; letter-spacing:.06em;
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    margin-bottom: 3px;
+  }
+  .tb-cell .v{ color: var(--ink); }
+
+  /* ---------- TOC ---------- */
+  .toc{
+    margin-top: 26px;
+    background: var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding: 20px 24px;
+  }
+  .toc h2{ font-size:14px; font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace; letter-spacing:.06em; color:var(--muted); font-weight:500; }
+  .toc ol{ margin: 12px 0 0; padding: 0; list-style:none; counter-reset: toc; }
+  .toc li{ counter-increment: toc; margin: 6px 0; }
+  .toc li a{
+    display:flex; gap:10px; align-items:baseline;
+    color:var(--ink); text-decoration:none;
+    padding: 4px 2px;
+    border-bottom: 1px dotted transparent;
+  }
+  .toc li a:hover{ color:var(--accent2); border-bottom-color: var(--line-strong); }
+  .toc li a::before{
+    content: counter(toc, decimal-leading-zero);
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    font-size:12.5px; color:var(--accent);
+    flex:0 0 auto;
+  }
+
+  /* ---------- Sections ---------- */
+  article{ margin-top: 56px; }
+  .part{ margin-top: 64px; scroll-margin-top: 24px; }
+  .part-head{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    border-left: 4px solid var(--accent);
+    padding-left: 14px;
+  }
+  .part-num{
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    font-size:12.5px; letter-spacing:.08em; color:var(--accent-ink);
+  }
+  .part h2{ font-size: clamp(21px,3vw,26px); }
+  .part-lede{
+    color:var(--muted);
+    margin: 14px 0 0;
+    font-size: 15px;
+  }
+  .part > .body{ margin-top: 22px; }
+  .part p{ margin: 14px 0; max-width: 68ch; }
+  h3{
+    margin-top: 34px;
+    font-size: 18px;
+  }
+  .part h3 + p{ margin-top: 10px; }
+
+  /* ---------- Callouts ---------- */
+  .callout{
+    position:relative;
+    margin: 24px 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px 22px 18px;
+  }
+  .callout .tag{
+    position:absolute; top:-10px; left:16px;
+    background: var(--accent);
+    color: #fff;
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    font-size: 11px; letter-spacing:.06em;
+    padding: 3px 9px;
+    border-radius: 3px;
+  }
+  .callout.alt .tag{ background: var(--accent2); }
+  @media (prefers-color-scheme: dark){
+    .callout .tag{ color:#1a1408; }
+    .callout.alt .tag{ color:#08191a; }
+  }
+  :root[data-theme="dark"] .callout .tag{ color:#1a1408; }
+  :root[data-theme="dark"] .callout.alt .tag{ color:#08191a; }
+  :root[data-theme="light"] .callout .tag{ color:#fff; }
+  :root[data-theme="light"] .callout.alt .tag{ color:#fff; }
+  .callout p{ margin: 8px 0; }
+  .callout .src{
+    margin-top:10px; font-size:13px; color:var(--muted);
+  }
+  .callout .src a{ color: var(--muted); }
+
+  .formula{
+    text-align:center;
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    font-size: clamp(17px, 2.6vw, 22px);
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 22px 16px;
+    margin: 26px 0;
+    color: var(--ink);
+  }
+  .formula .op{ color: var(--accent); margin: 0 10px; }
+
+  /* ---------- Perspective cards ---------- */
+  .pcard-grid{
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap:16px; margin: 22px 0;
+  }
+  .pcard{
+    border:1px solid var(--line); border-radius:10px; background:var(--surface);
+    padding:18px 20px; display:flex; flex-direction:column;
+  }
+  .pcard-head{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .pcard-head a{ font-weight:700; font-size:15.5px; }
+  .pcard-role{
+    font-size:11px; color:var(--muted);
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    letter-spacing:.03em;
+  }
+  .pcard-tagline{
+    margin:12px 0 10px; font-size:14px; font-weight:700; color:var(--accent-ink);
+    padding-bottom:10px; border-bottom:1px dashed var(--line);
+  }
+  .pcard-list{ margin:0; padding-left:1.15em; flex:1 1 auto; }
+  .pcard-list li{ font-size:13.5px; margin:7px 0; max-width:none; }
+  .pcard-src{ margin:14px 0 0; font-size:11.5px; color:var(--muted); line-height:1.6; }
+  .pcard-src a{ color:var(--muted); }
+
+  /* ---------- Glossary ---------- */
+  .glossary{ margin:18px 0 0; }
+  .glossary > div{ padding:13px 0; border-bottom:1px dashed var(--line); }
+  .glossary > div:last-child{ border-bottom:none; }
+  .glossary dt{ font-weight:700; font-size:14.5px; color:var(--ink); }
+  .glossary dd{ margin:5px 0 0; font-size:14px; color:var(--muted); max-width:70ch; line-height:1.75; }
+  .glossary dd .mono{ font-size:.92em; }
+
+  /* ---------- Table ---------- */
+  .tablewrap{ overflow-x:auto; margin: 22px 0; border:1px solid var(--line); border-radius:6px; }
+  table{ border-collapse:collapse; width:100%; min-width:640px; background:var(--surface); font-size:14.5px;}
+  th,td{ text-align:left; padding: 12px 16px; vertical-align:top; border-bottom:1px solid var(--line); }
+  thead th{
+    background: var(--surface-2);
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    font-size:12px; letter-spacing:.04em; color:var(--muted); font-weight:500;
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  td.who{ font-weight:600; white-space:nowrap; }
+
+  /* ---------- Timeline ---------- */
+  .timeline{
+    display:flex; gap:0; margin: 26px 0; overflow-x:auto;
+    border-top: 2px solid var(--line-strong);
+    padding-top: 18px;
+  }
+  .tl-item{
+    flex: 1 1 0; min-width: 130px;
+    position:relative;
+    padding: 0 14px 0 0;
+  }
+  .tl-item::before{
+    content:''; position:absolute; top:-24px; left:0;
+    width:10px; height:10px; border-radius:50%;
+    background: var(--accent); border:2px solid var(--bg);
+  }
+  .tl-item.now::before{ background: var(--accent2); }
+  .tl-date{ font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace; font-size:13px; color:var(--accent-ink); }
+  .tl-item.now .tl-date{ color: var(--accent2); }
+  .tl-label{ font-size:13.5px; margin-top:4px; color:var(--ink); }
+  .tl-item.now .tl-label{ font-weight:700; }
+
+  /* ---------- Lists ---------- */
+  ul.plain{ padding-left: 1.2em; margin: 14px 0; }
+  ul.plain li{ margin: 8px 0; max-width: 66ch; }
+  ul.plain li::marker{ color: var(--accent); }
+
+  /* ---------- Refs ---------- */
+  .refgroup{ margin-top: 22px; }
+  .refgroup h4{
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    font-size:12.5px; letter-spacing:.06em; color:var(--muted); font-weight:500;
+    text-transform:uppercase;
+    border-bottom:1px solid var(--line); padding-bottom:8px;
+  }
+  .refgroup ol{ list-style:none; margin:10px 0 0; padding:0; counter-reset: ref; }
+  .refgroup li{
+    counter-increment: ref;
+    display:flex; gap:12px; padding: 10px 0; border-bottom: 1px dashed var(--line);
+    font-size: 14.5px;
+  }
+  .refgroup li:last-child{ border-bottom:none; }
+  .refgroup li::before{
+    content: counter(ref);
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    color: var(--accent); flex:0 0 20px;
+  }
+  .refgroup .rtitle{ display:block; }
+  .refgroup .rmeta{ display:block; color:var(--muted); font-size:12.5px; margin-top:2px; }
+
+  footer{
+    margin-top: 70px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+    display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  }
+
+  @media (max-width: 560px){
+    .titleblock-top{ padding: 24px 20px 20px; }
+    .tb-cell{ padding: 10px 14px; }
+    .part-head{ padding-left:10px; }
+  }
+
+  /* ---------- Aside ---------- */
+  .aside{
+    position:relative;
+    margin: 24px 0 0;
+    border: 1px dashed var(--line-strong);
+    border-radius: 6px;
+    padding: 18px 20px 16px;
+    background: var(--surface);
+  }
+  .aside .tag{
+    display:inline-block;
+    font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+    font-size:11px; letter-spacing:.06em; color:var(--muted);
+    border:1px solid var(--line-strong); border-radius:3px;
+    padding:2px 8px; margin-bottom:10px;
+  }
+  .aside p{ margin:8px 0; font-size:14.5px; }
+  .aside .src{ margin-top:8px; font-size:12.5px; color:var(--muted); }
+  .aside .src a{ color:var(--muted); }
+
+  /* ---------- Inline citation ---------- */
+  .cite{ font-size: .88em; color: var(--muted); text-decoration-color: var(--line-strong); }
+  .cite:hover{ color: var(--accent2); }
+
+  /* ---------- Responsive: stacked tables on narrow screens ---------- */
+  @media (max-width: 640px){
+    .tablewrap{ border:none; overflow-x:visible; }
+    .tablewrap table{ min-width:0; }
+    .tablewrap thead{ display:none; }
+    .tablewrap table, .tablewrap tbody, .tablewrap tr, .tablewrap td{ display:block; width:100%; }
+    .tablewrap tr{
+      border:1px solid var(--line); border-radius:6px; margin-bottom:14px; overflow:hidden;
+      background:var(--surface);
+    }
+    .tablewrap td{ border-bottom:1px solid var(--line); padding:12px 14px; }
+    .tablewrap tr td:last-child{ border-bottom:none; }
+    .tablewrap td.who{ background:var(--surface-2); white-space:normal; }
+    .tablewrap td:not(.who)::before{
+      content: attr(data-label);
+      display:block;
+      font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace;
+      font-size:11px; letter-spacing:.05em; color:var(--accent-ink);
+      margin-bottom:5px;
+    }
+
+    /* timeline becomes a vertical list */
+    .timeline{
+      flex-direction:column; border-top:none;
+      border-left:2px solid var(--line-strong);
+      padding-top:2px; padding-left:22px; gap:22px;
+    }
+    .tl-item{ min-width:0; padding-right:0; }
+    .tl-item::before{ top:4px; left:-27px; }
+
+    .page{ padding-left:16px; padding-right:16px; }
+    .refgroup li{ gap:10px; }
+  }
+
+  /* ---------- Diagrams ---------- */
+  .diagram{ margin: 28px 0; }
+  .diagram .scrollbox{ overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:6px; }
+  .diagram svg{ display:block; overflow:visible; }
+  @media (max-width:640px){
+    .diagram .scrollbox{ margin:0 -16px; padding:0 16px; }
+  }
+  .diagram figcaption{ margin-top:12px; font-size:13px; color:var(--muted); text-align:center; line-height:1.7; max-width:56ch; margin-left:auto; margin-right:auto; }
+  .diagram text{ font-family:"Yu Gothic Medium","YuGothic","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; fill:var(--ink); }
+  .diagram text.mono{ font-family: ui-monospace,"Cascadia Mono","SF Mono",Consolas,"Roboto Mono",monospace; }
+  .diagram text.muted{ fill:var(--muted); }
+  .diagram text.on-accent{ fill:var(--bg); }
+  .diagram text.accent-ink{ fill:var(--accent-ink); }
+  .diagram text.accent2-ink{ fill:var(--accent2); }
+  .diagram .track2{ stroke:var(--accent2); }
+  .diagram .track1{ stroke:var(--accent); }
+  .diagram .fill-accent{ fill:var(--accent); }
+  .diagram .fill-none{ fill:none; }
+  .diagram .stroke-accent{ stroke:var(--accent); }
+  .diagram .stroke-accent2{ stroke:var(--accent2); }
+  .diagram .stroke-line{ stroke:var(--line-strong); }
+  .diagram .box{ fill:var(--surface); stroke:var(--line-strong); stroke-width:1.5; }
+  .diagram .box-warm{ fill:var(--accent-soft); stroke:var(--accent); stroke-width:1.5; }
+  .diagram .box-cool{ fill:var(--accent2-soft); stroke:var(--accent2); stroke-width:1.5; }
+  .diagram .dash{ stroke-dasharray:6 5; }
+  @media (max-width:640px){
+    .diagram figcaption{ text-align:left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="titleblock">
+    <div class="titleblock-top">
+      <span class="eyebrow">第3分科会 ／ AI品質保証</span>
+      <h1>「ハーネス」を理解する<br>― AI駆動開発とAI-DLCのいろは ―</h1>
+      <p class="subtitle">7/23締切「ハーネスの定義」宿題のたたき台。AI駆動開発に不慣れなメンバーでも読める前提で書いています。</p>
+    </div>
+    <div class="titleblock-grid">
+      <div class="tb-cell"><span class="k">研究会</span><span class="v">三菱CC研究会 第3部会</span></div>
+      <div class="tb-cell"><span class="k">分科会</span><span class="v">第3分科会（AI品質保証）</span></div>
+      <div class="tb-cell"><span class="k">位置づけ</span><span class="v">宿題たたき台・議論用資料</span></div>
+      <div class="tb-cell"><span class="k">作成者</span><span class="v">東京海上日動システムズ 中島</span></div>
+      <div class="tb-cell"><span class="k">更新日</span><span class="v">2026-07-19</span></div>
+    </div>
+  </div>
+
+  <nav class="toc" aria-label="目次">
+    <h2>CONTENTS</h2>
+    <ol>
+      <li><a href="#s1">なぜこの資料を作ったか</a></li>
+      <li><a href="#s2">そもそも「AI駆動開発」とは何か</a></li>
+      <li><a href="#s3">ひとつの実践モデル：AI-DLC</a></li>
+      <li><a href="#s4">速く作れても、信頼できるとは限らない</a></li>
+      <li><a href="#s5">「ハーネス」とは何か</a></li>
+      <li><a href="#s6">分科会としての論点・次の一歩</a></li>
+      <li><a href="#s7">用語ミニ集</a></li>
+      <li><a href="#s8">参考文献</a></li>
+    </ol>
+  </nav>
+
+  <article>
+
+    <section class="part" id="s1">
+      <div class="part-head">
+        <span class="part-num">PART 1</span>
+        <h2>なぜこの資料を作ったか</h2>
+      </div>
+      <div class="body">
+        <p>第3分科会の最初の宿題は、<strong>7/23までに「ハーネス」という言葉の定義を各自調べてくること</strong>でした。ただ、ハーネス単体をいきなり説明しても、「なぜ今その概念が必要とされているのか」が分からないと実感が湧きません。</p>
+        <p>そこでこの資料では、①そもそもAI駆動開発とは何か、②AWSが提唱する具体的な進め方「AI-DLC」、③その先で誰もがぶつかる「品質・信頼性」の壁、④その壁への処方箋としての「ハーネス」――という順番で説明します。AI駆動開発に触れたことがない方でも読み進められるよう、専門用語は初出時にかみ砕いています。</p>
+
+        <div class="aside">
+          <span class="tag">余談：なぜこの資料はHTMLなのか</span>
+          <p>Anthropicのブログで、Claude Codeチームのエンジニアが「エージェントとの情報のやり取りは、Markdownより実はHTMLの方が効果的だ」と論じています。理由は主に3つ。①表・配色・レイアウトを使えるので情報密度が上げられる、②リンク一つで共有できてブラウザで開くだけで読める、③スライダーやトグルなど双方向のやり取りもできる。「100行を超えるMarkdownはもう自分でも読まなくなった」という一節が象徴的です。この資料をあえてHTMLで作っているのも、分科会メンバー全員に実際に読んで／使ってもらいたいからです。</p>
+          <p class="src">出典：<a href="https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html" target="_blank" rel="noopener">“Using Claude Code: The unreasonable effectiveness of HTML”（Anthropic Blog, Thariq Shihipar）</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="part" id="s2">
+      <div class="part-head">
+        <span class="part-num">PART 2</span>
+        <h2>そもそも「AI駆動開発」とは何か</h2>
+      </div>
+      <div class="body">
+        <p>「AI駆動開発」という言葉は幅広く使われますが、大きく2つの立ち位置に分けて考えると整理しやすくなります。</p>
+        <ul class="plain">
+          <li><strong>AI支援型（AI-Assisted）</strong>：コーディングやレビューなど、既存の開発プロセスの一部の作業をAIが助ける。主導権はあくまで人。</li>
+          <li><strong>AI駆動型（AI-Driven）</strong>：要件定義・設計・実装・テスト・運用まで、開発ライフサイクルの実行そのものをAIが担い、人は方針決定と検証に回る。</li>
+        </ul>
+
+        <figure class="diagram"><div class="scrollbox">
+          <svg viewBox="0 0 680 130" width="680" height="130" role="img" aria-labelledby="diagA-title">
+            <title id="diagA-title">AI支援型からAI駆動型までのスペクトラム</title>
+            <line x1="50" y1="66" x2="330" y2="66" class="track2" stroke-width="8" stroke-linecap="round"/>
+            <line x1="330" y1="66" x2="605" y2="66" class="track1" stroke-width="8" stroke-linecap="round"/>
+            <polygon points="605,58 622,66 605,74" class="fill-accent"/>
+            <text x="50" y="34" class="mono accent2-ink" font-size="13" font-weight="700">AI支援型（AI-Assisted）</text>
+            <text x="50" y="98" class="muted" font-size="12">既存プロセスの一部をAIが助ける／主導権は人</text>
+            <text x="630" y="34" text-anchor="end" class="mono accent-ink" font-size="13" font-weight="700">AI駆動型（AI-Driven）</text>
+            <text x="630" y="98" text-anchor="end" class="muted" font-size="12">ライフサイクルの実行をAIが担う／人は監督</text>
+            <circle cx="460" cy="66" r="8" class="box-warm" stroke-width="3"/>
+            <text x="460" y="118" text-anchor="middle" font-size="12">AI-DLCが狙う位置</text>
+          </svg>
+          </div>
+          <figcaption>AI駆動開発は「どこまでAIに実行を委ねるか」のグラデーション。AI-DLCはかなり右寄り＝AI駆動型を志向するモデル。</figcaption>
+        </figure>
+
+        <p>両者の間には段階があり、AWSのセッションでも「どこまでAIに実行を委ねるか」を数段階に整理して説明していました<span class="cite">（出典：AWS Summit Japan 2026 AIM221「AI駆動開発ライフサイクル(AI-DLC)のご紹介」）</span>。ポイントは、AI駆動開発は「タイピング中に次の数行を提案してくれる」といったコード補完レベルの効率化ではなく、要件定義から実装・テスト・運用までの<strong>「実行」そのものをどこまでAIに委ねるか</strong>という、開発プロセス全体の主導権に関わる設計判断だということです。前者はカーナビが道を教えてくれる程度の支援ですが、後者はAIが実際にハンドルを握り、人は目的地を指示して要所で確認する、くらいの違いがあります。</p>
+
+        <h3>「本当に速くなっているのか」問題</h3>
+        <p>ここで大事な前提として、AI駆動開発は必ずしも「無条件に速くて正確」というわけではない、というデータがあります。</p>
+        <div class="callout">
+          <span class="tag">DATA</span>
+          <p>Thoughtworksの調査では、AI活用による生産性向上は概ね<strong>10〜15%程度</strong>という報告がある一方、METRが2025年に実施したランダム化比較試験では、経験豊富なOSS開発者がAIツールを使うと、実際には作業時間が<strong>19%長くなった</strong>という結果が出ています。しかも開発者本人たちは、作業後に「20%速くなった」と感じていました。</p>
+          <p class="src">出典：<a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">METR “Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity”</a>／AWS Summit Japan 2026 AIM223資料</p>
+        </div>
+        <p>つまり「AIを使えば速くなる／良くなる」という体感と、実際の成果には<strong>大きなギャップが生まれうる</strong>ということです。このギャップを埋めて「本当に信頼して使えるか」を見極める仕組みが必要になる――これが、後述する「ハーネス」が求められる根本的な理由です。</p>
+      </div>
+    </section>
+
+    <section class="part" id="s3">
+      <div class="part-head">
+        <span class="part-num">PART 3</span>
+        <h2>ひとつの実践モデル：AI-DLC</h2>
+      </div>
+      <div class="body">
+        <p>「AI駆動でどう開発を進めるか」の具体案として、AWSは<strong>AI-DLC（AI-Driven Development Lifecycle／AI駆動開発ライフサイクル）</strong>というモデルを提唱しています。AI支援型（作業の一部を強化するだけ）でも、完全自律型（人が一切介在しない）でもない「第三の道」と位置づけられており、2つの原則で成り立っています<span class="cite">（出典：<a href="https://aws.amazon.com/jp/blogs/news/ai-driven-development-life-cycle/" target="_blank" rel="noopener">AWS公式ブログ「AI駆動開発ライフサイクル (AI-DLC)」</a>／AIM221）</span>。</p>
+        <ul class="plain">
+          <li><strong>AIが実行し、人間が監視する</strong>：AIが詳細な作業計画を作り、都度確認を求める。ただし重要な意思決定の権限は人が持ち続ける。</li>
+          <li><strong>動的なチームコラボレーション</strong>：AIが定型作業を引き受けている間、チームは問題解決や創造的な判断に集中する。</li>
+        </ul>
+
+        <h3>コアとなる3つのフェーズ</h3>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>フェーズ</th><th>内容</th></tr></thead>
+            <tbody>
+              <tr><td class="who">Inception（開始）</td><td data-label="内容">ビジネス上の意図を詳細な要件・ストーリーに落とし込む。「モブエラボレーション」と呼ばれる集団作業で、チーム全員がAIの質問・提案をその場で検証する。</td></tr>
+              <tr><td class="who">Construction（構築）</td><td data-label="内容">Inceptionで固めた前提をもとに、AIが論理アーキテクチャ・ドメインモデル・コード実装・テストを提案。「モブコンストラクション」で、チームが技術的な判断をリアルタイムに明確化する。</td></tr>
+              <tr><td class="who">Operation（運用）</td><td data-label="内容">蓄積された文脈をもとに、AIがInfrastructure as Codeとデプロイをチームの監督のもとで管理する。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout alt">
+          <span class="tag">UPDATE：Workflows v2</span>
+          <p>2026年に入り、AI-DLCは<strong>「AI-DLC Workflows v2」</strong>としてOSS公開・大幅刷新されています。骨格である Inception → Construction → Operation の3フェーズという考え方は変わりませんが、実装としては前段に<strong>Initialization（環境・コンテキストの初期セットアップ）</strong>と<strong>Ideation（要件を固める前の課題・アイデアの整理）</strong>の2つが追加され、<strong>5フェーズ・32ステージ、11のドメインエキスパートエージェント</strong>（product／design／delivery／architect／quality等）が各ステージを分担する構成に細分化されました。</p>
+          <p>さらに興味深いのは、v2では<strong>「ハーネス」という言葉がAI-DLC自身の用語集に正式に登場する</strong>ことです。v2の定義では、ハーネスとは「AI-DLCの中核ロジックを載せて動かすエージェントCLI/IDE（Claude CodeやKiroなど）と、そのツール向けに生成される配布形態」を指します。v2はこの意味でのハーネスに単一依存しない「マルチハーネス」アーキテクチャ（1つのコアから複数ツール向けに配布物を自動生成）を採用しています。Part 5で扱う「Model + Harness」とは少し粒度の違う話ですが、<strong>「ハーネス」が業界の共通語になりつつある</strong>ことを裏付ける実例と言えます。</p>
+          <p class="src">出典：<a href="https://github.com/awslabs/aidlc-workflows" target="_blank" rel="noopener">awslabs/aidlc-workflows（GitHub）</a>／<a href="https://aws.amazon.com/blogs/devops/open-sourcing-adaptive-workflows-for-ai-driven-development-life-cycle-ai-dlc/" target="_blank" rel="noopener">AWS DevOps Blog “Open-Sourcing Adaptive Workflows for AI-DLC”</a>／<a href="https://zenn.dev/aws_japan/articles/aidlc-workflows-v2-harness-engineering" target="_blank" rel="noopener">「AI-DLC Workflows 2.0 とは何か、そしてどう実装されているか」（Zenn, AWS Japan）</a></p>
+        </div>
+
+        <figure class="diagram"><div class="scrollbox">
+          <svg viewBox="0 0 900 270" width="900" height="270" role="img" aria-labelledby="diagB-title">
+            <title id="diagB-title">AI-DLC v2の5フェーズと循環</title>
+            <defs>
+              <marker id="arrB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" class="fill-accent"/>
+              </marker>
+            </defs>
+
+            <text x="65" y="90" text-anchor="middle" font-size="10.5" class="muted">v2で追加</text>
+            <rect x="10" y="100" width="110" height="90" rx="10" class="box"/>
+            <text x="65" y="130" text-anchor="middle" class="mono" font-size="12" font-weight="700">Initial-</text>
+            <text x="65" y="145" text-anchor="middle" class="mono" font-size="12" font-weight="700">ization</text>
+            <text x="65" y="166" text-anchor="middle" font-size="10.5" class="muted">環境・文脈の</text>
+            <text x="65" y="180" text-anchor="middle" font-size="10.5" class="muted">初期セットアップ</text>
+
+            <text x="195" y="90" text-anchor="middle" font-size="10.5" class="muted">v2で追加</text>
+            <rect x="140" y="100" width="110" height="90" rx="10" class="box"/>
+            <text x="195" y="136" text-anchor="middle" class="mono" font-size="12" font-weight="700">Ideation</text>
+            <text x="195" y="158" text-anchor="middle" font-size="10.5" class="muted">要件確定前の</text>
+            <text x="195" y="172" text-anchor="middle" font-size="10.5" class="muted">課題・案の整理</text>
+
+            <rect x="270" y="55" width="170" height="20" rx="10" class="box-warm"/>
+            <text x="355" y="69" text-anchor="middle" font-size="11">人＋AI 協働（モブ）</text>
+            <rect x="270" y="90" width="170" height="110" rx="12" class="box-warm"/>
+            <text x="355" y="118" text-anchor="middle" class="mono" font-size="15" font-weight="700">Inception</text>
+            <text x="355" y="137" text-anchor="middle" font-size="12">（開始）</text>
+            <text x="355" y="160" text-anchor="middle" font-size="11" class="muted">要件をストーリーへ</text>
+            <text x="355" y="176" text-anchor="middle" font-size="11" class="muted">モブエラボレーション</text>
+
+            <rect x="460" y="55" width="170" height="20" rx="10" class="box-warm"/>
+            <text x="545" y="69" text-anchor="middle" font-size="11">人＋AI 協働（モブ）</text>
+            <rect x="460" y="90" width="170" height="110" rx="12" class="box-warm"/>
+            <text x="545" y="118" text-anchor="middle" class="mono" font-size="15" font-weight="700">Construction</text>
+            <text x="545" y="137" text-anchor="middle" font-size="12">（構築）</text>
+            <text x="545" y="160" text-anchor="middle" font-size="11" class="muted">設計・実装・テストを提案</text>
+            <text x="545" y="176" text-anchor="middle" font-size="11" class="muted">モブコンストラクション</text>
+
+            <rect x="650" y="55" width="170" height="20" rx="10" class="box-cool"/>
+            <text x="735" y="69" text-anchor="middle" font-size="11">AIが実行・人は監督</text>
+            <rect x="650" y="90" width="170" height="110" rx="12" class="box-cool"/>
+            <text x="735" y="118" text-anchor="middle" class="mono" font-size="15" font-weight="700">Operation</text>
+            <text x="735" y="137" text-anchor="middle" font-size="12">（運用）</text>
+            <text x="735" y="160" text-anchor="middle" font-size="11" class="muted">IaC・デプロイを管理</text>
+            <text x="735" y="176" text-anchor="middle" font-size="11" class="muted">人の監督のもとで実行</text>
+
+            <line x1="122" y1="145" x2="138" y2="145" class="stroke-line" stroke-width="2.5" marker-end="url(#arrB)"/>
+            <line x1="252" y1="145" x2="266" y2="145" class="stroke-accent" stroke-width="2.5" marker-end="url(#arrB)"/>
+            <line x1="442" y1="145" x2="456" y2="145" class="stroke-accent" stroke-width="2.5" marker-end="url(#arrB)"/>
+            <line x1="632" y1="145" x2="646" y2="145" class="stroke-accent" stroke-width="2.5" marker-end="url(#arrB)"/>
+
+            <path d="M 735 200 C 735 235 355 235 355 200" class="stroke-accent2 dash fill-none" stroke-width="2.5" marker-end="url(#arrB)"/>
+            <text x="545" y="252" text-anchor="middle" font-size="11.5" class="accent2-ink">運用で得た知見を次のInceptionへフィードバック</text>
+          </svg>
+          </div>
+          <figcaption>v2では前段に Initialization・Ideation が加わり5フェーズ・32ステージに細分化。中核の Inception→Construction は人とAIの「モブ作業」、Operationはより自律的にAIが実行し、結果は次のサイクルへ還元される。</figcaption>
+        </figure>
+
+        <p>用語も刷新されていて、「スプリント」は<strong>ボルト（bolts）</strong>という時間・日単位の短いサイクルに、「エピック」は<strong>作業単位（Units of Work）</strong>に置き換えられています。従来のアジャイル用語よりも、継続的デリバリーとスピード感を強く意識した命名です。</p>
+        <p class="part-lede" style="margin-top:22px;">AI-DLCはあくまで「AWSが提唱する一つの型」であり、唯一解ではありません。ただ、「人がどこに残り、AIがどこを担うか」を役割ごとに定義しているという点は、後述のハーネスの話ともつながる重要な視点です。</p>
+      </div>
+    </section>
+
+    <section class="part" id="s4">
+      <div class="part-head">
+        <span class="part-num">PART 4</span>
+        <h2>速く作れても、信頼できるとは限らない</h2>
+      </div>
+      <div class="body">
+        <p>AI-DLCのようなモデルで開発サイクルを高速化できたとしても、それだけでは「できあがったものを信頼して使えるか」という問いには答えられません。AWS Summit Japan 2026のセッション「AIでコードは書けても、レビューできる人がいなくなる」<span class="cite">（AIM223）</span>は、まさにこの問題を扱っています。</p>
+
+        <h3>レビューできる人がいなくなる、というパラドックス</h3>
+        <p>AIにコードを書かせる比重が増えるほど、皮肉なことに<strong>そのコードを正しくレビューできる人が組織から失われていく</strong>、という逆説が起こりえます。このセッションでは、心理的所有感（Psychological Ownership）という理論を引いて、この現象を説明していました。</p>
+        <div class="callout alt">
+          <span class="tag">THEORY</span>
+          <p>人が何かに対して当事者意識・熟達を持つには、3つの要素が必要とされます。</p>
+          <ul class="plain" style="margin:8px 0 0;">
+            <li><strong>統制（Control）</strong>：自分がその対象をコントロールできている感覚</li>
+            <li><strong>精通した知識（Intimate knowledge）</strong>：対象を深く理解している感覚</li>
+            <li><strong>自己投資（Self-investment）</strong>：自分の時間・労力を注ぎ込んだという感覚</li>
+          </ul>
+          <p>AIにコードの大部分を書かせてしまうと、この3つすべてが失われやすくなります。結果として「誰も細部を把握していないコード」が生まれ、レビューという行為そのものが機能しなくなっていきます。</p>
+          <p class="src">出典：Jon L. Pierce, Tatiana Kostova, Kurt T. Dirks (2001) “Toward a Theory of Psychological Ownership in Organizations”／Tapani Rinta-Kahila et al. (2023) “The Vicious Circles of Skill Erosion”／AWS Summit Japan 2026 AIM223資料</p>
+        </div>
+
+        <figure class="diagram"><div class="scrollbox">
+          <svg viewBox="0 0 520 300" width="520" height="300" role="img" aria-labelledby="diagC-title">
+            <title id="diagC-title">当事者意識を支える3要素</title>
+            <line x1="260" y1="95" x2="260" y2="150" class="stroke-line dash" stroke-width="2"/>
+            <line x1="115" y1="235" x2="225" y2="185" class="stroke-line dash" stroke-width="2"/>
+            <line x1="405" y1="235" x2="295" y2="185" class="stroke-line dash" stroke-width="2"/>
+
+            <circle cx="260" cy="175" r="52" class="fill-accent"/>
+            <text x="260" y="171" text-anchor="middle" class="on-accent" font-size="13" font-weight="700">当事者意識</text>
+            <text x="260" y="189" text-anchor="middle" class="on-accent" font-size="11">（レビュー能力）</text>
+
+            <circle cx="260" cy="55" r="46" class="box-warm"/>
+            <text x="260" y="51" text-anchor="middle" font-size="12" font-weight="700">統制</text>
+            <text x="260" y="66" text-anchor="middle" font-size="10.5" class="muted">Control</text>
+
+            <circle cx="95" cy="255" r="46" class="box-warm"/>
+            <text x="95" y="248" text-anchor="middle" font-size="12" font-weight="700">精通した知識</text>
+            <text x="95" y="264" text-anchor="middle" font-size="10.5" class="muted">Intimate knowledge</text>
+
+            <circle cx="425" cy="255" r="46" class="box-warm"/>
+            <text x="425" y="248" text-anchor="middle" font-size="12" font-weight="700">自己投資</text>
+            <text x="425" y="264" text-anchor="middle" font-size="10.5" class="muted">Self-investment</text>
+          </svg>
+          </div>
+          <figcaption>3つの要素とのつながりが強いほど「当事者意識」＝レビューできる力が保たれる。AIに任せる範囲が広がるほど、この3本の線が細くなっていく。</figcaption>
+        </figure>
+
+        <h3>ヒューマン・イン・ザ・ループとヒューマン・オン・ザ・ループ</h3>
+        <p>「人間がどこまで関わるか」の度合いは、次の2つの言葉で整理されます。</p>
+        <ul class="plain">
+          <li><strong>ヒューマン・イン・ザ・ループ（Human-in-the-Loop, HITL）</strong>：AIは行動を実行する前に必ず立ち止まり、人間の承認を待つ。人間が「輪の中」にいて、すべてのアクションが承認ポイントになる。統制は最大化されるが、承認待ちのたびに処理が止まるため速度が犠牲になる。</li>
+          <li><strong>ヒューマン・オン・ザ・ループ（Human-on-the-Loop, HOTL）</strong>：AIが一連の処理を自律的に最後まで実行し、人間はダッシュボードやアラートで「輪の外側から」見守り、異常があったときだけ介入する。速度は上がるが、後から取り消せる作業であることや、異常を確実に検知できる仕組みが前提になる。</li>
+        </ul>
+        <p>AI駆動開発が実用的なスピードを出すには、いずれ<strong>HITLからHOTLへの移行</strong>が避けられません。ただしHOTLは、「人間が見ていなくても異常を確実に検知できる仕組み」が整って初めて安全に機能します。その仕組みを欠いたHOTLは、見張っているようで実は何も見ていない<strong>「統治の演技（governance theater）」</strong>に陥ってしまいます。</p>
+        <p style="text-align:right;"><span class="cite">出典：<a href="https://waxell.ai/blog/human-in-the-loop-vs-human-on-the-loop-ai-agents" target="_blank" rel="noopener">“Human-in-the-Loop vs Human-on-the-Loop for AI Agents”（Waxell）</a></span></p>
+
+        <p>Amazon CTOのWerner Vogelsが提唱した<strong>“You build it, you run it.”</strong>（作った人が運用する）という原則<span class="cite">（出典：<a href="https://aws.amazon.com/blogs/aws/acm_queue_inter/" target="_blank" rel="noopener">ACM Queue: Interview with Amazon's Werner Vogels</a>）</span>も、書いた人・理解している人がいなくなることで根本から揺らぎます。つまりAI駆動開発を進めれば進めるほど、「誰が・どうやって品質と信頼性を担保するか」という問いが避けられなくなるのです。</p>
+        <p>この「HITLからHOTLへ安全に移行するための仕組み」、つまり誰が・どうやって品質と信頼性を担保するかという問いへの処方箋として近年よく使われるようになった言葉が、次に説明する<strong>「ハーネス」</strong>です。</p>
+      </div>
+    </section>
+
+    <section class="part" id="s5">
+      <div class="part-head">
+        <span class="part-num">PART 5</span>
+        <h2>「ハーネス」とは何か</h2>
+      </div>
+      <div class="body">
+        <p>ハーネス（harness）はもともと、馬に馬具をつけて力を引き出しながら制御する「馬具」や、命綱・配線をひとまとめにした「安全帯／ワイヤーハーネス」を指す言葉です。<strong>動力そのものではなく、その動力を安全かつ狙った方向に発揮させるための周辺装置</strong>、というのが元々のニュアンスです。</p>
+        <p>これがそのままAIエージェントの文脈にも転用されています。<a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a>や<a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">Martin Fowler</a>らの整理では、次の等式が繰り返し登場します。</p>
+
+        <div class="formula">Agent <span class="op">=</span> Model <span class="op">+</span> Harness</div>
+        <p style="text-align:center;margin-top:-14px;"><span class="cite">出典：<a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic “Demystifying evals for AI agents”</a>／<a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">Fowler “Harness engineering for coding agent users”</a></span></p>
+
+        <p>つまり「AIエージェント」は、モデル単体ではなく、<strong>モデル（推論エンジン）＋ハーネス（モデルを除くすべての周辺装置）</strong>の組み合わせだ、という考え方です。プロンプト、使えるツール、実行環境（サンドボックス）、生成物をチェックする仕組み、記録・監視の仕組みなどは、すべて「ハーネス」の一部にあたります。</p>
+
+        <figure class="diagram"><div class="scrollbox">
+          <svg viewBox="0 0 760 340" width="760" height="340" role="img" aria-labelledby="diagD-title">
+            <title id="diagD-title">Model + Harness の構造図</title>
+            <defs>
+              <marker id="arrD" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" class="fill-accent"/>
+              </marker>
+            </defs>
+
+            <rect x="140" y="35" width="480" height="270" rx="16" class="fill-none stroke-accent2 dash" stroke-width="2"/>
+            <text x="162" y="60" class="mono accent2-ink" font-size="13" font-weight="700">HARNESS</text>
+
+            <text x="30" y="150" text-anchor="middle" font-size="12">人間</text>
+            <text x="30" y="167" text-anchor="middle" font-size="12">（開発者）</text>
+            <line x1="55" y1="175" x2="165" y2="175" class="stroke-accent" stroke-width="2.5" marker-end="url(#arrD)"/>
+            <text x="110" y="165" text-anchor="middle" font-size="10.5" class="muted">文脈・指示</text>
+
+            <rect x="168" y="95" width="145" height="160" rx="12" class="box-cool"/>
+            <text x="240" y="122" text-anchor="middle" font-size="13" font-weight="700">ガイド</text>
+            <text x="240" y="138" text-anchor="middle" font-size="10.5" class="muted">(Feedforward)</text>
+            <text x="192" y="167" font-size="11">・コーディング規約</text>
+            <text x="192" y="188" font-size="11">・設計ドキュメント</text>
+            <text x="192" y="209" font-size="11">・アーキテクチャ</text>
+            <text x="200" y="227" font-size="11">制約</text>
+
+            <line x1="313" y1="175" x2="357" y2="175" class="stroke-accent" stroke-width="2.5" marker-end="url(#arrD)"/>
+
+            <circle cx="400" cy="175" r="46" class="fill-accent"/>
+            <text x="400" y="171" text-anchor="middle" class="on-accent mono" font-size="14" font-weight="700">MODEL</text>
+            <text x="400" y="188" text-anchor="middle" class="on-accent" font-size="10.5">推論エンジン</text>
+
+            <line x1="446" y1="175" x2="490" y2="175" class="stroke-accent" stroke-width="2.5" marker-end="url(#arrD)"/>
+            <text x="468" y="165" text-anchor="middle" font-size="10.5" class="muted">生成</text>
+
+            <rect x="493" y="95" width="145" height="160" rx="12" class="box-cool"/>
+            <text x="565" y="122" text-anchor="middle" font-size="13" font-weight="700">センサー</text>
+            <text x="565" y="138" text-anchor="middle" font-size="10.5" class="muted">(Feedback)</text>
+            <text x="517" y="163" font-size="11">・テスト／リンタ</text>
+            <text x="517" y="179" font-size="10.5" class="muted">（計算的統制）</text>
+            <text x="517" y="204" font-size="11">・AIレビュー</text>
+            <text x="517" y="220" font-size="10.5" class="muted">（推論的統制）</text>
+
+            <path d="M 565 93 C 565 70 240 70 240 93" class="stroke-accent2 dash fill-none" stroke-width="2" marker-end="url(#arrD)"/>
+            <text x="400" y="72" text-anchor="middle" font-size="10.5" class="accent2-ink">検知結果をフィードバック</text>
+
+            <line x1="638" y1="175" x2="700" y2="175" class="stroke-accent" stroke-width="2.5" marker-end="url(#arrD)"/>
+            <text x="700" y="150" text-anchor="middle" font-size="12">成果物</text>
+            <text x="700" y="167" text-anchor="middle" font-size="12">→人が確認</text>
+
+            <text x="618" y="295" text-anchor="end" class="mono muted" font-size="12">Agent = Model + Harness</text>
+          </svg>
+          </div>
+          <figcaption>モデルを中心に、事前に振る舞いを導く「ガイド」と、生成後に検知して返す「センサー」がハーネスを構成する。この一式（点線の枠）が整って初めて、AIの生成物を信頼して使える。</figcaption>
+        </figure>
+
+        <h3>「ハーネスエンジニアリング」という営み</h3>
+        <p>ガイドとセンサーを設計し、ハーネスを組み立てていく――この一連の実践を指して、近年<strong>「ハーネスエンジニアリング（Harness Engineering）」</strong>という言葉が使われ始めています。Martin Fowlerの定義では、ハーネスエンジニアリングとは<strong>「コーディングエージェントの周囲に、事前に導くガイドと事後に検知するセンサーを構築し、その出力への信頼度を高めていく実践」</strong>を指します。Part 3で見たAI-DLC v2の解説記事のタイトルにも、まさに「harness-engineering」という言葉が使われていました。つまり関心の重心は、「ハーネス」という名詞（モデルの外側にある仕組み）そのものから、それを<strong>どう設計・実装・運用していくかという営み（エンジニアリング）</strong>の方へと移りつつあります。第3分科会の宿題も、この「ハーネスエンジニアリング」という実践として捉えると、単なる用語定義以上の広がりを持つはずです。</p>
+        <p style="text-align:right;"><span class="cite">出典：<a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">“Harness engineering for coding agent users”（Martin Fowler）</a></span></p>
+
+        <h3>3つの視点から見る「ハーネス」</h3>
+        <p>ハーネスをどう捉えるかは、立場によって強調点が少し異なります。3つの代表的な整理を、要点だけかみ砕いて並べてみます。</p>
+
+        <div class="pcard-grid">
+          <div class="pcard">
+            <div class="pcard-head">
+              <a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Anthropic</a>
+              <span class="pcard-role">実務者視点</span>
+            </div>
+            <p class="pcard-tagline">一言で言うと：ハーネスを「前」と「後」の両面から整える</p>
+            <ul class="plain pcard-list">
+              <li>ハーネス＝モデルを除く全部</li>
+              <li>使う<strong>前</strong>に導く「ガイド」（規約・設計書など）</li>
+              <li>使った<strong>後</strong>にチェックする「センサー」（テスト・リンタ・AIレビューなど）</li>
+              <li>機械的にすぐ白黒つくもの／意味を読んで判断するもの、両方を組み合わせる</li>
+              <li>エージェントの評価＝実は「モデル＋ハーネス」丸ごとの評価</li>
+            </ul>
+            <p class="pcard-src">出典：<a href="https://www.anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">Harness design for long-running application development</a>／<a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Effective harnesses for long-running agents</a></p>
+          </div>
+
+          <div class="pcard">
+            <div class="pcard-head">
+              <a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">Martin Fowler</a>
+              <span class="pcard-role">アーキテクト視点</span>
+            </div>
+            <p class="pcard-tagline">一言で言うと：ハーネスを3種類の「健康診断」に分けて考える</p>
+            <ul class="plain pcard-list">
+              <li><strong>保守性の診断</strong>：複雑さ・重複・テスト網羅性など</li>
+              <li><strong>アーキテクチャ適合の診断</strong>：性能・監視ルールなど</li>
+              <li><strong>振る舞いの診断</strong>：機能が正しく動くか＝今いちばん人手に頼っている領域</li>
+              <li>人を置き換えるのではなく、熟練者が無意識にやっていたことを明文化し、人の労力をより価値の高い判断へ回すもの</li>
+            </ul>
+            <p class="pcard-src">出典：<a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">Harness engineering for coding agent users</a>（Birgitta Böckeler）</p>
+          </div>
+
+          <div class="pcard">
+            <div class="pcard-head">
+              <a href="https://www.databricks.com/blog/ai-harness" target="_blank" rel="noopener">Databricks</a>
+              <span class="pcard-role">基盤・プラットフォーム視点</span>
+            </div>
+            <p class="pcard-tagline">一言で言うと：ハーネスを8つの部品に分解する</p>
+            <ul class="plain pcard-list">
+              <li>指示（システムプロンプト）・使えるツール・実行環境（サンドボックス）・記憶・フィードバックループ・安全装置（ガードレール）・記録（可観測性）など</li>
+              <li><strong>同じモデルでも、ハーネスの設計次第で精度は大きく変わる</strong></li>
+              <li>実例：GPT-4.5＋ハーネス設計だけで正答率が36.1%→52.6%に向上</li>
+            </ul>
+            <p class="pcard-src">出典：<a href="https://www.databricks.com/blog/ai-harness" target="_blank" rel="noopener">What is an AI Agent Harness?</a></p>
+          </div>
+        </div>
+
+        <h3>3つの立場に共通していること</h3>
+        <ul class="plain">
+          <li>ハーネスは<strong>モデルの「外側」にある仕組み全般</strong>を指す言葉であること。</li>
+          <li><strong>事前に振る舞いを導く仕掛け</strong>（ガイド・規約・アーキテクチャ制約）と、<strong>事後に検知する仕掛け</strong>（テスト・レビュー・監視）の両方が必要なこと。</li>
+          <li>機械的に一瞬で白黒つけられるもの（テスト・リンタ）と、意味や文脈を読んで判断が必要なもの（AIによるレビュー・人間による判断）を<strong>分けて設計すべき</strong>であること。</li>
+        </ul>
+
+        <h3>実は、あなたが既に使っているものがハーネスの一部</h3>
+        <p>ここまで抽象的な言葉が続きましたが、ハーネスの構成要素は、その多くが<strong>すでに現場で当たり前に使っているもの</strong>です。何か目新しいものを一から作る話ではなく、「AIの生成物を信頼するために、これらをAI向けに整え直す」というのがハーネスエンジニアリングの実像です。</p>
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>ハーネスの役割</th><th>現場で言うと（すでにあるもの）</th></tr></thead>
+            <tbody>
+              <tr><td class="who">ガイド<br><span style="font-weight:400;color:var(--muted);font-size:12px;">事前に導く</span></td><td data-label="現場で言うと">コーディング規約、設計書、アーキテクチャ標準、（AI向けなら）CLAUDE.md やプロンプトの定型文</td></tr>
+              <tr><td class="who">センサー（計算的）<br><span style="font-weight:400;color:var(--muted);font-size:12px;">自動で検知</span></td><td data-label="現場で言うと">単体テスト、CIパイプライン、リンタ、静的解析ツール（SonarQube 等）、型チェック</td></tr>
+              <tr><td class="who">センサー（推論的）<br><span style="font-weight:400;color:var(--muted);font-size:12px;">意味で判断</span></td><td data-label="現場で言うと">コードレビュー、設計レビュー、（AIによる）自動レビュー</td></tr>
+              <tr><td class="who">ガードレール・記録</td><td data-label="現場で言うと">承認ゲート、権限管理、監査ログ</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>言い換えれば、ハーネスとは<strong>「強力だが暴れがちなモデルを、狙った方向に安全に走らせるための“馬具”一式」</strong>――冒頭で触れた語源そのままのイメージです。</p>
+
+        <h3>私たちの本業「品質保証」との重なりと違い</h3>
+        <p>私たち第3分科会のテーマは「AI品質保証」です。上の表を見て気づくのは、ハーネスの多くが<strong>従来のQAでやってきたことと重なる</strong>という点です。テスト・レビュー・品質ゲートは、AI以前から品質を守る仕組みでした。では、何が新しいのでしょうか。</p>
+        <ul class="plain">
+          <li><strong>検証する相手が変わった</strong>：これまでは「人が書いたコード」を検証していたが、これからは「AIが大量・高速に生成した成果物」を検証する。量とスピードが桁違いになる。</li>
+          <li><strong>人手のレビューがボトルネックになる</strong>：すべてを人が目視レビューしていては、AIの速度が活きない。Part 4のHITL→HOTLの話が、まさにここで効いてくる。</li>
+          <li><strong>品質保証の仕組み自体を“再現性のある形”で作る必要がある</strong>：「この人ならレビューできる」という属人的なやり方では、AI時代のスピードに追いつけない。誰がやっても同じ品質が出る仕組みが要る。</li>
+        </ul>
+        <p>つまりハーネスは、<strong>従来のQAをAI駆動開発のスピードに耐えられる形へ作り替えたもの</strong>と捉えると分かりやすいはずです。ゼロから新しい概念を学ぶというより、<strong>「自分たちがQAで培ってきたものを、AI前提で再設計する」</strong>——それが私たちの宿題の本質だと言えます。</p>
+      </div>
+    </section>
+
+    <section class="part" id="s6">
+      <div class="part-head">
+        <span class="part-num">PART 6</span>
+        <h2>分科会としての論点・次の一歩</h2>
+      </div>
+      <div class="body">
+        <p>7/23の宿題は「ハーネスという言葉の定義を調べてくる」ことでしたが、ここまで見てきた内容を踏まえると、単に世の中の定義を一つ引用して終わりにするのではなく、<strong>「我々のAI駆動開発において、モデルの外側で何を担保すべきか」を自分たちの言葉で言語化すること</strong>が本質的な狙いだと考えられます。</p>
+        <p>8/6の宿題（事例調査＋評価対象成果物の決定）に向けて、たとえば次のような論点が残っています。</p>
+        <ul class="plain">
+          <li>評価の対象は<strong>コード</strong>か、<strong>設計書</strong>か、その両方か。</li>
+          <li>「計算的統制（自動でテストできる品質）」と「推論的統制（意味を判断する品質）」、どちらから整備すべきか。</li>
+          <li>集中検討会で谷脇さんから出た指摘――<strong>「実機検証の解像度を上げること」「ハーネスを作るか作らないかを明確にすること」</strong>――にどう応えるか。</li>
+        </ul>
+
+        <h3>宿題スケジュール（再掲）</h3>
+        <div class="timeline">
+          <div class="tl-item now">
+            <div class="tl-date">7/23</div>
+            <div class="tl-label">「ハーネス」の定義を各自調べる</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-date">8/6</div>
+            <div class="tl-label">事例調査＋レポート／評価対象の決定</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-date">8/27</div>
+            <div class="tl-label">事例調査＋レポート／資料作成</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-date">9/10</div>
+            <div class="tl-label">中間報告資料 完成</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-date">10/2</div>
+            <div class="tl-label">中間報告会</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="part" id="s7">
+      <div class="part-head">
+        <span class="part-num">PART 7</span>
+        <h2>用語ミニ集</h2>
+      </div>
+      <div class="body">
+        <p class="part-lede">本文に出てきたカタカナ用語を、ざっくり一言で。迷子になったらここに戻ってください。</p>
+        <dl class="glossary">
+          <div><dt>ハーネス（Harness）</dt><dd>AIモデルの「外側」にある仕組み一式。プロンプト・ツール・テスト・レビュー・記録などを含む。<span class="mono">Agent = Model + Harness</span>。</dd></div>
+          <div><dt>ハーネスエンジニアリング</dt><dd>ガイドとセンサーを設計してハーネスを組み立て、AIの出力への信頼度を高めていく実践。</dd></div>
+          <div><dt>ガイド（フィードフォワード）</dt><dd>AIが動く“前”に振る舞いを導く仕掛け。規約・設計書・アーキテクチャ制約など。</dd></div>
+          <div><dt>センサー（フィードバック）</dt><dd>AIが生成した“後”に問題を検知する仕掛け。テスト・リンタ・レビューなど。</dd></div>
+          <div><dt>計算的統制</dt><dd>機械的に一瞬で白黒つく検証。単体テスト・リンタ・型チェックなど。</dd></div>
+          <div><dt>推論的統制</dt><dd>意味・文脈を読んで判断が必要な検証。人やAIによるレビューなど。</dd></div>
+          <div><dt>eval（評価）</dt><dd>AIエージェントの出力や振る舞いを検証すること。ハーネスの中核であり、「エージェントの評価」とは実際には「モデル＋ハーネス」を評価している。</dd></div>
+          <div><dt>HITL（ヒューマン・イン・ザ・ループ）</dt><dd>AIが実行の前に必ず人の承認を待つ方式。統制は最大だが遅い。</dd></div>
+          <div><dt>HOTL（ヒューマン・オン・ザ・ループ）</dt><dd>AIが自律的に実行し、人は外から監視して異常時だけ介入する方式。速いが、検知の仕組みが前提。</dd></div>
+          <div><dt>AI-DLC</dt><dd>AWSが提唱するAI駆動開発の型。Inception→Construction→Operation が骨格。v2で5フェーズ・32ステージに細分化。</dd></div>
+          <div><dt>モブエラボレーション／モブコンストラクション</dt><dd>AI-DLCで、チーム全員が集まってAIの提案をその場で検証・明確化する共同作業。</dd></div>
+          <div><dt>心理的所有感</dt><dd>統制・精通した知識・自己投資の3つで生まれる当事者意識。AIに任せすぎると失われ、レビュー力が落ちる。</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="part" id="s8">
+      <div class="part-head">
+        <span class="part-num">PART 8</span>
+        <h2>参考文献</h2>
+      </div>
+      <div class="body">
+        <p class="part-lede">この資料の作成にあたって参照した一次情報です。時間のある方はぜひ原文にもあたってみてください。</p>
+
+        <div class="refgroup">
+          <h4>Anthropic（ハーネスの実務的な整理）</h4>
+          <ol>
+            <li><span><span class="rtitle"><a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents" target="_blank" rel="noopener">Demystifying evals for AI agents</a></span><span class="rmeta">「エージェントの評価」とはモデルとハーネスの組み合わせを評価すること、という整理</span></span></li>
+            <li><span><span class="rtitle"><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents" target="_blank" rel="noopener">Effective harnesses for long-running agents</a></span><span class="rmeta">長時間タスクを担うエージェント向けハーネスの具体的な設計パターン</span></span></li>
+            <li><span><span class="rtitle"><a href="https://www.anthropic.com/engineering/harness-design-long-running-apps" target="_blank" rel="noopener">Harness design for long-running application development</a></span><span class="rmeta">フィードフォワード／フィードバック、計算的／推論的統制の枠組み</span></span></li>
+          </ol>
+        </div>
+
+        <div class="refgroup">
+          <h4>Martin Fowler（アーキテクトからの整理）</h4>
+          <ol>
+            <li><span><span class="rtitle"><a href="https://martinfowler.com/articles/harness-engineering.html" target="_blank" rel="noopener">Harness engineering for coding agent users</a></span><span class="rmeta">Agent = Model + Harness、3種のハーネス分類の元記事</span></span></li>
+            <li><span><span class="rtitle"><a href="https://martinfowler.com/articles/exploring-gen-ai/harness-engineering-memo.html" target="_blank" rel="noopener">Harness Engineering - first thoughts</a></span><span class="rmeta">ハーネスという概念が生まれた初期の考察</span></span></li>
+            <li><span><span class="rtitle"><a href="https://martinfowler.com/articles/sensors-for-coding-agents.html" target="_blank" rel="noopener">Maintainability sensors for coding agents</a></span><span class="rmeta">保守性を検知する「センサー」の具体例</span></span></li>
+          </ol>
+        </div>
+
+        <div class="refgroup">
+          <h4>その他の一次情報</h4>
+          <ol>
+            <li><span><span class="rtitle"><a href="https://www.databricks.com/blog/ai-harness" target="_blank" rel="noopener">What is an AI Agent Harness?（Databricks）</a></span><span class="rmeta">ハーネスの8要素分解と、ハーネス改善による精度向上の実証データ</span></span></li>
+            <li><span><span class="rtitle"><a href="https://www.firecrawl.dev/blog/what-is-an-agent-harness" target="_blank" rel="noopener">What Is an Agent Harness?（Firecrawl）</a></span><span class="rmeta">エージェント障害の多くはモデルでなくハーネス起因、という指摘</span></span></li>
+            <li><span><span class="rtitle"><a href="https://waxell.ai/blog/human-in-the-loop-vs-human-on-the-loop-ai-agents" target="_blank" rel="noopener">Human-in-the-Loop vs Human-on-the-Loop for AI Agents（Waxell）</a></span><span class="rmeta">HITL／HOTLの定義とトレードオフ、governance theaterの指摘</span></span></li>
+            <li><span><span class="rtitle"><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/" target="_blank" rel="noopener">Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity（METR）</a></span><span class="rmeta">熟練開発者はAI利用で実測19%遅くなったが、本人は20%速くなったと感じていたRCT研究</span></span></li>
+            <li><span><span class="rtitle"><a href="https://aws.amazon.com/jp/blogs/news/ai-driven-development-life-cycle/" target="_blank" rel="noopener">AI駆動開発ライフサイクル（AI-DLC）（AWS公式ブログ）</a></span><span class="rmeta">Inception / Construction / Operationの3フェーズと役割分担の詳細</span></span></li>
+            <li><span><span class="rtitle"><a href="https://github.com/awslabs/aidlc-workflows" target="_blank" rel="noopener">awslabs/aidlc-workflows（GitHub）</a></span><span class="rmeta">AI-DLC Workflows v2のOSS実装。5フェーズ・32ステージ・マルチハーネス構成の一次情報</span></span></li>
+            <li><span><span class="rtitle"><a href="https://aws.amazon.com/blogs/devops/open-sourcing-adaptive-workflows-for-ai-driven-development-life-cycle-ai-dlc/" target="_blank" rel="noopener">Open-Sourcing Adaptive Workflows for AI-DLC（AWS DevOps Blog）</a></span><span class="rmeta">v2のOSS化・適応的ワークフローの背景</span></span></li>
+            <li><span><span class="rtitle"><a href="https://zenn.dev/aws_japan/articles/aidlc-workflows-v2-harness-engineering" target="_blank" rel="noopener">AI-DLC Workflows 2.0 とは何か、そしてどう実装されているか（Zenn, AWS Japan）</a></span><span class="rmeta">v2における「ハーネス」の定義とマルチハーネス・アーキテクチャの解説</span></span></li>
+            <li><span><span class="rtitle"><a href="https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html" target="_blank" rel="noopener">Using Claude Code: The unreasonable effectiveness of HTML（Anthropic Blog）</a></span><span class="rmeta">余談で触れたHTML活用の話の出典</span></span></li>
+          </ol>
+        </div>
+
+        <div class="refgroup">
+          <h4>AWS Summit Japan 2026 セッション資料</h4>
+          <ol>
+            <li><span><span class="rtitle">AIM221：AI駆動開発ライフサイクル (AI-DLC) のご紹介</span><span class="rmeta">AWS</span></span></li>
+            <li><span><span class="rtitle">AIM223：AIでコードは書けても、レビューできる人がいなくなる ― ソフトウェア開発における自動化のパラドックス</span><span class="rmeta">AWS</span></span></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+  </article>
+
+  <footer>
+    <span>三菱CC研究会 第3部会 ／ 第3分科会（AI品質保証）</span>
+    <span>作成：東京海上日動システムズ 中島 ／ 2026-07-19</span>
+  </footer>
+
+</div>
+</body>
+</html>

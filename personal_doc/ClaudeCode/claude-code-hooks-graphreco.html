@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>グラレコ：Claude Code Hooks 徹底図解</title>
+<style>
+  :root{
+    --paper:#F3ECDD;
+    --card:#F7F1E3;
+    --ink:#2A2723;
+    --terracotta:#C15F3C;
+    --teal:#3E6B6E;
+    --highlight:#EED9A0;
+    --shadow:rgba(42,39,35,0.12);
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0; width:100%; overflow-x:hidden;
+    background-color:var(--paper);
+    background-image:
+      repeating-linear-gradient(transparent 0 31px, rgba(42,39,35,0.035) 31px 32px),
+      radial-gradient(rgba(42,39,35,0.03) 1px, transparent 1.2px);
+    background-size: auto, 7px 7px;
+    color:var(--ink);
+    font-family:"Segoe Print","Bradley Hand","Comic Sans MS","Yu Gothic UI","Hiragino Maru Gothic ProN",sans-serif;
+    line-height:1.6;
+  }
+  img,svg{ max-width:100%; height:auto; }
+  .page{ max-width:min(1040px,94vw); margin:0 auto; }
+  code{ font-family:Consolas,"SFMono-Regular",Menlo,monospace; font-size:0.92em; }
+  code:not(pre code){ background:rgba(42,39,35,0.08); padding:1px 5px; border-radius:4px; }
+
+  /* ---------- 番号見出し ---------- */
+  .sec-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom:14px; }
+  .sec-num{
+    flex-shrink:0;
+    font-size:clamp(1.9rem,5vw,2.8rem);
+    font-weight:bold;
+    color:var(--terracotta);
+    line-height:1;
+    text-shadow: 1.5px 1.5px 0 rgba(193,95,60,0.20);
+  }
+  .section-title{
+    display:inline-block;
+    font-size:clamp(1.3rem,3.2vw,1.9rem);
+    letter-spacing:0.04em;
+    position:relative;
+    padding-bottom:6px;
+    background-image: linear-gradient(120deg, rgba(193,95,60,0.35), rgba(193,95,60,0.35));
+    background-repeat:no-repeat;
+    background-size:100% 0.42em;
+    background-position:0 92%;
+  }
+  .sec-sub{ margin:6px 0 0 0; color:#6b6660; font-size:0.9rem; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:0.85rem; color:var(--teal); font-weight:bold;
+    letter-spacing:0.08em;
+    margin-bottom:10px;
+  }
+
+  /* ---------- セクション & カード ---------- */
+  .section{ padding:30px 0; }
+  .card{
+    background:var(--card);
+    border:2px solid var(--ink);
+    border-radius: 18px;
+    box-shadow: 0 6px 14px var(--shadow);
+    padding:24px clamp(18px,4vw,40px);
+    position:relative;
+  }
+
+  /* ---------- 補足表 ---------- */
+  .info-table{ width:100%; border-collapse:collapse; margin:18px 0 6px; font-size:0.86rem; }
+  .info-table th,.info-table td{ border:1.5px solid var(--ink); padding:9px 12px; text-align:left; vertical-align:top; }
+  .info-table th{ background:var(--highlight); font-weight:bold; }
+  .info-table tr:nth-child(even) td{ background:rgba(62,107,110,0.07); }
+
+  /* ---------- 厚い解説文 ---------- */
+  .explain{ margin-top:14px; font-size:0.92rem; line-height:1.7; }
+  .explain strong{ color:var(--terracotta); }
+
+  /* ---------- 付箋 ---------- */
+  .sticky-note{
+    background:var(--highlight); border-radius:2px; padding:16px 20px; position:relative;
+    box-shadow:3px 5px 9px var(--shadow); margin-top:22px; font-weight:bold;
+  }
+  .sticky-note::after{
+    content:""; position:absolute; top:0; right:0; width:22px; height:22px;
+    background:linear-gradient(135deg, transparent 50%, rgba(42,39,35,0.18) 52%);
+    border-bottom-left-radius:5px;
+  }
+
+  /* ---------- 手描きマーカー・囲み ---------- */
+  .marker{
+    background-image: linear-gradient(120deg, rgba(193,95,60,0.32), rgba(193,95,60,0.32));
+    background-repeat:no-repeat; background-size:100% 0.55em; background-position:0 82%;
+    font-weight:bold;
+  }
+  .circled{ position:relative; display:inline-block; padding:0 0.35em; }
+  .circled::before{
+    content:""; position:absolute; inset:-6px -10px;
+    border:2.5px solid var(--terracotta);
+    border-radius:48% 52% 45% 55% / 55% 45% 58% 42%;
+    transform: rotate(-1deg);
+    pointer-events:none;
+  }
+
+  /* ---------- フクロウ博士 ---------- */
+  .owl{ display:block; flex-shrink:0; }
+  .owl-row{ display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  .bubble{
+    position:relative; background:#fff9ec; border:2px solid var(--ink); border-radius:16px;
+    padding:10px 16px; font-size:0.95rem; max-width:360px;
+  }
+  .bubble::before{ content:""; position:absolute; left:-14px; top:18px; border:8px solid transparent; border-right-color:var(--ink); }
+  .bubble::after{ content:""; position:absolute; left:-11px; top:19px; border:7px solid transparent; border-right-color:#fff9ec; }
+
+  .check-icon{ display:inline-block; vertical-align:middle; flex-shrink:0; margin-top:2px; }
+
+  /* ---------- 出典フッター ---------- */
+  footer.source{ text-align:center; font-size:0.78rem; opacity:0.75; padding:20px 0 50px; }
+  footer.source a{ color:var(--teal); }
+
+  /* ---------- ヒーロー ---------- */
+  .hero{ text-align:center; padding-top:36px; }
+  .hero .section-title{ font-size:clamp(1.7rem,5.6vw,2.7rem); }
+  .hero-sub{ font-size:clamp(1rem,2.4vw,1.2rem); margin-top:14px; }
+  .hero-date{
+    display:inline-block; margin-top:18px; background:var(--terracotta); color:#fff9ec;
+    padding:8px 20px; border-radius:999px; font-weight:bold; box-shadow:0 5px 10px var(--shadow);
+  }
+
+  /* ================= Hooks専用 追加パーツ ================= */
+
+  /* 00 ミニ目次 */
+  .mini-index{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-top:22px; text-align:left; }
+  .mini-index a{
+    display:block; text-decoration:none; color:var(--ink);
+    background:var(--paper); border:2px solid var(--ink); border-radius:10px;
+    padding:9px 12px; font-size:0.82rem; font-weight:bold;
+  }
+  .mini-index a span.mi-num{ color:var(--terracotta); margin-right:6px; }
+
+  /* 01 対比図 */
+  .contrast-row{ display:flex; gap:14px; flex-wrap:wrap; align-items:stretch; justify-content:center; margin-top:22px; }
+  .contrast-box{ flex:1 1 260px; max-width:340px; border:2.5px solid var(--ink); border-radius:14px; padding:18px 20px; }
+  .contrast-box.probabilistic{ background:#eee3d2; }
+  .contrast-box.deterministic{ background:var(--card); border-color:var(--teal); border-width:3px; }
+  .contrast-vs{ display:flex; align-items:center; justify-content:center; flex:0 0 44px; font-weight:bold; font-size:1.3rem; color:var(--terracotta); }
+  .contrast-label{ font-size:0.76rem; color:var(--teal); font-weight:bold; letter-spacing:0.05em; margin-bottom:6px; }
+  .contrast-title{ font-weight:bold; font-size:1.1rem; margin-bottom:8px; }
+  .contrast-desc{ font-size:0.86rem; }
+  .axis-note{ text-align:center; margin-top:16px; font-size:0.85rem; color:var(--teal); font-weight:bold; }
+  .domain-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:16px; margin-top:18px; text-align:center; align-items:stretch; }
+  .domain-item{
+    background:var(--highlight); border:2px solid var(--ink); border-radius:12px; padding:14px 8px;
+    box-shadow:0 5px 10px var(--shadow); display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:0.82rem;
+  }
+  .domain-icon{ font-size:1.6rem; display:block; margin-bottom:6px; }
+
+  /* 02 タイムライン */
+  .timeline-wrap{ margin-top:14px; }
+
+  /* 03 イベントカタログ */
+  .event-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:14px; margin-top:18px; align-items:stretch; }
+  .event-card{ background:var(--paper); border:2px solid var(--ink); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:5px; }
+  .event-card-title{ font-weight:bold; font-size:1.05rem; color:var(--terracotta); border-bottom:2px dashed var(--ink); padding-bottom:5px; margin-bottom:2px; }
+  .event-card-row{ font-size:0.81rem; line-height:1.5; }
+  .event-card-row b{ color:var(--teal); }
+  .tag-pill{ display:inline-block; padding:1px 10px; border-radius:999px; font-size:0.74rem; font-weight:bold; }
+  .tag-pill.ok{ background:var(--teal); color:#fff9ec; }
+  .tag-pill.no{ background:#b7ada0; color:#fff9ec; }
+
+  /* コードブロック（04/06/07/09で使い回す） */
+  .code-block{
+    background:#232120; color:#F3ECDD; border:2px solid var(--ink); border-radius:12px;
+    padding:16px 18px; font-size:0.8rem; line-height:1.65; overflow-x:auto; margin-top:14px;
+  }
+  .code-block pre{ margin:0; }
+  .code-block code{ background:none; padding:0; }
+  .code-block .ck1{ color:#e8927c; font-weight:bold; }
+  .code-block .ck2{ color:#8fd0d3; font-weight:bold; }
+  .code-block .ck3{ color:#EED9A0; font-weight:bold; }
+  .code-block .cv{ color:#d7cdb8; }
+  .code-legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:0.78rem; font-weight:bold; }
+  .code-legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .code-legend i{ display:inline-block; width:12px; height:12px; border-radius:3px; }
+
+  /* 05 matcher */
+  .matcher-chip-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .matcher-chip{ background:var(--highlight); border:2px solid var(--ink); border-radius:8px; padding:6px 14px; font-weight:bold; font-size:0.86rem; }
+  .warn-box{ margin-top:18px; background:#f4e3d3; border:2.5px solid var(--terracotta); border-radius:12px; padding:14px 18px; font-size:0.86rem; }
+  .warn-box b{ color:var(--terracotta); }
+
+  /* 07 exitフロー */
+  .flow3-row{ display:flex; gap:14px; flex-wrap:wrap; margin-top:20px; align-items:stretch; }
+  .flow3-box{ flex:1 1 220px; border:2.5px solid var(--ink); border-radius:14px; padding:16px 18px; display:flex; flex-direction:column; }
+  .flow3-box.exit0{ background:var(--card); border-color:var(--teal); }
+  .flow3-box.exit2{ background:#f4e3d3; border-color:var(--terracotta); }
+  .flow3-box.exitother{ background:#eee3d2; }
+  .flow3-code{ font-family:Consolas,monospace; font-weight:bold; font-size:1.05rem; margin-bottom:6px; }
+  .flow3-title{ font-weight:bold; margin-bottom:6px; }
+  .flow3-desc{ font-size:0.84rem; margin-top:auto; }
+  .adv-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:18px; }
+  .adv-card{ background:var(--paper); border:2px dashed var(--ink); border-radius:12px; padding:14px 16px; }
+  .adv-card-title{ font-weight:bold; color:var(--teal); margin-bottom:6px; font-family:Consolas,monospace; font-size:0.85rem; }
+  .adv-card p{ font-size:0.82rem; margin:0; }
+  .readwrite-row{ display:flex; align-items:center; gap:16px; justify-content:center; margin-top:22px; flex-wrap:wrap; }
+  .readwrite-box{ flex:1 1 220px; max-width:280px; text-align:center; border:2px solid var(--ink); border-radius:12px; padding:14px; background:var(--highlight); font-weight:bold; font-size:0.9rem; }
+
+  /* 08 レシピ */
+  .recipe-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:14px; margin-top:20px; align-items:stretch; }
+  .recipe-card{ background:var(--card); border:2px solid var(--ink); border-radius:14px; padding:14px 18px; display:flex; flex-direction:column; gap:6px; box-shadow:0 4px 10px var(--shadow); }
+  .recipe-head{ display:flex; align-items:center; gap:8px; }
+  .recipe-num{ flex-shrink:0; font-weight:bold; color:#fff9ec; background:var(--terracotta); width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.82rem; }
+  .recipe-title{ font-weight:bold; font-size:0.98rem; }
+  .recipe-meta{ font-family:Consolas,monospace; font-size:0.75rem; background:var(--paper); border:1.5px dashed var(--ink); border-radius:6px; padding:4px 8px; }
+  .recipe-desc{ font-size:0.83rem; margin-top:auto; }
+
+  /* 09 落とし穴 */
+  .pitfall-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:14px; margin-top:18px; align-items:stretch; }
+  .pitfall-card{ background:#f4e3d3; border:2.5px solid var(--terracotta); border-radius:12px; padding:14px 18px; }
+  .pitfall-title{ font-weight:bold; color:var(--terracotta); margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+  .pitfall-card p{ font-size:0.85rem; }
+
+  /* 10 チェックリスト */
+  .check-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr)); gap:14px; margin-top:18px; }
+  .check-card{ background:var(--paper); border:2px solid var(--ink); border-radius:12px; padding:14px 16px; }
+  .check-card-title{ font-weight:bold; display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+  .check-card p{ font-size:0.84rem; margin:0; }
+</style>
+</head>
+<body>
+
+<!-- 再利用シンボル定義 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="owl-doc" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="58" rx="34" ry="32" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M28 30 Q34 8 44 27" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M72 30 Q66 8 56 27" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="38" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="62" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="49" y1="51" x2="51" y2="51" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="38" cy="52" r="4.2" fill="#2A2723"/>
+    <circle cx="62" cy="52" r="4.2" fill="#2A2723"/>
+    <path d="M50 60 L45 69 L55 69 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M17 66 Q8 76 19 87" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M83 66 Q92 76 81 87" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="check-mark" viewBox="0 0 18 16">
+    <path d="M2 8 L7 13 L16 3" stroke="#3E6B6E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="hand-arrow" viewBox="0 0 60 24">
+    <path d="M2 12 Q30 6 48 12" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M48 12 L40 7 M48 12 L40 17" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<div class="page">
+
+  <!-- 00. ヒーロー -->
+  <section class="section hero" id="p00">
+    <div class="card">
+      <svg class="owl" width="90" height="90" style="margin:0 auto 12px;"><use href="#owl-doc"/></svg>
+      <div class="section-title">Claude Code Hooks 徹底図解</div>
+      <p class="hero-sub">
+        Hooksとは、Claudeの動作に割り込む<span class="marker">"決定論的"フック</span><br>
+        <span class="circled">お願い</span>ではなく<span class="circled">必ず実行</span>される仕組み
+      </p>
+      <div class="hero-date">殿（Windows / PowerShell環境）向け実務資料</div>
+      <nav class="mini-index">
+        <a href="#p01"><span class="mi-num">01</span>なぜHooksか</a>
+        <a href="#p02"><span class="mi-num">02</span>ライフサイクル俯瞰</a>
+        <a href="#p03"><span class="mi-num">03</span>イベント・カタログ</a>
+        <a href="#p04"><span class="mi-num">04</span>settings.jsonの書き方</a>
+        <a href="#p05"><span class="mi-num">05</span>matcherの当て方</a>
+        <a href="#p06"><span class="mi-num">06</span>入力JSON</a>
+        <a href="#p07"><span class="mi-num">07</span>出力・制御</a>
+        <a href="#p08"><span class="mi-num">08</span>活用レシピ集</a>
+        <a href="#p09"><span class="mi-num">09</span>落とし穴＆Windows作法</a>
+        <a href="#p10"><span class="mi-num">10</span>セキュリティ＆デバッグ</a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- 01. なぜHooksか -->
+  <section class="section" id="p01">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <div>
+          <h2 class="section-title">なぜHooksか</h2>
+          <p class="sec-sub">CLAUDE.mdへの「お願い」と、Hooksの「強制」は根本的に違う。</p>
+        </div>
+      </div>
+      <div class="contrast-row">
+        <div class="contrast-box probabilistic">
+          <div class="contrast-label">従来：LLMにお願いする</div>
+          <div class="contrast-title">💬 CLAUDE.md / プロンプト指示</div>
+          <div class="contrast-desc">「編集後は必ずprettierを走らせて」と書いても、<strong>確率的</strong>にしか従わない。会話が長くなるほど<strong>忘れる</strong>・見落とす・省略することがある。</div>
+        </div>
+        <div class="contrast-vs">VS</div>
+        <div class="contrast-box deterministic">
+          <div class="contrast-label">Hooks：イベントで縛る</div>
+          <div class="contrast-title">⚙️ Hooks（フック）</div>
+          <div class="contrast-desc">PostToolUseイベントが発火すれば<strong>100%必ず</strong>コマンドが実行される。Claudeの気分や記憶に依存しない<strong>決定論的</strong>な仕組み。</div>
+        </div>
+      </div>
+      <p class="axis-note">Hooksの存在理由＝「たぶんやる」を「必ずやる」に変えること</p>
+
+      <div class="sec-head" style="margin-top:26px;">
+        <span class="sec-num" style="font-size:1.5rem;">＋</span>
+        <div><h3 class="section-title" style="font-size:1.05rem;">4機能の棲み分け（誰が引き金を引くか）</h3></div>
+      </div>
+      <div class="domain-grid">
+        <div class="domain-item"><span class="domain-icon">⚙️</span><b>Hooks</b><br>イベント駆動・自動</div>
+        <div class="domain-item"><span class="domain-icon">⌨️</span><b>スラッシュコマンド</b><br>人間が手動起動</div>
+        <div class="domain-item"><span class="domain-icon">🔌</span><b>MCP</b><br>外部能力の供給</div>
+        <div class="domain-item"><span class="domain-icon">🤝</span><b>subagent</b><br>文脈を切り離した委任</div>
+      </div>
+      <p class="explain">軸は<strong>「誰が引き金を引くか」</strong>。Hooksは<strong>イベント</strong>が、スラッシュコマンドは<strong>人間</strong>が、MCPやsubagentの起動は主に<strong>モデル自身の判断</strong>が引き金になる。「なぜ自動フォーマットはHooksで縛り、複雑な調査はsubagentに委任するのか」は、この軸で腹落ちする。</p>
+    </div>
+  </section>
+
+  <!-- 02. セッションのライフサイクル俯瞰（最重要） -->
+  <section class="section" id="p02">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <div>
+          <h2 class="section-title">セッションのライフサイクル俯瞰</h2>
+          <p class="sec-sub">資料の背骨・最重要。どのイベントがいつ火を噴くかを一目で。</p>
+        </div>
+      </div>
+
+      <div class="timeline-wrap">
+        <svg viewBox="0 0 1090 380" width="100%" role="img" aria-label="セッションライフサイクルのタイムライン図">
+          <defs>
+            <marker id="tl-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 Z" fill="#2A2723"/>
+            </marker>
+            <marker id="tl-arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 Z" fill="#3E6B6E"/>
+            </marker>
+          </defs>
+
+          <!-- 主フロー矢印 -->
+          <line x1="155" y1="190" x2="195" y2="190" stroke="#2A2723" stroke-width="2.5" marker-end="url(#tl-arrow)"/>
+          <line x1="325" y1="190" x2="365" y2="190" stroke="#2A2723" stroke-width="2.5" marker-end="url(#tl-arrow)"/>
+          <line x1="495" y1="190" x2="508" y2="190" stroke="#2A2723" stroke-width="2.5" marker-end="url(#tl-arrow)"/>
+          <line x1="532" y1="190" x2="545" y2="190" stroke="#2A2723" stroke-width="2.5" marker-end="url(#tl-arrow)"/>
+          <line x1="675" y1="190" x2="725" y2="190" stroke="#2A2723" stroke-width="2.5" marker-end="url(#tl-arrow)"/>
+          <line x1="855" y1="190" x2="895" y2="190" stroke="#2A2723" stroke-width="2.5" marker-end="url(#tl-arrow)"/>
+
+          <!-- ループ弧（×N） -->
+          <path d="M610,166 Q520,88 432,166" fill="none" stroke="#3E6B6E" stroke-width="2.5" marker-end="url(#tl-arrow-teal)"/>
+          <text x="520" y="78" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#3E6B6E">↻ ×N（ツール呼び出しのたび繰り返し）</text>
+
+          <!-- SessionStart -->
+          <rect x="25" y="166" width="130" height="48" rx="10" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+          <text x="90" y="186" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">Session</text>
+          <text x="90" y="202" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">Start</text>
+          <text x="90" y="230" text-anchor="middle" font-size="10" fill="#2A2723">セッション開始</text>
+
+          <!-- UserPromptSubmit -->
+          <rect x="195" y="166" width="130" height="48" rx="10" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+          <text x="260" y="186" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">UserPrompt</text>
+          <text x="260" y="202" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">Submit</text>
+          <text x="260" y="230" text-anchor="middle" font-size="10" fill="#2A2723">発話送信時</text>
+
+          <!-- PreToolUse -->
+          <rect x="365" y="166" width="130" height="48" rx="10" fill="#F7F1E3" stroke="#C15F3C" stroke-width="3"/>
+          <text x="430" y="186" text-anchor="middle" font-size="12" font-weight="bold" fill="#C15F3C">PreTool</text>
+          <text x="430" y="202" text-anchor="middle" font-size="12" font-weight="bold" fill="#C15F3C">Use</text>
+          <text x="430" y="230" text-anchor="middle" font-size="10" fill="#2A2723">ツール実行"直前"</text>
+
+          <!-- ツール実行マーカー（Hookではない） -->
+          <circle cx="520" cy="190" r="11" fill="#3E6B6E" stroke="#2A2723" stroke-width="2"/>
+          <text x="520" y="230" text-anchor="middle" font-size="10" fill="#2A2723">ツール実行</text>
+          <text x="520" y="242" text-anchor="middle" font-size="8.5" fill="#2A2723" opacity="0.7">（Hookではない）</text>
+
+          <!-- PostToolUse -->
+          <rect x="545" y="166" width="130" height="48" rx="10" fill="#F7F1E3" stroke="#C15F3C" stroke-width="3"/>
+          <text x="610" y="186" text-anchor="middle" font-size="12" font-weight="bold" fill="#C15F3C">PostTool</text>
+          <text x="610" y="202" text-anchor="middle" font-size="12" font-weight="bold" fill="#C15F3C">Use</text>
+          <text x="610" y="230" text-anchor="middle" font-size="10" fill="#2A2723">ツール実行"直後"</text>
+
+          <!-- Stop -->
+          <rect x="725" y="166" width="130" height="48" rx="10" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+          <text x="790" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2A2723">Stop</text>
+          <text x="790" y="230" text-anchor="middle" font-size="10" fill="#2A2723">応答終了時</text>
+
+          <!-- SessionEnd -->
+          <rect x="895" y="166" width="130" height="48" rx="10" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+          <text x="960" y="186" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">Session</text>
+          <text x="960" y="202" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">End</text>
+          <text x="960" y="230" text-anchor="middle" font-size="10" fill="#2A2723">セッション終了</text>
+
+          <!-- 分岐：PreCompact（上） -->
+          <line x1="260" y1="166" x2="260" y2="118" stroke="#3E6B6E" stroke-width="2" stroke-dasharray="5 4"/>
+          <circle cx="260" cy="166" r="3.5" fill="#3E6B6E"/>
+          <rect x="165" y="60" width="190" height="58" rx="10" fill="#EED9A0" stroke="#3E6B6E" stroke-width="2.5" stroke-dasharray="5 4"/>
+          <text x="260" y="80" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">PreCompact</text>
+          <text x="260" y="96" text-anchor="middle" font-size="9.5" fill="#2A2723">手動(/compact) または</text>
+          <text x="260" y="108" text-anchor="middle" font-size="9.5" fill="#2A2723">自動（コンテキスト圧迫時）</text>
+
+          <!-- 分岐：Notification（下） -->
+          <line x1="520" y1="201" x2="520" y2="288" stroke="#3E6B6E" stroke-width="2" stroke-dasharray="5 4"/>
+          <circle cx="520" cy="201" r="3.5" fill="#3E6B6E"/>
+          <rect x="425" y="288" width="190" height="58" rx="10" fill="#EED9A0" stroke="#3E6B6E" stroke-width="2.5" stroke-dasharray="5 4"/>
+          <text x="520" y="308" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">Notification</text>
+          <text x="520" y="324" text-anchor="middle" font-size="9.5" fill="#2A2723">権限確認の通知や</text>
+          <text x="520" y="336" text-anchor="middle" font-size="9.5" fill="#2A2723">60秒アイドル時に発火</text>
+
+          <!-- 分岐：SubagentStop（下） -->
+          <line x1="675" y1="214" x2="740" y2="288" stroke="#3E6B6E" stroke-width="2" stroke-dasharray="5 4"/>
+          <circle cx="675" cy="214" r="3.5" fill="#3E6B6E"/>
+          <rect x="645" y="288" width="200" height="58" rx="10" fill="#EED9A0" stroke="#3E6B6E" stroke-width="2.5" stroke-dasharray="5 4"/>
+          <text x="745" y="308" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723">SubagentStop</text>
+          <text x="745" y="324" text-anchor="middle" font-size="9.5" fill="#2A2723">サブエージェント(Task)</text>
+          <text x="745" y="336" text-anchor="middle" font-size="9.5" fill="#2A2723">の応答完了時</text>
+
+          <!-- 凡例 -->
+          <line x1="885" y1="298" x2="915" y2="298" stroke="#2A2723" stroke-width="2.5" marker-end="url(#tl-arrow)"/>
+          <text x="922" y="302" font-size="10" fill="#2A2723">主フロー（実線）</text>
+          <line x1="885" y1="320" x2="915" y2="320" stroke="#3E6B6E" stroke-width="2" stroke-dasharray="5 4"/>
+          <text x="922" y="324" font-size="10" fill="#2A2723">分岐イベント（点線）</text>
+        </svg>
+      </div>
+
+      <p class="explain">主フローは<strong>SessionStart→UserPromptSubmit→〔PreToolUse→ツール実行→PostToolUse〕×N→Stop→SessionEnd</strong>の順で必ず一直線に流れる。ツールが呼ばれるたびに<strong>PreToolUse→ツール実行→PostToolUse</strong>のセットが繰り返され（1回の応答で複数回ツールを使えば、その回数だけ繰り返す）、ツールを一切使わない応答であればこのループはゼロ回のままStopへ進む。</p>
+      <p class="explain">一方、<strong>Notification</strong>・<strong>SubagentStop</strong>・<strong>PreCompact</strong>の3つは主フローの「傍流」で、条件を満たしたときだけ分岐的に発火する。Notificationは権限確認ダイアログの表示や60秒以上の応答待ちアイドル時に、SubagentStopはTaskツール経由で呼び出したサブエージェントの応答が完了した瞬間に、PreCompactは殿が手動で<code>/compact</code>を打つか、コンテキストウィンドウが圧迫されて自動圧縮が走る直前に、それぞれ発火する。</p>
+      <p class="explain">なお、1セッション内で複数回ユーザーが発話すれば、Stopのあと再びUserPromptSubmitに戻ってこの主フロー全体が繰り返される（＝セッションは複数ターンにまたがる）。SessionEndが発火するのはセッションそのものが終了するときの一度きりである。</p>
+    </div>
+  </section>
+
+  <!-- 03. イベント・カタログ -->
+  <section class="section" id="p03">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <div>
+          <h2 class="section-title">イベント・カタログ</h2>
+          <p class="sec-sub">主要9イベントは厚く、拡張イベントは一覧で網羅する。</p>
+        </div>
+      </div>
+
+      <div class="event-grid">
+        <div class="event-card">
+          <div class="event-card-title">PreToolUse</div>
+          <div class="event-card-row"><b>発火：</b>ツール実行の"直前"</div>
+          <div class="event-card-row"><b>用途：</b>危険コマンドのブロック、権限チェック、パラメータ検証</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill ok">可</span> exit2 / permissionDecision:deny で実行阻止</div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-title">PostToolUse</div>
+          <div class="event-card-row"><b>発火：</b>ツール実行が成功した"直後"</div>
+          <div class="event-card-row"><b>用途：</b>自動フォーマット、lint、変更の監査ログ</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill no">不可</span> ツールは実行済み。ただしexit2でエラーをClaudeへフィードバック可</div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-title">UserPromptSubmit</div>
+          <div class="event-card-row"><b>発火：</b>ユーザーの発話がClaudeに渡される直前</div>
+          <div class="event-card-row"><b>用途：</b>コンテキスト注入（additionalContext）、プロンプト内容の検証・ブロック</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill ok">可</span> exit2でプロンプト投入そのものを止める</div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-title">Notification</div>
+          <div class="event-card-row"><b>発火：</b>Claudeが通知を送る時（権限確認・60秒アイドル等）</div>
+          <div class="event-card-row"><b>用途：</b>デスクトップ通知、外部連携</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill no">不可</span></div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-title">Stop</div>
+          <div class="event-card-row"><b>発火：</b>メインエージェントが応答を終えようとする時</div>
+          <div class="event-card-row"><b>用途：</b>未完了タスクの検知、停止前の最終検証</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill ok">可</span> exit2で停止をブロックし継続させる</div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-title">SubagentStop</div>
+          <div class="event-card-row"><b>発火：</b>サブエージェント（Task経由）が応答を終えようとする時</div>
+          <div class="event-card-row"><b>用途：</b>サブエージェント成果物の検証</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill ok">可</span> Stopと同様、exit2で継続させる</div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-title">PreCompact</div>
+          <div class="event-card-row"><b>発火：</b>会話履歴の圧縮（compact）直前</div>
+          <div class="event-card-row"><b>用途：</b>圧縮前のtranscriptバックアップ</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill no">不可</span></div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-title">SessionStart</div>
+          <div class="event-card-row"><b>発火：</b>セッション開始・再開（startup/resume/clear/compact）時</div>
+          <div class="event-card-row"><b>用途：</b>git状態や開発コンテキストの自動注入（additionalContext）</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill no">不可</span> 追加コンテキストの注入は可能</div>
+        </div>
+        <div class="event-card">
+          <div class="event-card-title">SessionEnd</div>
+          <div class="event-card-row"><b>発火：</b>セッション終了時</div>
+          <div class="event-card-row"><b>用途：</b>クリーンアップ処理、終了ログの記録</div>
+          <div class="event-card-row"><b>ブロック：</b><span class="tag-pill no">不可</span></div>
+        </div>
+      </div>
+
+      <p class="explain">凡例：<span class="tag-pill ok">可</span>＝そのフックの実行結果（exit code / JSON出力）でClaudeの挙動を止める・変えることができる。<span class="tag-pill no">不可</span>＝原則として観測・副作用用途で、Claude本体の処理フローを止める力はない。</p>
+
+      <div class="sec-head" style="margin-top:26px;">
+        <span class="sec-num" style="font-size:1.5rem;">＋</span>
+        <div><h3 class="section-title" style="font-size:1.05rem;">拡張イベント一覧（21種・詳細は公式ドキュメント参照）</h3></div>
+      </div>
+      <table class="info-table">
+        <tr><td>Setup</td><td>UserPromptExpansion</td><td>PermissionRequest</td></tr>
+        <tr><td>PermissionDenied</td><td>PostToolUseFailure</td><td>PostToolBatch</td></tr>
+        <tr><td>MessageDisplay</td><td>SubagentStart</td><td>TaskCreated</td></tr>
+        <tr><td>TaskCompleted</td><td>StopFailure</td><td>TeammateIdle</td></tr>
+        <tr><td>InstructionsLoaded</td><td>ConfigChange</td><td>CwdChanged</td></tr>
+        <tr><td>FileChanged</td><td>WorktreeCreate</td><td>WorktreeRemove</td></tr>
+        <tr><td>PostCompact</td><td>Elicitation</td><td>ElicitationResult</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 04. 設定の書き方 -->
+  <section class="section" id="p04">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <div>
+          <h2 class="section-title">設定の書き方（settings.json）</h2>
+          <p class="sec-sub">matcher → hooks[] → {type, command, timeout} の入れ子構造。</p>
+        </div>
+      </div>
+
+      <div class="code-block">
+<pre><code>{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "<span class="ck1">matcher</span>": "<span class="cv">Edit|Write</span>",
+        "<span class="ck2">hooks</span>": [
+          {
+            "type": "<span class="cv">command</span>",
+            "<span class="ck3">command</span>": "<span class="cv">\"$CLAUDE_PROJECT_DIR/.claude/hooks/format.py\"</span>",
+            "<span class="ck3">timeout</span>": <span class="cv">30</span>
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+      </div>
+      <div class="code-legend">
+        <span><i style="background:#e8927c;"></i>matcher＝どのツール呼び出しに反応するか</span>
+        <span><i style="background:#8fd0d3;"></i>hooks[]＝実行するコマンドの配列（複数登録可）</span>
+        <span><i style="background:#EED9A0;"></i>command / timeout＝実行内容と秒単位のタイムアウト</span>
+      </div>
+      <p class="explain">この例はPostToolUseに登録したフック。<strong>matcher: "Edit|Write"</strong>でEditツールまたはWriteツールの呼び出し後だけに反応し、<strong>hooks配列</strong>の中に<strong>type: "command"</strong>（現状はcommand型のみ）、実行する<strong>command</strong>、<strong>timeout</strong>（省略可、超過すると強制終了）を書く。commandは<code>$CLAUDE_PROJECT_DIR</code>で絶対パス参照すると堅牢（詳細は09）。フック本体（format.py側）は06で見る入力JSONをstdinで受け取り、<code>tool_input.file_path</code>から対象ファイルを判定する設計にすると環境非依存になる。</p>
+
+      <div class="sec-head" style="margin-top:26px;">
+        <span class="sec-num" style="font-size:1.5rem;">＋</span>
+        <div><h3 class="section-title" style="font-size:1.05rem;">3階層の設定ファイル</h3></div>
+      </div>
+      <table class="info-table">
+        <tr><th>階層</th><th>パス</th><th>用途</th></tr>
+        <tr><td>ユーザー全体</td><td><code>~/.claude/settings.json</code></td><td>全プロジェクト共通の個人設定</td></tr>
+        <tr><td>プロジェクト共有</td><td><code>.claude/settings.json</code></td><td>チームで共有・commit対象</td></tr>
+        <tr><td>プロジェクトローカル</td><td><code>.claude/settings.local.json</code></td><td>個人のローカル設定・<code>.gitignore</code>対象</td></tr>
+      </table>
+      <div class="sticky-note">3階層は<strong>上書きではなく「マージ・合算」</strong>される。同じイベントに複数階層でフックを登録すると<strong>両方とも実行される</strong>（＝二重発火に注意。09で詳述）。</div>
+    </div>
+  </section>
+
+  <!-- 05. matcherの当て方 -->
+  <section class="section" id="p05">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <div>
+          <h2 class="section-title">matcherの当て方</h2>
+          <p class="sec-sub">「どのツール／どの条件で発火するか」を決めるパターン。</p>
+        </div>
+      </div>
+
+      <p class="sec-sub" style="margin-top:0;">ツール名の例：</p>
+      <div class="matcher-chip-row">
+        <span class="matcher-chip">Edit</span>
+        <span class="matcher-chip">Write</span>
+        <span class="matcher-chip">Bash</span>
+        <span class="matcher-chip">Read</span>
+        <span class="matcher-chip">Task</span>
+      </div>
+
+      <table class="info-table">
+        <tr><th>matcherの書き方</th><th>意味</th></tr>
+        <tr><td><code>Edit</code></td><td>Editツールの呼び出しだけに一致（完全一致）</td></tr>
+        <tr><td><code>Edit|Write</code></td><td>EditまたはWrite（正規表現のOR）</td></tr>
+        <tr><td><code>Notebook.*</code></td><td>正規表現として評価される（柔軟なパターンマッチ）</td></tr>
+        <tr><td>（空文字／省略）</td><td>すべてのツール呼び出しに一致</td></tr>
+      </table>
+
+      <div class="warn-box">
+        <b>⚠ イベントによってmatcherの「意味」自体が変わる</b>
+        <table class="info-table" style="margin-top:10px;">
+          <tr><th>イベント</th><th>matcherが表すもの</th></tr>
+          <tr><td>PreToolUse / PostToolUse</td><td>ツール名（Edit, Write, Bash 等）</td></tr>
+          <tr><td>PreCompact</td><td><code>manual</code>（/compact手動実行）または<code>auto</code>（自動圧縮）</td></tr>
+          <tr><td>SessionStart</td><td><code>startup</code> / <code>resume</code> / <code>clear</code> / <code>compact</code></td></tr>
+        </table>
+        <p style="margin:10px 0 0;">さらに<strong>matcherは大文字小文字を区別する</strong>。<code>"edit"</code>と書いても<code>Edit</code>ツールにはマッチしない。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06. 入力JSON -->
+  <section class="section" id="p06">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <div>
+          <h2 class="section-title">入力JSON（stdinで受け取る）</h2>
+          <p class="sec-sub">フックはこのJSONを標準入力から読み、判断材料にする。</p>
+        </div>
+      </div>
+
+      <div class="code-block">
+<pre><code>{
+  "<span class="ck3">session_id</span>": "<span class="cv">abc123...</span>",
+  "<span class="ck3">transcript_path</span>": "<span class="cv">/home/user/.claude/projects/.../session.jsonl</span>",
+  "<span class="ck3">cwd</span>": "<span class="cv">/home/user/project</span>",
+  "<span class="ck3">hook_event_name</span>": "<span class="cv">PreToolUse</span>",
+  "<span class="ck3">permission_mode</span>": "<span class="cv">default</span>",
+  "<span class="ck1">tool_name</span>": "<span class="cv">Write</span>",
+  "<span class="ck1">tool_input</span>": {
+    "file_path": "<span class="cv">/home/user/project/notes.txt</span>",
+    "content": "<span class="cv">Hello World</span>"
+  },
+  "<span class="ck1">tool_use_id</span>": "<span class="cv">toolu_01ABC...</span>"
+}</code></pre>
+      </div>
+      <div class="code-legend">
+        <span><i style="background:#EED9A0;"></i>共通フィールド（全イベントに存在）</span>
+        <span><i style="background:#e8927c;"></i>イベント固有フィールド（PreToolUseの場合）</span>
+      </div>
+      <p class="explain">これはPreToolUse発火時の入力例。<strong>共通フィールド</strong>（<code>session_id, transcript_path, cwd, hook_event_name, permission_mode</code>）はどのイベントでも必ず含まれる「土台」。<strong>イベント固有フィールド</strong>（PreToolUseなら<code>tool_name, tool_input, tool_use_id</code>）はイベント種別ごとに変わる。フック側のスクリプトは、まずstdin全体をJSONとして読み込み、<code>hook_event_name</code>で分岐し、必要な固有フィールドを取り出す、という実装が定石になる。次の07では、このJSONを読んだ上で「何を返すか（出力・制御）」を対で見る。</p>
+    </div>
+  </section>
+
+  <!-- 07. 出力・制御 -->
+  <section class="section" id="p07">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <div>
+          <h2 class="section-title">出力・制御（フックからClaudeへ）</h2>
+          <p class="sec-sub">難所。exit codeとJSON出力の2系統で挙動を制御する。</p>
+        </div>
+      </div>
+
+      <div class="flow3-row">
+        <div class="flow3-box exit0">
+          <div class="flow3-code">exit 0</div>
+          <div class="flow3-title">✅ 通過</div>
+          <div class="flow3-desc">正常終了として処理を継続。stdoutにJSONを出力すればその内容が処理される（UserPromptSubmitではstdoutの文字列がそのままcontextに追加される）。</div>
+        </div>
+        <div class="flow3-box exit2">
+          <div class="flow3-code">exit 2</div>
+          <div class="flow3-title">⛔ ブロッキングエラー</div>
+          <div class="flow3-desc">stderrの内容がClaudeに渡される。イベントに応じて処理そのものを<strong>止める</strong>（詳細は下表）。</div>
+        </div>
+        <div class="flow3-box exitother">
+          <div class="flow3-code">exit N（N≠0,2）</div>
+          <div class="flow3-title">⚠ 非ブロッキングエラー</div>
+          <div class="flow3-desc">エラーとして記録されるが、Claudeの処理は<strong>止めずに継続</strong>する。</div>
+        </div>
+      </div>
+
+      <table class="info-table" style="margin-top:22px;">
+        <tr><th>イベント</th><th>exit 2 の効果</th></tr>
+        <tr><td>PreToolUse</td><td>これから実行しようとしたツール呼び出しを<strong>止める</strong></td></tr>
+        <tr><td>UserPromptSubmit</td><td>プロンプトのClaudeへの投入そのものを<strong>止める</strong></td></tr>
+        <tr><td>Stop / SubagentStop</td><td>応答を終えて<strong>停止しようとする動作自体を止め</strong>、Claudeに継続させる</td></tr>
+      </table>
+
+      <div class="sec-head" style="margin-top:26px;">
+        <span class="sec-num" style="font-size:1.5rem;">＋</span>
+        <div><h3 class="section-title" style="font-size:1.05rem;">JSON出力による上級制御</h3></div>
+      </div>
+      <div class="adv-grid">
+        <div class="adv-card">
+          <div class="adv-card-title">{"decision":"block","reason":"..."}</div>
+          <p>汎用のブロック指定。<code>reason</code>の文字列がClaudeに伝わり、次の行動判断の材料になる。</p>
+        </div>
+        <div class="adv-card">
+          <div class="adv-card-title">hookSpecificOutput.permissionDecision</div>
+          <p>PreToolUse専用。<code>"allow" / "deny" / "ask"</code>の3択でツール実行そのものを制御できる。</p>
+        </div>
+        <div class="adv-card">
+          <div class="adv-card-title">hookSpecificOutput.additionalContext</div>
+          <p>UserPromptSubmit・SessionStart用。任意の文字列をClaudeのコンテキストに<strong>注入</strong>できる（git branch名の自動挿入等、08のレシピ⑥参照）。</p>
+        </div>
+      </div>
+
+      <div class="readwrite-row">
+        <div class="readwrite-box">📥 06：stdinのJSONを<br>「読む」</div>
+        <svg width="40" height="24"><use href="#hand-arrow"/></svg>
+        <div class="readwrite-box">📤 07：exit code / stdoutで<br>「返す」</div>
+      </div>
+      <p class="explain">06で受け取った入力JSON（<code>tool_input</code>等）を判断材料に、07の出力方式で応答する——この「読む→返す」の一往復が、フック1回の実行サイクルの全体像になる。exit codeは<strong>粗い制御</strong>（通す／止める／継続）、JSON出力は<strong>細かい制御</strong>（許可・拒否・保留・理由・コンテキスト注入）と役割が分かれている点を押さえておく。</p>
+    </div>
+  </section>
+
+  <!-- 08. 活用レシピ集 -->
+  <section class="section" id="p08">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <div>
+          <h2 class="section-title">活用レシピ集</h2>
+          <p class="sec-sub">〔イベント × matcher × 何をするか〕の3点セットで覚える。</p>
+        </div>
+      </div>
+      <div class="recipe-grid">
+        <div class="recipe-card">
+          <div class="recipe-head"><span class="recipe-num">1</span><span class="recipe-title">🎨 自動フォーマット</span></div>
+          <div class="recipe-meta">PostToolUse × matcher: "Edit|Write"</div>
+          <div class="recipe-desc">保存直後に<code>prettier</code> / <code>gofmt</code>等を自動実行。フォーマット崩れを人間がレビューする手間をゼロにする。</div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-head"><span class="recipe-num">2</span><span class="recipe-title">🔍 lint／型チェック</span></div>
+          <div class="recipe-meta">PostToolUse × matcher: "Edit|Write"</div>
+          <div class="recipe-desc">lint・型チェックを実行し、失敗したら<code>exit 2</code>でstderrにエラー内容を返す。Claudeがそのエラーを見て自ら修正に向かう。</div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-head"><span class="recipe-num">3</span><span class="recipe-title">🛡 ファイル保護</span></div>
+          <div class="recipe-meta">PreToolUse × matcher: "Edit|Write|Bash"</div>
+          <div class="recipe-desc"><code>.env</code>や<code>.git/</code>配下等の重要ファイルへの書き込み・削除を<code>permissionDecision:"deny"</code>で機械的にブロック。</div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-head"><span class="recipe-num">4</span><span class="recipe-title">🔔 デスクトップ通知</span></div>
+          <div class="recipe-meta">Notification / Stop × matcher: なし</div>
+          <div class="recipe-desc">権限確認待ちや応答完了のタイミングでOS標準の通知を飛ばし、離席中でも気づけるようにする。</div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-head"><span class="recipe-num">5</span><span class="recipe-title">🧾 監査ログ</span></div>
+          <div class="recipe-meta">各種イベント × matcher: なし</div>
+          <div class="recipe-desc">受け取った入力JSONをそのままログファイルに追記。「いつ・何のツールが・何をしたか」を後から機械的に追える証跡になる。</div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-head"><span class="recipe-num">6</span><span class="recipe-title">📌 コンテキスト注入</span></div>
+          <div class="recipe-meta">UserPromptSubmit / SessionStart × matcher: なし</div>
+          <div class="recipe-desc">現在のgit branch名や直近のCIステータス等を<code>additionalContext</code>で自動的にClaudeへ渡し、「今どのブランチで作業中か」を毎回説明する手間を省く。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09. 落とし穴＆Windows作法 -->
+  <section class="section" id="p09">
+    <div class="card">
+      <div class="owl-row">
+        <svg class="owl" width="52" height="52"><use href="#owl-doc"/></svg>
+        <div class="bubble">殿の環境（Windows/PowerShell）は要注意ポイントが多いぞ</div>
+      </div>
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <div>
+          <h2 class="section-title">落とし穴＆Windows作法</h2>
+          <p class="sec-sub">公式ドキュメントで明記されている、実務で踏みがちな地雷。</p>
+        </div>
+      </div>
+
+      <div class="pitfall-grid">
+        <div class="pitfall-card" style="grid-column:1 / -1;">
+          <div class="pitfall-title">⚠ Windows差異（最重要）</div>
+          <p>フックのshell-form command（<code>"command":"..."</code>という文字列指定）は、<strong>Windowsでは既定でGit Bashを起動して実行される</strong>。つまりコマンドはGit Bash（POSIX風シェル）前提で書く必要がある。公式のサンプルに頻出する<code>jq</code>はWindowsに標準搭載されていないため、公式は<strong>Python / Node.jsでのJSONパース</strong>を推奨している。パスは<code>${CLAUDE_PROJECT_DIR}</code>を使って絶対参照させると、cwdの違いに左右されず堅牢になる。</p>
+          <div class="code-block">
+<pre><code>{
+  "type": "command",
+  "command": "python3 \"${CLAUDE_PROJECT_DIR}/.claude/hooks/check.py\""
+}</code></pre>
+          </div>
+          <p style="margin-top:10px;">どうしてもPowerShellのコマンドを使いたい場合は、shell formの中から<strong>直接呼び出す</strong>形にする：</p>
+          <div class="code-block">
+<pre><code>{
+  "type": "command",
+  "command": "powershell.exe -Command \"Get-Content $env:CLAUDE_PROJECT_DIR/notes.txt\""
+}</code></pre>
+          </div>
+        </div>
+
+        <div class="pitfall-card">
+          <div class="pitfall-title">🔀 並列実行とマージ発火</div>
+          <p>同一イベントに複数フックが登録されていれば<strong>並列実行</strong>される。さらに04で見た通りuser/project/localの3階層は<strong>マージ・合算</strong>されるため、同じような処理を複数階層で重ねて登録していないか（＝二重発火）を定期的に見直す。</p>
+        </div>
+        <div class="pitfall-card">
+          <div class="pitfall-title">🐢 レイテンシの上乗せ</div>
+          <p>フックは登録した対象イベントの<strong>毎回</strong>走る。重いlintやテストを全PostToolUseに付けると、Edit1回ごとに数秒〜数十秒待たされることになる。matcherで対象を絞る、重い処理は非同期化する等の工夫が要る。</p>
+        </div>
+        <div class="pitfall-card" style="grid-column:1 / -1;">
+          <div class="pitfall-title">🔁 無限ループ注意</div>
+          <p>Stopフックが「まだ作業が残っている」と判断してexit2で継続させ続けると、Claudeが新たな作業を延々と生み出す無限ループに陥りうる。入力JSON中の<code>stop_hook_active</code>等のフラグを見て、<strong>自己防御的に多重発火を打ち切る</strong>実装にする。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. セキュリティ＆デバッグ -->
+  <section class="section" id="p10">
+    <div class="card">
+      <div class="sec-head">
+        <span class="sec-num">10</span>
+        <div>
+          <h2 class="section-title">セキュリティ＆デバッグ</h2>
+          <p class="sec-sub">「任意コード実行」である以上、最後は自己責任で確認する。</p>
+        </div>
+      </div>
+
+      <div class="check-grid">
+        <div class="check-card">
+          <div class="check-card-title"><svg class="check-icon" width="20" height="18"><use href="#check-mark"/></svg>ユーザー権限での任意実行</div>
+          <p>フックは<strong>殿自身のユーザー権限で任意のシェルコマンドを実行する</strong>。確認なしに自動実行されるため、共有・流用する前に内容を必ずレビューする。</p>
+        </div>
+        <div class="check-card">
+          <div class="check-card-title"><svg class="check-icon" width="20" height="18"><use href="#check-mark"/></svg>セッション開始時にスナップショット</div>
+          <p>フック定義は<strong>セッション開始時点の内容がスナップショットされる</strong>。実行中にsettings.jsonを書き換えても即時反映されない＝セッション中に悪意あるフックへすり替えられる攻撃を防ぐ設計。</p>
+        </div>
+        <div class="check-card">
+          <div class="check-card-title"><svg class="check-icon" width="20" height="18"><use href="#check-mark"/></svg>denyは常に優先される</div>
+          <p><code>deny</code>ルールは<strong>bypassPermissionsモードでも有効</strong>（強制ルールとして機能する）。一方<code>allow</code>ルールは既存のdenyルールを<strong>緩和できない</strong>（制限を厳しくする方向のみに働く）。</p>
+        </div>
+        <div class="check-card">
+          <div class="check-card-title"><svg class="check-icon" width="20" height="18"><use href="#check-mark"/></svg>デバッグ動線</div>
+          <p><code>/hooks</code>コマンドで現在登録されているフック内容をread-only確認できる。挙動が怪しい時は<code>claude --debug</code>で詳細ログを見る。</p>
+        </div>
+        <div class="check-card" style="grid-column:1 / -1;">
+          <div class="check-card-title"><svg class="check-icon" width="20" height="18"><use href="#check-mark"/></svg>JSON汚染対策</div>
+          <p>シェルのprofile（<code>.bashrc</code>等）にechoを仕込んでいると、その出力がフックのJSON入出力に混ざり<strong>パース不能</strong>になることがある。echoは<strong>interactive時のみ</strong>に限定するよう条件分岐しておく。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="source">
+    出典：Claude Code 公式ドキュメント（Hooks） <a href="https://code.claude.com/docs/en/hooks">https://code.claude.com/docs/en/hooks</a>
+  </footer>
+
+</div>
+</body>
+</html>

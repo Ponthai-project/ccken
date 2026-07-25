@@ -1,0 +1,390 @@
+<title>CLAUDE.md / settings.json / rules / skills の違い</title>
+<style>
+:root{
+  --bg:#f3f4f6;
+  --paper:#ffffff;
+  --ink:#1a1d24;
+  --ink-soft:#565c6b;
+  --line:#dde1e8;
+  --line-soft:#e8eaf0;
+  --mono-bg:#eef0f4;
+
+  --md:#a4720f;      /* CLAUDE.md */
+  --md-bg:#fbf3e2;
+  --json:#2a5f9e;    /* settings.json */
+  --json-bg:#e8f0fb;
+  --rules:#7448a6;   /* .claude/rules */
+  --rules-bg:#f2e9fa;
+  --skill:#1f7a5c;   /* skills */
+  --skill-bg:#e3f4ec;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#14161c;
+    --paper:#1c1f27;
+    --ink:#eceef2;
+    --ink-soft:#a2a8b8;
+    --line:#313744;
+    --line-soft:#272c37;
+    --mono-bg:#22262f;
+
+    --md:#e0ac52;
+    --md-bg:#332a17;
+    --json:#7ab0f0;
+    --json-bg:#1c2c40;
+    --rules:#c298ea;
+    --rules-bg:#2d2038;
+    --skill:#6fd0ab;
+    --skill-bg:#173129;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161c; --paper:#1c1f27; --ink:#eceef2; --ink-soft:#a2a8b8;
+  --line:#31374d; --line-soft:#272c37; --mono-bg:#22262f;
+  --md:#e0ac52; --md-bg:#332a17;
+  --json:#7ab0f0; --json-bg:#1c2c40;
+  --rules:#c298ea; --rules-bg:#2d2038;
+  --skill:#6fd0ab; --skill-bg:#173129;
+}
+:root[data-theme="light"]{
+  --bg:#f3f4f6; --paper:#ffffff; --ink:#1a1d24; --ink-soft:#565c6b;
+  --line:#dde1e8; --line-soft:#e8eaf0; --mono-bg:#eef0f4;
+  --md:#a4720f; --md-bg:#fbf3e2;
+  --json:#2a5f9e; --json-bg:#e8f0fb;
+  --rules:#7448a6; --rules-bg:#f2e9fa;
+  --skill:#1f7a5c; --skill-bg:#e3f4ec;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Segoe UI","Yu Gothic UI","Hiragino Sans",system-ui,sans-serif;
+  line-height:1.65;
+}
+.wrap{
+  max-width:920px;
+  margin:0 auto;
+  padding:48px 24px 80px;
+}
+.mono{
+  font-family:ui-monospace,"Cascadia Code","Consolas",monospace;
+  font-size:0.92em;
+}
+code{
+  font-family:ui-monospace,"Cascadia Code","Consolas",monospace;
+  background:var(--mono-bg);
+  padding:0.12em 0.4em;
+  border-radius:4px;
+  font-size:0.88em;
+}
+
+header{margin-bottom:44px;}
+.eyebrow{
+  font-size:0.78rem;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin:0 0 10px;
+}
+h1{
+  font-size:1.9rem;
+  font-weight:700;
+  margin:0 0 12px;
+  text-wrap:balance;
+  letter-spacing:-0.01em;
+}
+.lede{
+  color:var(--ink-soft);
+  font-size:1.02rem;
+  max-width:62ch;
+  margin:0;
+}
+
+h2{
+  font-size:1.15rem;
+  font-weight:700;
+  margin:0 0 6px;
+  letter-spacing:-0.005em;
+}
+.section-note{
+  color:var(--ink-soft);
+  font-size:0.92rem;
+  margin:0 0 22px;
+  max-width:64ch;
+}
+section{margin-bottom:52px;}
+
+/* ---- flow diagram ---- */
+.flow-group-label{
+  font-size:0.74rem;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin:0 0 12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.flow-group-label::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:var(--line);
+}
+.auto-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-bottom:8px;
+}
+.card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:16px 16px 14px;
+  position:relative;
+}
+.badge{
+  display:inline-block;
+  font-size:0.68rem;
+  font-weight:700;
+  letter-spacing:0.04em;
+  padding:3px 8px;
+  border-radius:5px;
+  margin-bottom:10px;
+}
+.card h3{
+  margin:0 0 6px;
+  font-size:0.98rem;
+  font-family:ui-monospace,"Cascadia Code","Consolas",monospace;
+  font-weight:600;
+}
+.card p{
+  margin:0;
+  font-size:0.85rem;
+  color:var(--ink-soft);
+}
+.arrow-down{
+  display:flex;
+  justify-content:center;
+  color:var(--ink-soft);
+  font-size:0.8rem;
+  margin:6px 0;
+}
+.merge-bar{
+  background:var(--paper);
+  border:1px dashed var(--line);
+  border-radius:10px;
+  padding:14px 18px;
+  text-align:center;
+  font-size:0.9rem;
+  color:var(--ink-soft);
+  margin-bottom:32px;
+}
+.merge-bar strong{color:var(--ink);}
+
+.ondemand-row{display:grid;grid-template-columns:1fr;gap:16px;}
+.skill-card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:16px 18px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.skill-card .badge{margin:0;flex-shrink:0;}
+.skill-card .txt h3{margin:0 0 4px;font-size:0.98rem;font-family:ui-monospace,"Cascadia Code","Consolas",monospace;font-weight:600;}
+.skill-card .txt p{margin:0;font-size:0.85rem;color:var(--ink-soft);}
+
+/* ---- table ---- */
+.table-scroll{
+  overflow-x:auto;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--paper);
+}
+table{
+  border-collapse:collapse;
+  width:100%;
+  min-width:760px;
+  font-size:0.87rem;
+}
+th,td{
+  text-align:left;
+  padding:12px 14px;
+  border-bottom:1px solid var(--line-soft);
+  vertical-align:top;
+}
+thead th{
+  color:var(--ink-soft);
+  font-size:0.72rem;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  font-weight:600;
+  border-bottom:1px solid var(--line);
+}
+tbody tr:last-child td{border-bottom:none;}
+td.name{white-space:nowrap;}
+td.name .badge{display:block;width:fit-content;margin-bottom:6px;}
+td.name .fname{font-family:ui-monospace,"Cascadia Code","Consolas",monospace;font-weight:600;font-size:0.88rem;}
+td ul{margin:0;padding-left:18px;}
+td li{margin-bottom:3px;}
+td li:last-child{margin-bottom:0;}
+
+/* ---- decision guide ---- */
+.guide{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.guide-item{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 16px;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.guide-item .dot{
+  width:9px;height:9px;border-radius:50%;
+  margin-top:6px;flex-shrink:0;
+}
+.guide-item p{margin:0;font-size:0.88rem;}
+.guide-item .q{color:var(--ink-soft);display:block;margin-bottom:3px;font-size:0.82rem;}
+.guide-item .a{font-family:ui-monospace,"Cascadia Code","Consolas",monospace;font-weight:600;font-size:0.88rem;}
+
+footer{
+  margin-top:8px;
+  font-size:0.8rem;
+  color:var(--ink-soft);
+}
+
+@media (max-width:680px){
+  .auto-row{grid-template-columns:1fr;}
+  .guide{grid-template-columns:1fr;}
+  h1{font-size:1.55rem;}
+}
+</style>
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">Claude Code — 設定・拡張機構の見取り図</p>
+  <h1>CLAUDE.md / settings.json / .claude/rules/ / Skills</h1>
+  <p class="lede">4つとも「Claude Codeの挙動を変える」点は同じだが、<strong>何を書くものか</strong>と<strong>いつ効くか</strong>が異なる。まず読み込まれ方の違いから見る。</p>
+</header>
+
+<section>
+  <h2>起動時、何が自動的に読み込まれるか</h2>
+  <p class="section-note">下の3つは呼び出さなくても毎回自動で効く。Skillsだけは名前で呼ばれるまでコンテキストに乗らない。</p>
+
+  <p class="flow-group-label">常時オート・ロード</p>
+  <div class="auto-row">
+    <div class="card">
+      <span class="badge" style="background:var(--md-bg);color:var(--md);">MD</span>
+      <h3>CLAUDE.md</h3>
+      <p>自然言語の指示・プロジェクトの前提知識。人間向けの説明書きをそのまま読ませる。</p>
+    </div>
+    <div class="card">
+      <span class="badge" style="background:var(--json-bg);color:var(--json);">JSON</span>
+      <h3>settings.json</h3>
+      <p>権限・フック・MCP・モデル選択などハーネス自体の構造化された挙動設定。</p>
+    </div>
+    <div class="card">
+      <span class="badge" style="background:var(--rules-bg);color:var(--rules);">RULE</span>
+      <h3>.claude/rules/*.md</h3>
+      <p>ディレクトリ・パス単位で切り替えたい規約。触っている場所によって効く内容が変わる。</p>
+    </div>
+  </div>
+  <div class="arrow-down">↓ すべて合成される</div>
+  <div class="merge-bar"><strong>今のセッションの前提・制約・作法</strong>として常にコンテキストに存在</div>
+
+  <p class="flow-group-label">オン・デマンド（呼ばれたときだけ）</p>
+  <div class="ondemand-row">
+    <div class="skill-card">
+      <span class="badge" style="background:var(--skill-bg);color:var(--skill);">SKILL</span>
+      <div class="txt">
+        <h3>.claude/skills/*/SKILL.md</h3>
+        <p>「この作業のやり方」を手順化したもの。<code>/skill-name</code>で明示的に呼ぶか、内容が今の作業に合致した時だけ読み込まれる — 常駐しない分、平時のコンテキストを圧迫しない。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>詳細比較</h2>
+  <p class="section-note">形式・優先順位・向いている内容の違い。</p>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>機構</th>
+          <th>目的</th>
+          <th>発火タイミング</th>
+          <th>適用範囲</th>
+          <th>書くのに向く内容</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name"><span class="badge" style="background:var(--md-bg);color:var(--md);">MD</span><span class="fname">CLAUDE.md</span></td>
+          <td>プロジェクト／ユーザーの恒久的な前提知識・方針を伝える</td>
+          <td>セッション開始時に自動ロード。ディレクトリ階層ごとに重ねがけ</td>
+          <td>グローバル(<code>~/.claude/</code>)〜プロジェクト〜サブディレクトリ</td>
+          <td>コーディング規約、アーキテクチャ方針、ロールプレイ設定など<strong>言葉で説明する指示</strong></td>
+        </tr>
+        <tr>
+          <td class="name"><span class="badge" style="background:var(--json-bg);color:var(--json);">JSON</span><span class="fname">settings.json</span></td>
+          <td>ハーネス自体の動作を構造化データで制御する</td>
+          <td>セッション起動時にマージして自動適用</td>
+          <td>Enterprise管理 &gt; CLI引数 &gt; プロジェクトlocal &gt; プロジェクト &gt; ユーザー</td>
+          <td>権限許可リスト、フック、環境変数、MCPサーバー登録、モデル指定など<strong>設定値</strong></td>
+        </tr>
+        <tr>
+          <td class="name"><span class="badge" style="background:var(--rules-bg);color:var(--rules);">RULE</span><span class="fname">.claude/rules/</span></td>
+          <td>触っているパスに応じて適用ルールを出し分ける</td>
+          <td>該当パスを扱う操作時に自動的に効く</td>
+          <td>パス単位（ディレクトリ別に細分化）</td>
+          <td>「<code>frontend/</code>配下ではこの規約」のような<strong>場所依存の細則</strong></td>
+        </tr>
+        <tr>
+          <td class="name"><span class="badge" style="background:var(--skill-bg);color:var(--skill);">SKILL</span><span class="fname">Skills</span></td>
+          <td>特定タスクの手順・ワークフローを再利用可能にパッケージ化する</td>
+          <td>名前で明示的に呼ぶ、または内容が状況に一致した時のみ読み込み</td>
+          <td>プロジェクト／ユーザー（配置場所による）</td>
+          <td>「デプロイ手順」「レビュー手順」など<strong>再利用する一連の作業手順</strong></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>結局どこに書けばいいか</h2>
+  <div class="guide">
+    <div class="guide-item">
+      <span class="dot" style="background:var(--md);"></span>
+      <p><span class="q">「毎回この方針で動いてほしい」</span><span class="a">CLAUDE.md</span></p>
+    </div>
+    <div class="guide-item">
+      <span class="dot" style="background:var(--json);"></span>
+      <p><span class="q">「このコマンドは毎回許可して」「このフックを仕込みたい」</span><span class="a">settings.json</span></p>
+    </div>
+    <div class="guide-item">
+      <span class="dot" style="background:var(--rules);"></span>
+      <p><span class="q">「このディレクトリ配下だけ別ルールにしたい」</span><span class="a">.claude/rules/</span></p>
+    </div>
+    <div class="guide-item">
+      <span class="dot" style="background:var(--skill);"></span>
+      <p><span class="q">「この一連の作業を使い回したい・名前で呼びたい」</span><span class="a">Skills</span></p>
+    </div>
+  </div>
+</section>
+
+<footer>常時ロード3種は指示が積み重なるほどコンテキストを消費する。パス限定の話は<code>rules/</code>、手順化できる作業は<code>Skills</code>に逃がすと運用が軽くなる。</footer>
+
+</div>
