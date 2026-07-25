@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>グラレコ：CLAUDE.md / settings.json / rules / Skills の違い</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{
+  --paper:#F3ECDD;
+  --card:#F7F1E3;
+  --ink:#2A2723;
+  --terracotta:#C15F3C;
+  --teal:#3E6B6E;
+  --highlight:#EED9A0;
+  --shadow:rgba(42,39,35,0.12);
+
+  --md-ink:#8a5c10;   --md-bg:#f3e0ae;
+  --json-ink:#2f5f60; --json-bg:#dcebe9;
+  --rules-ink:#6b4a8f; --rules-bg:#e8dcf2;
+  --skill-ink:#b0492c; --skill-bg:#f7ded0;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{
+  margin:0; padding:0; width:100%; overflow-x:hidden;
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(transparent 0 31px, rgba(42,39,35,0.035) 31px 32px),
+    radial-gradient(rgba(42,39,35,0.03) 1px, transparent 1.2px);
+  background-size: auto, 7px 7px;
+  color:var(--ink);
+  font-family:"Segoe Print","Bradley Hand","Comic Sans MS","Yu Gothic UI","Hiragino Maru Gothic ProN",sans-serif;
+  line-height:1.6;
+}
+img,svg{ max-width:100%; height:auto; }
+.page{ max-width:min(980px,92vw); margin:0 auto; }
+
+.sec-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom:10px; }
+.sec-num{
+  flex-shrink:0; font-size:clamp(1.9rem,5vw,2.8rem); font-weight:bold;
+  color:var(--terracotta); line-height:1;
+  text-shadow: 1.5px 1.5px 0 rgba(193,95,60,0.20);
+}
+.sec-head-txt{ padding-top:6px; }
+.section-title{
+  display:inline-block; font-size:clamp(1.3rem,3.2vw,1.9rem); letter-spacing:0.04em;
+  position:relative; padding-bottom:6px;
+  background-image: linear-gradient(120deg, rgba(193,95,60,0.35), rgba(193,95,60,0.35));
+  background-repeat:no-repeat; background-size:100% 0.42em; background-position:0 92%;
+}
+.sec-sub{ margin:8px 0 0 0; color:#6b6660; font-size:0.9rem; max-width:68ch; }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--teal);
+  font-weight:bold; letter-spacing:0.08em; margin-bottom:10px;
+}
+
+.section{ padding:26px 0; }
+.card{
+  background:var(--card); border:2px solid var(--ink); border-radius:18px;
+  box-shadow:0 6px 14px var(--shadow); padding:22px clamp(16px,4vw,36px); position:relative;
+}
+
+.marker{
+  background-image: linear-gradient(120deg, rgba(193,95,60,0.32), rgba(193,95,60,0.32));
+  background-repeat:no-repeat; background-size:100% 0.55em; background-position:0 82%;
+  font-weight:bold;
+}
+.circled{ position:relative; display:inline-block; padding:0 0.35em; }
+.circled::before{
+  content:""; position:absolute; inset:-6px -10px; border:2.5px solid var(--terracotta);
+  border-radius:48% 52% 45% 55% / 55% 45% 58% 42%; transform: rotate(-1deg); pointer-events:none;
+}
+
+.owl-row{ display:flex; align-items:center; gap:14px; margin:18px 0 4px; flex-wrap:wrap; }
+.bubble{
+  position:relative; background:#fff9ec; border:2px solid var(--ink); border-radius:16px;
+  padding:12px 18px; font-size:0.95rem; max-width:460px;
+}
+.bubble::before{
+  content:""; position:absolute; left:-14px; top:18px; border:8px solid transparent;
+  border-right-color:var(--ink);
+}
+.bubble::after{
+  content:""; position:absolute; left:-11px; top:19px; border:7px solid transparent;
+  border-right-color:#fff9ec;
+}
+
+/* ---- 常時オートロード：3枚カード ---- */
+.auto-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:18px; }
+.auto-card{
+  border:2.5px solid var(--ink); border-radius:14px; padding:16px 16px 14px; position:relative;
+  display:flex; flex-direction:column; gap:8px;
+}
+.auto-card .chip{ align-self:flex-start; }
+.auto-card h3{
+  margin:0; font-size:0.98rem; font-weight:bold;
+  font-family:ui-monospace,"Cascadia Code","Consolas",monospace;
+}
+.auto-card p{ margin:0; font-size:0.85rem; }
+.flow-group-label{
+  display:flex; align-items:center; gap:8px; font-size:0.78rem; letter-spacing:0.06em;
+  color:var(--teal); font-weight:bold; margin:22px 0 4px;
+}
+.flow-group-label::after{ content:""; flex:1; height:1.5px; background:var(--ink); opacity:0.25; }
+.arrow-down-row{ display:flex; justify-content:center; margin:10px 0; }
+.merge-bar{
+  border:2.5px dashed var(--ink); border-radius:14px; padding:14px 20px; text-align:center;
+  font-size:0.92rem; background:var(--highlight); font-weight:bold; margin-bottom:6px;
+}
+.skill-card{
+  border:2.5px dashed var(--skill-ink); border-radius:14px; padding:16px 20px; margin-top:16px;
+  display:flex; align-items:center; gap:16px; background:var(--skill-bg); flex-wrap:wrap;
+}
+.skill-card .txt h3{
+  margin:0 0 4px; font-size:0.98rem; font-weight:bold;
+  font-family:ui-monospace,"Cascadia Code","Consolas",monospace;
+}
+.skill-card .txt p{ margin:0; font-size:0.87rem; }
+
+/* ---- チップ（4機構の色分け） ---- */
+.chip{
+  display:inline-block; font-weight:bold; font-size:0.74rem; letter-spacing:0.02em;
+  padding:3px 10px; border-radius:999px; border:2px solid currentColor;
+}
+.chip-md{ color:var(--md-ink); background:var(--md-bg); }
+.chip-json{ color:var(--json-ink); background:var(--json-bg); }
+.chip-rules{ color:var(--rules-ink); background:var(--rules-bg); }
+.chip-skill{ color:var(--skill-ink); background:var(--skill-bg); }
+
+/* ---- 補足表 ---- */
+.info-table{ width:100%; border-collapse:collapse; margin:18px 0 4px; font-size:0.85rem; }
+.info-table th,.info-table td{ border:1.5px solid var(--ink); padding:10px 12px; text-align:left; vertical-align:top; }
+.info-table th{ background:var(--highlight); font-weight:bold; white-space:nowrap; font-size:0.78rem; letter-spacing:0.02em; }
+.info-table tr:nth-child(even) td{ background:rgba(62,107,110,0.06); }
+.info-table td.name{ white-space:nowrap; }
+.info-table td.name .fname{
+  display:block; margin-top:6px; font-family:ui-monospace,"Cascadia Code","Consolas",monospace;
+  font-weight:bold; font-size:0.85rem;
+}
+.info-table code{
+  font-family:ui-monospace,"Cascadia Code","Consolas",monospace; background:var(--paper);
+  padding:0.1em 0.4em; border-radius:4px; font-size:0.9em;
+}
+
+/* ---- 4象限：どこに書くか ---- */
+.quote-row{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; align-items:stretch; margin-top:22px; }
+.quote-cloud{
+  flex:1 1 220px; max-width:270px; display:flex; flex-direction:column; justify-content:space-between;
+  gap:12px; border:2.5px solid var(--ink); border-radius:14px; padding:18px 18px; text-align:center;
+  box-shadow:0 6px 14px var(--shadow); background:var(--card);
+}
+.quote-cloud .q{ font-size:0.88rem; font-weight:bold; }
+.quote-cloud .a-row{ display:flex; align-items:center; justify-content:center; gap:8px; }
+
+.explain{ margin-top:14px; font-size:0.92rem; line-height:1.7; }
+.explain strong{ color:var(--terracotta); }
+
+.sticky-note{
+  background:var(--highlight); border-radius:2px; padding:16px 22px; position:relative;
+  box-shadow:3px 5px 9px var(--shadow); margin-top:24px; font-weight:bold; font-size:0.92rem;
+}
+.sticky-note::after{
+  content:""; position:absolute; top:0; right:0; width:22px; height:22px;
+  background:linear-gradient(135deg, transparent 50%, rgba(42,39,35,0.18) 52%);
+  border-bottom-left-radius:5px;
+}
+
+.hero{ text-align:center; padding:38px 0 6px; }
+.hero .section-title{ font-size:clamp(1.5rem,5.2vw,2.5rem); line-height:1.35; }
+.hero-sub{ font-size:clamp(0.95rem,2.4vw,1.15rem); margin-top:14px; }
+
+footer.source{ text-align:center; font-size:0.78rem; opacity:0.75; padding:20px 0 50px; line-height:1.8; }
+
+@media (max-width:680px){
+  .auto-row{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="owl-doc" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="58" rx="34" ry="32" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M28 30 Q34 8 44 27" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M72 30 Q66 8 56 27" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="38" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="62" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="49" y1="51" x2="51" y2="51" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="38" cy="52" r="4.2" fill="#2A2723"/>
+    <circle cx="62" cy="52" r="4.2" fill="#2A2723"/>
+    <path d="M50 60 L45 69 L55 69 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M17 66 Q8 76 19 87" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M83 66 Q92 76 81 87" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="check-mark" viewBox="0 0 18 16">
+    <path d="M2 8 L7 13 L16 3" stroke="#3E6B6E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="hand-arrow-down" viewBox="0 0 24 60">
+    <path d="M12 2 Q6 30 12 48" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M12 48 L7 40 M12 48 L17 40" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="magnifier" viewBox="0 0 80 80">
+    <circle cx="34" cy="34" r="20" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="48" y1="48" x2="68" y2="68" stroke="#2A2723" stroke-width="4" stroke-linecap="round"/>
+    <path d="M24 30 Q30 22 40 26" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+  </symbol>
+  <symbol id="compass" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="26" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M40 24 L46 40 L40 56 L34 40 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="1.6" stroke-linejoin="round"/>
+    <circle cx="40" cy="40" r="3.2" fill="#2A2723"/>
+  </symbol>
+  <symbol id="sparkle" viewBox="0 0 24 24">
+    <path d="M12 1 L14.2 9.8 L23 12 L14.2 14.2 L12 23 L9.8 14.2 L1 12 L9.8 9.8 Z"
+          fill="#EED9A0" stroke="#2A2723" stroke-width="1.2" stroke-linejoin="round"/>
+  </symbol>
+</svg>
+
+<div class="page">
+
+  <section class="hero">
+    <div class="eyebrow">CLAUDE CODE — 設定・拡張機構の見取り図</div>
+    <h1 class="section-title">CLAUDE.md / settings.json /<br>.claude/rules/ / Skills</h1>
+    <p class="hero-sub">4つとも<span class="marker">「Claude Codeの挙動を変える」</span>点は同じ。<br>
+    でも<span class="circled">何を書くか</span>と<span class="circled">いつ効くか</span>が違う。</p>
+    <div class="owl-row" style="justify-content:center;">
+      <svg width="72" height="72"><use href="#owl-doc"/></svg>
+      <div class="bubble">「まず読み込まれ方の違いから見ていくのじゃ。起動時に自動で乗るのは3つ。Skillsだけは名前で呼ばれるまでコンテキストに乗らないぞ」</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-head">
+      <div class="sec-num">01</div>
+      <div class="sec-head-txt">
+        <span class="section-title">起動時、何が自動的に読み込まれるか</span>
+        <p class="sec-sub">下の3つは呼び出さなくても毎回自動で効く。Skillsだけは名前で呼ばれるまでコンテキストに乗らない。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flow-group-label">常時オート・ロード</div>
+      <div class="auto-row">
+        <div class="auto-card" style="border-color:var(--md-ink); background:var(--md-bg);">
+          <span class="chip chip-md">MD</span>
+          <h3>CLAUDE.md</h3>
+          <p>自然言語の指示・プロジェクトの前提知識。人間向けの説明書きをそのまま読ませる。</p>
+        </div>
+        <div class="auto-card" style="border-color:var(--json-ink); background:var(--json-bg);">
+          <span class="chip chip-json">JSON</span>
+          <h3>settings.json</h3>
+          <p>権限・フック・MCP・モデル選択などハーネス自体の構造化された挙動設定。</p>
+        </div>
+        <div class="auto-card" style="border-color:var(--rules-ink); background:var(--rules-bg);">
+          <span class="chip chip-rules">RULE</span>
+          <h3>.claude/rules/*.md</h3>
+          <p>ディレクトリ・パス単位で切り替えたい規約。触っている場所によって効く内容が変わる。</p>
+        </div>
+      </div>
+
+      <div class="arrow-down-row"><svg width="22" height="46"><use href="#hand-arrow-down"/></svg></div>
+      <div class="merge-bar">すべて合成 → 「今のセッションの前提・制約・作法」として常にコンテキストに存在</div>
+
+      <div class="flow-group-label">オン・デマンド（呼ばれたときだけ）</div>
+      <div class="skill-card">
+        <span class="chip chip-skill">SKILL</span>
+        <div class="txt">
+          <h3>.claude/skills/*/SKILL.md <svg width="15" height="15" style="vertical-align:middle;"><use href="#sparkle"/></svg></h3>
+          <p>「この作業のやり方」を手順化したもの。<code>/skill-name</code> で明示的に呼ぶか、内容が今の作業に合致した時だけ読み込まれる — 常駐しない分、平時のコンテキストを圧迫しない。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-head">
+      <div class="sec-num">02</div>
+      <div class="sec-head-txt">
+        <span class="section-title">詳細比較</span>
+        <svg width="24" height="24" style="vertical-align:middle; margin-left:6px;"><use href="#magnifier"/></svg>
+        <p class="sec-sub">形式・優先順位・向いている内容の違いを一覧で見る。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="overflow-x:auto;">
+        <table class="info-table">
+          <thead>
+            <tr>
+              <th>機構</th><th>目的</th><th>発火タイミング</th><th>適用範囲</th><th>書くのに向く内容</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name"><span class="chip chip-md">MD</span><span class="fname">CLAUDE.md</span></td>
+              <td>プロジェクト／ユーザーの恒久的な前提知識・方針を伝える</td>
+              <td>セッション開始時に自動ロード。ディレクトリ階層ごとに重ねがけ</td>
+              <td>グローバル(<code>~/.claude/</code>)〜プロジェクト〜サブディレクトリ</td>
+              <td>コーディング規約、アーキテクチャ方針、ロールプレイ設定など<strong>言葉で説明する指示</strong></td>
+            </tr>
+            <tr>
+              <td class="name"><span class="chip chip-json">JSON</span><span class="fname">settings.json</span></td>
+              <td>ハーネス自体の動作を構造化データで制御する</td>
+              <td>セッション起動時にマージして自動適用</td>
+              <td>Enterprise管理 &gt; CLI引数 &gt; プロジェクトlocal &gt; プロジェクト &gt; ユーザー</td>
+              <td>権限許可リスト、フック、環境変数、MCPサーバー登録、モデル指定など<strong>設定値</strong></td>
+            </tr>
+            <tr>
+              <td class="name"><span class="chip chip-rules">RULE</span><span class="fname">.claude/rules/</span></td>
+              <td>触っているパスに応じて適用ルールを出し分ける</td>
+              <td>該当パスを扱う操作時に自動的に効く</td>
+              <td>パス単位（ディレクトリ別に細分化）</td>
+              <td>「<code>frontend/</code>配下ではこの規約」のような<strong>場所依存の細則</strong></td>
+            </tr>
+            <tr>
+              <td class="name"><span class="chip chip-skill">SKILL</span><span class="fname">Skills</span></td>
+              <td>特定タスクの手順・ワークフローを再利用可能にパッケージ化する</td>
+              <td>名前で明示的に呼ぶ、または内容が状況に一致した時のみ読み込み</td>
+              <td>プロジェクト／ユーザー（配置場所による）</td>
+              <td>「デプロイ手順」「レビュー手順」など<strong>再利用する一連の作業手順</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="explain">4つの違いは結局<strong>「常時か・オンデマンドか」</strong>と<strong>「言葉の指示か・構造化データか」</strong>の掛け算で整理できる。CLAUDE.mdとrulesは同じ自然言語の指示だが、rulesは<strong>パスという条件つき</strong>で発火する点がCLAUDE.mdと違う。settings.jsonだけがハーネス自体の構造化設定であり、優先順位（Enterprise管理 &gt; CLI引数 &gt; プロジェクトlocal &gt; プロジェクト &gt; ユーザー）まで明確に決まっている。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="sec-head">
+      <div class="sec-num">03</div>
+      <div class="sec-head-txt">
+        <span class="section-title">結局どこに書けばいいか</span>
+        <svg width="24" height="24" style="vertical-align:middle; margin-left:6px;"><use href="#compass"/></svg>
+        <p class="sec-sub">4つの「こう動いてほしい」から逆引きする。</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="quote-row">
+        <div class="quote-cloud" style="border-color:var(--md-ink);">
+          <div class="q">「毎回この方針で動いてほしい」</div>
+          <div class="a-row"><svg width="18" height="16"><use href="#hand-arrow-down" transform="rotate(-90 12 30)"/></svg><span class="chip chip-md">CLAUDE.md</span></div>
+        </div>
+        <div class="quote-cloud" style="border-color:var(--json-ink);">
+          <div class="q">「このコマンドは毎回許可して」「このフックを仕込みたい」</div>
+          <div class="a-row"><span class="chip chip-json">settings.json</span></div>
+        </div>
+        <div class="quote-cloud" style="border-color:var(--rules-ink);">
+          <div class="q">「このディレクトリ配下だけ別ルールにしたい」</div>
+          <div class="a-row"><span class="chip chip-rules">.claude/rules/</span></div>
+        </div>
+        <div class="quote-cloud" style="border-color:var(--skill-ink);">
+          <div class="q">「この一連の作業を使い回したい・名前で呼びたい」</div>
+          <div class="a-row"><span class="chip chip-skill">Skills</span></div>
+        </div>
+      </div>
+
+      <div class="sticky-note">
+        <svg width="18" height="16" style="vertical-align:middle; margin-right:6px;"><use href="#check-mark"/></svg>
+        常時ロード3種（CLAUDE.md／settings.json／rules）は指示が積み重なるほどコンテキストを消費する。パス限定の話は <code style="background:var(--card); padding:0.1em 0.4em; border-radius:4px;">rules/</code> に、手順化できる作業は <code style="background:var(--card); padding:0.1em 0.4em; border-radius:4px;">Skills</code> に逃がすと運用が軽くなる。
+      </div>
+    </div>
+  </section>
+
+  <footer class="source">
+    元資料：ccken/personal_doc/ClaudeCode/claude-code-config-diagram.html（Claude Code 設定・拡張機構の比較図）をもとにグラレコ化。
+  </footer>
+
+</div>
+</body>
+</html>
