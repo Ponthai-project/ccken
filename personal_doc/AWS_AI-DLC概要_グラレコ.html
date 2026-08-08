@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-DLC — AI駆動開発ライフサイクル</title>
+<style>
+:root{
+  --paper:#F3ECDD;
+  --card:#F7F1E3;
+  --ink:#2A2723;
+  --terracotta:#C15F3C;
+  --terracotta-text:#A94A2A;
+  --teal:#3E6B6E;
+  --highlight:#EED9A0;
+  --shadow:rgba(42,39,35,0.12);
+}
+.gr-page, .gr-page *, .gr-page *::before, .gr-page *::after{ box-sizing:border-box; }
+.gr-page{
+  margin:0; padding:0; width:100%; overflow-x:hidden;
+  color-scheme: only light;
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(transparent 0 31px, rgba(42,39,35,0.035) 31px 32px),
+    radial-gradient(rgba(42,39,35,0.03) 1px, transparent 1.2px);
+  background-size: auto, 7px 7px;
+  color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","Yu Gothic UI","Yu Gothic","Meiryo",sans-serif;
+  line-height:1.6;
+}
+@media (prefers-color-scheme: dark){
+  .gr-page{ background-color:var(--paper) !important; color:var(--ink) !important; }
+}
+:root[data-theme="dark"] .gr-page{ background-color:var(--paper) !important; color:var(--ink) !important; }
+
+.gr-page img, .gr-page svg{ max-width:100%; height:auto; }
+.gr-page .page{ max-width:min(1000px,92vw); margin:0 auto; }
+
+.sec-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom:14px; }
+.sec-num{
+  flex-shrink:0; font-size:clamp(1.9rem,5vw,2.8rem); font-weight:bold;
+  color:var(--terracotta); line-height:1;
+  text-shadow: 1.5px 1.5px 0 rgba(193,95,60,0.20);
+}
+.section-title{
+  display:inline-block; font-size:clamp(1.3rem,3.2vw,1.9rem); letter-spacing:0.04em;
+  position:relative; padding-bottom:6px;
+  background-image: linear-gradient(120deg, rgba(193,95,60,0.35), rgba(193,95,60,0.35));
+  background-repeat:no-repeat; background-size:100% 0.42em; background-position:0 92%;
+}
+h2.section-title{ margin:0; font-weight:bold; }
+.sec-sub{ margin:6px 0 0 0; color:#6b6660; font-size:0.9rem; }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px; font-size:0.85rem; color:var(--teal);
+  font-weight:bold; letter-spacing:0.08em; margin-bottom:10px;
+}
+
+.section{ padding:30px 0; }
+.card{
+  background:var(--card); border:2px solid var(--ink); border-radius:18px;
+  box-shadow: 0 6px 14px var(--shadow); padding:24px clamp(18px,4vw,40px); position:relative;
+}
+
+.info-table{ width:100%; border-collapse:collapse; margin:18px 0 6px; font-size:0.86rem; }
+.info-table th,.info-table td{ border:1.5px solid var(--ink); padding:9px 12px; text-align:left; vertical-align:top; }
+.info-table th{ background:var(--highlight); font-weight:bold; white-space:nowrap; }
+.info-table tr:nth-child(even) td{ background:rgba(62,107,110,0.07); }
+.table-scroll{ overflow-x:auto; }
+
+.explain{ margin-top:14px; font-size:0.92rem; line-height:1.7; }
+.explain strong{ color:var(--terracotta-text); }
+.explain + .explain{ margin-top:10px; }
+
+.sticky-note{
+  background:var(--highlight); border-radius:2px; padding:16px 20px; position:relative;
+  box-shadow:3px 5px 9px var(--shadow); margin-top:22px; font-weight:bold;
+}
+.sticky-note::after{
+  content:""; position:absolute; top:0; right:0; width:22px; height:22px;
+  background:linear-gradient(135deg, transparent 50%, rgba(42,39,35,0.18) 52%);
+  border-bottom-left-radius:5px;
+}
+.sticky-note .tape{
+  position:absolute; top:-10px; left:24px; width:64px; height:18px;
+  background:rgba(193,95,60,0.28); border:1px solid rgba(42,39,35,0.2);
+  transform:rotate(-1deg);
+}
+
+.marker{
+  background-image: linear-gradient(120deg, rgba(193,95,60,0.32), rgba(193,95,60,0.32));
+  background-repeat:no-repeat; background-size:100% 0.55em; background-position:0 82%; font-weight:bold;
+}
+.circled{ position:relative; display:inline-block; padding:0 0.35em; }
+.circled::before{
+  content:""; position:absolute; inset:-6px -10px; border:2.5px solid var(--terracotta);
+  border-radius:48% 52% 45% 55% / 55% 45% 58% 42%; transform: rotate(-1deg); pointer-events:none;
+}
+
+.big-num{
+  font-size:clamp(2.4rem,7vw,4.2rem); font-weight:bold; color:var(--terracotta);
+  text-shadow: 1.5px 1.5px 0 rgba(193,95,60,0.22), -1px -1px 0 rgba(62,107,110,0.16);
+  line-height:1; display:inline-block;
+}
+.big-num small{ font-size:0.32em; color:var(--ink); font-weight:normal; }
+
+.owl{ display:block; flex-shrink:0; }
+.owl-row{ display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+.bubble{
+  position:relative; background:#fff9ec; border:2px solid var(--ink); border-radius:16px;
+  padding:12px 18px; font-size:0.95rem; max-width:520px;
+}
+.bubble::before{ content:""; position:absolute; left:-14px; top:22px; border:8px solid transparent; border-right-color:var(--ink); }
+.bubble::after{ content:""; position:absolute; left:-11px; top:23px; border:7px solid transparent; border-right-color:#fff9ec; }
+
+.quote-row{ display:flex; gap:18px; flex-wrap:wrap; justify-content:center; align-items:stretch; margin-top:20px; }
+.quote-cloud{
+  flex:1 1 220px; display:flex; flex-direction:column; justify-content:center; gap:6px;
+  background:var(--highlight); border:2.5px solid var(--ink); border-radius:12px; padding:18px 18px;
+  text-align:center; font-size:0.92rem; max-width:280px; box-shadow:0 6px 14px var(--shadow);
+}
+.quote-cloud .en{ font-weight:bold; font-style:italic; }
+.quote-cloud .ja{ color:#544f47; font-size:0.85rem; }
+
+.flow-wrap{ display:flex; gap:16px; align-items:stretch; flex-wrap:wrap; margin-top:22px; }
+.flow-box{
+  flex:1 1 240px; display:flex; flex-direction:column; border:2px solid var(--ink); border-radius:14px; padding:18px 20px;
+}
+.flow-box.before{ background:#eee3d2; }
+.flow-box.after{ background:var(--card); border-color:var(--teal); border-width:2.5px; }
+.flow-label{ font-weight:bold; font-size:0.78rem; color:var(--teal); letter-spacing:0.05em; margin-bottom:6px; }
+.flow-title{ font-weight:bold; font-size:1.05rem; margin-bottom:8px; display:flex; align-items:center; gap:8px;}
+.flow-desc{ font-size:0.88rem; margin-top:auto; }
+.flow-arrow-wrap{ display:flex; align-items:center; justify-content:center; flex:0 0 56px; }
+@media (max-width:700px){
+  .flow-arrow-wrap{ flex-basis:36px; }
+  .flow-arrow-wrap svg{ transform:rotate(90deg); }
+}
+.episode-list{ display:flex; flex-direction:column; gap:16px; margin-top:20px; }
+.episode-card{
+  display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap;
+  border:2px dashed var(--ink); border-radius:14px; padding:16px 20px; background:var(--paper);
+}
+.episode-num{
+  flex-shrink:0; font-weight:bold; font-size:1.2rem; color:var(--terracotta);
+  background:var(--highlight); border:2px solid var(--ink); border-radius:50%;
+  width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+}
+.episode-body{ flex:1 1 200px; min-width:0; }
+.episode-title{ font-weight:bold; margin-bottom:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.episode-star{ font-size:0.68rem; background:var(--terracotta-text); color:#fff9ec; padding:2px 8px; border-radius:999px; font-weight:bold; }
+
+.feat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; margin-top:20px; align-items:stretch; }
+.feat-card{
+  background:var(--paper); border:2px dashed var(--ink); border-radius:14px; padding:18px; position:relative;
+  display:flex; flex-direction:column; gap:6px;
+}
+.feat-card .feat-head{ display:flex; align-items:center; gap:10px; }
+.feat-card .feat-name{ font-weight:bold; font-size:1rem; }
+.feat-card .feat-old{ font-size:0.78rem; color:var(--teal); font-weight:bold; margin-top:auto; }
+
+.safety-list{ list-style:none; margin:18px 0 0 0; padding:0; }
+.safety-list li{ display:flex; gap:10px; align-items:flex-start; margin-bottom:12px; font-size:0.92rem; }
+.safety-list li .txt{ flex:1; }
+.caveat-card{
+  margin-top:20px; background:#f4e3d3; border:2.5px solid var(--terracotta); border-radius:12px;
+  padding:16px 20px; font-size:0.88rem; display:flex; gap:12px; align-items:flex-start;
+}
+.note-box{
+  background:var(--paper); border:2px dashed var(--ink); border-radius:10px; padding:12px 16px;
+  font-size:0.82rem; margin-top:16px;
+}
+.chip{ background:var(--teal); color:#fff9ec; padding:6px 14px; border-radius:999px; font-size:0.82rem; font-weight:bold; }
+.chip-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; justify-content:center; }
+
+footer.source{ text-align:center; font-size:0.78rem; opacity:0.8; padding:20px 0 50px; }
+footer.source a{ color:var(--teal); word-break:break-all; }
+footer.source .src-cols{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 20px; text-align:left; max-width:900px; margin:14px auto 0; }
+@media (max-width:560px){ footer.source .src-cols{ grid-template-columns:1fr; } }
+
+.hero{ text-align:center; padding-top:36px; }
+.hero .section-title{
+  font-size:clamp(1.9rem,6.4vw,3.1rem);
+  /* 2行折り返し時にマーカー帯が見出しから分離するのを避けるため、表紙見出しではマーカー背景を外す */
+  background-image:none; padding-bottom:0;
+}
+.hero-sub{ font-size:clamp(1rem,2.6vw,1.25rem); margin-top:14px; }
+.hero-date{
+  display:inline-block; margin-top:18px; background:var(--terracotta-text); color:#fff9ec;
+  padding:8px 20px; border-radius:999px; font-weight:bold; box-shadow:0 5px 10px var(--shadow);
+}
+
+/* ---- diagram-specific: 3フェーズ・全体フロー ---- */
+.phase-flow{ display:flex; align-items:stretch; gap:8px; flex-wrap:wrap; margin-top:22px; justify-content:center; }
+.phase-card{
+  flex:1 1 230px; max-width:290px; background:var(--card); border:2.5px solid var(--ink); border-radius:16px;
+  padding:18px; display:flex; flex-direction:column; gap:8px; box-shadow:0 5px 10px var(--shadow);
+}
+.phase-card .ph-num{ font-size:0.72rem; font-weight:bold; color:var(--teal); letter-spacing:0.06em; }
+.phase-card .ph-name{ font-weight:bold; font-size:1.1rem; word-break:keep-all; overflow-wrap:normal; }
+.phase-card .ph-quote{ font-size:0.78rem; font-style:italic; background:rgba(238,217,160,0.5); padding:6px 8px; border-radius:6px; }
+.phase-card .ph-desc{ font-size:0.82rem; }
+.phase-arrow{ display:flex; align-items:center; justify-content:center; flex:0 0 40px; }
+@media (max-width:820px){ .phase-arrow{ flex-basis:100%; height:30px; } .phase-arrow svg{ transform:rotate(90deg);} }
+.loop-row{ display:flex; align-items:center; justify-content:center; gap:12px; margin-top:14px; flex-wrap:wrap; text-align:center; }
+.loop-row .loop-text{ font-size:0.82rem; color:var(--teal); font-weight:bold; max-width:520px; }
+
+/* ---- role split (04) ---- */
+.role-flow{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:center; margin-top:22px; }
+.role-card{
+  flex:1 1 260px; max-width:320px; border:2.5px solid var(--ink); border-radius:16px; padding:18px 20px;
+  background:var(--card); box-shadow:0 5px 10px var(--shadow);
+}
+.role-card.ai{ border-color:var(--teal); }
+.role-card h3{ margin:8px 0 8px; display:flex; align-items:center; gap:8px; font-size:1.05rem; }
+.role-card ul{ margin:0; padding-left:20px; font-size:0.88rem; }
+.role-card li{ margin-bottom:4px; }
+
+/* ---- 08 実装v2：5フェーズ入れ子図 ---- */
+.impl-outer{
+  border:1px solid var(--ink); border-radius:22px; padding:26px 16px 16px; position:relative;
+  margin-top:24px; background:rgba(243,236,221,0.4);
+}
+.impl-outer > .grp-label{
+  background:var(--card); color:var(--ink); border:1.5px solid var(--ink);
+}
+.impl-flow{ display:flex; gap:14px; align-items:stretch; flex-wrap:wrap; justify-content:center; }
+.impl-arrow{ display:flex; align-items:center; justify-content:center; flex:0 0 40px; }
+@media (max-width:1006px){ .impl-arrow{ flex-basis:100%; height:26px; } .impl-arrow svg{ transform:rotate(90deg);} }
+.impl-card{
+  flex:1 1 140px; max-width:190px; background:var(--card); border:2px solid var(--ink); border-radius:12px;
+  padding:12px 14px; font-size:0.78rem; display:flex; flex-direction:column; gap:4px;
+}
+.impl-card .ic-num{ font-size:0.68rem; font-weight:bold; color:var(--teal); letter-spacing:0.04em; }
+.impl-card .ic-name{ font-weight:bold; font-size:0.98rem; }
+.impl-card .ic-stage{ font-size:0.72rem; color:var(--terracotta-text); font-weight:bold; }
+.prep-group{
+  border:3px dashed var(--teal); border-radius:16px; padding:20px 12px 12px; position:relative;
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-content:flex-start;
+  flex:2 1 300px;
+}
+.impl-group{
+  border:3px solid var(--terracotta); border-radius:16px; padding:20px 12px 12px; position:relative;
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:center; align-content:flex-start;
+  flex:3 1 440px;
+}
+.grp-label{
+  position:absolute; top:-14px; left:14px; color:#fff9ec; font-size:0.7rem; font-weight:bold;
+  padding:4px 12px; border-radius:999px; box-shadow:0 3px 6px var(--shadow); line-height:1.3; max-width:92%;
+}
+.prep-group .grp-label{ background:var(--teal); }
+.impl-group .grp-label{ background:var(--terracotta-text); }
+
+/* ---- 09 誤解 vs 実際の対比図 ---- */
+.relation-compare{ display:flex; gap:20px; align-items:stretch; flex-wrap:wrap; margin-top:22px; }
+.relation-wrong{
+  flex:1 1 220px; max-width:260px; position:relative;
+  background:var(--paper); border:2px dashed #8d867c; border-radius:14px; padding:16px 14px;
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+}
+.rw-badge{ font-size:0.72rem; font-weight:bold; color:#6b5f52; text-align:center; }
+.rw-stack{
+  display:flex; flex-direction:column; gap:5px; align-items:center; width:100%;
+  position:relative; overflow:hidden;
+}
+.rw-layer{
+  border:1.5px solid rgba(42,39,35,0.45); border-radius:6px; padding:8px 10px; font-size:0.72rem;
+  font-weight:bold; text-align:center; background:rgba(247,241,227,0.65); color:#6b6660;
+}
+.rw-top{ width:78%; }
+.rw-bottom{ width:100%; }
+.rw-strike{
+  position:absolute; left:6%; right:6%; top:50%; height:0; border-top:3px solid var(--terracotta);
+  transform:translateY(-50%) rotate(-14deg); transform-origin:center; opacity:0.85; pointer-events:none;
+}
+.rw-caption{ font-size:0.7rem; text-align:center; color:#6b6660; line-height:1.4; }
+.relation-right{
+  flex:2 1 420px; background:var(--card); border:3px solid var(--teal); border-radius:16px;
+  padding:18px; box-shadow:0 6px 14px var(--shadow); display:flex; flex-direction:column; gap:10px;
+}
+.rr-badge{ font-size:0.78rem; font-weight:bold; color:var(--teal); text-align:center; }
+.pillar-row{ display:flex; gap:14px; align-items:stretch; flex-wrap:wrap; justify-content:center; }
+.pillar{
+  flex:1 1 160px; max-width:210px; border:2.5px solid var(--teal); border-radius:14px; padding:14px;
+  text-align:center; background:var(--paper); display:flex; flex-direction:column; align-items:center; gap:6px;
+}
+.pillar-name{ font-weight:bold; font-size:1rem; }
+.pillar-desc{ font-size:0.76rem; }
+.relation-link{ display:flex; flex-direction:column; align-items:center; justify-content:center; flex:0 0 128px; gap:4px; }
+.relation-link .dots{ width:100%; max-width:38px; border-top:2px dashed var(--ink); opacity:0.6; }
+.relation-link .rl-txt{ font-size:0.66rem; color:var(--teal); font-weight:bold; text-align:center; line-height:1.35; }
+@media (max-width:800px){
+  .relation-right{ order:-1; }
+}
+@media (max-width:640px){
+  .relation-link{ flex-basis:100%; }
+  .relation-link .dots{ max-width:72px; }
+}
+body{ background:#F3ECDD; margin:0; color-scheme: only light; }
+</style>
+</head>
+<body>
+<div class="gr-page">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="owl-doc" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="58" rx="34" ry="32" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M28 30 Q34 8 44 27" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M72 30 Q66 8 56 27" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="38" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="62" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="49" y1="51" x2="51" y2="51" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="38" cy="52" r="4.2" fill="#2A2723"/>
+    <circle cx="62" cy="52" r="4.2" fill="#2A2723"/>
+    <path d="M50 60 L45 69 L55 69 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M17 66 Q8 76 19 87" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M83 66 Q92 76 81 87" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="check-mark" viewBox="0 0 18 16">
+    <path d="M2 8 L7 13 L16 3" stroke="#3E6B6E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="hand-arrow" viewBox="0 0 60 24">
+    <path d="M2 12 Q30 6 48 12" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M48 12 L40 7 M48 12 L40 17" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="sparkle" viewBox="0 0 24 24">
+    <path d="M12 1 L14.2 9.8 L23 12 L14.2 14.2 L12 23 L9.8 14.2 L1 12 L9.8 9.8 Z"
+          fill="#EED9A0" stroke="#2A2723" stroke-width="1.2" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="magnifier" viewBox="0 0 80 80">
+    <circle cx="34" cy="34" r="20" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="48" y1="48" x2="68" y2="68" stroke="#2A2723" stroke-width="4" stroke-linecap="round"/>
+    <path d="M24 30 Q30 22 40 26" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+  </symbol>
+
+  <symbol id="gear" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="16" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="40" cy="40" r="6" fill="#F7F1E3" stroke="#2A2723" stroke-width="2"/>
+    <g stroke="#2A2723" stroke-width="4" stroke-linecap="round">
+      <line x1="40" y1="10" x2="40" y2="20"/>
+      <line x1="40" y1="60" x2="40" y2="70"/>
+      <line x1="10" y1="40" x2="20" y2="40"/>
+      <line x1="60" y1="40" x2="70" y2="40"/>
+      <line x1="18" y1="18" x2="25" y2="25"/>
+      <line x1="55" y1="55" x2="62" y2="62"/>
+      <line x1="62" y1="18" x2="55" y2="25"/>
+      <line x1="25" y1="55" x2="18" y2="62"/>
+    </g>
+  </symbol>
+
+  <symbol id="laptop" viewBox="0 0 80 80">
+    <path d="M20 22 Q20 19 23 19 L57 19 Q60 19 60 22 L60 52 L20 52 Z"
+          fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M25 28 Q40 24 55 28" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+    <path d="M25 36 Q38 33 50 36" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+    <path d="M10 60 Q10 56 14 56 L66 56 Q70 56 70 60 Q70 64 65 64 L15 64 Q10 64 10 60 Z"
+          fill="#EED9A0" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="shield" viewBox="0 0 80 80">
+    <path d="M40 10 Q56 16 64 20 Q66 46 40 70 Q14 46 16 20 Q24 16 40 10 Z"
+          fill="#EED9A0" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M28 38 L37 47 L54 28" fill="none" stroke="#2A2723" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="checklist-doc" viewBox="0 0 80 80">
+    <path d="M20 10 L52 10 L62 20 L62 70 Q62 72 60 72 L20 72 Q18 72 18 70 L18 12 Q18 10 20 10 Z"
+          fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M52 10 L52 20 L62 20 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M26 32 L31 37 L38 28" fill="none" stroke="#3E6B6E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="42" y1="33" x2="56" y2="33" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+    <path d="M26 48 L31 53 L38 44" fill="none" stroke="#3E6B6E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="42" y1="49" x2="56" y2="49" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+    <rect x="25" y="60" width="8" height="8" fill="none" stroke="#2A2723" stroke-width="2"/>
+    <line x1="42" y1="64" x2="56" y2="64" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="talking-person" viewBox="0 0 80 80">
+    <circle cx="30" cy="26" r="12" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M14 68 Q14 46 30 46 Q46 46 46 68" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M48 14 Q70 14 70 30 Q70 44 54 44 L54 52 L46 42 Q46 42 46 30 Q46 14 48 14 Z"
+          fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="54" y1="24" x2="64" y2="24" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+    <line x1="54" y1="31" x2="60" y2="31" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+  </symbol>
+
+  <symbol id="robot-ai" viewBox="0 0 80 80">
+    <rect x="20" y="26" width="40" height="32" rx="6" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="40" y1="26" x2="40" y2="14" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="40" cy="10" r="4" fill="#EED9A0" stroke="#2A2723" stroke-width="2"/>
+    <circle cx="30" cy="42" r="5" fill="#3E6B6E"/>
+    <circle cx="50" cy="42" r="5" fill="#3E6B6E"/>
+    <rect x="28" y="52" width="24" height="4" rx="2" fill="#2A2723"/>
+    <line x1="12" y1="36" x2="20" y2="36" stroke="#2A2723" stroke-width="3" stroke-linecap="round"/>
+    <line x1="60" y1="36" x2="68" y2="36" stroke="#2A2723" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="compass" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="28" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M40 20 L46 40 L40 60 L34 40 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="40" cy="40" r="4" fill="#2A2723"/>
+    <line x1="40" y1="12" x2="40" y2="18" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+    <line x1="40" y1="62" x2="40" y2="68" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="calendar-week" viewBox="0 0 80 80">
+    <rect x="14" y="18" width="52" height="46" rx="4" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="14" y1="30" x2="66" y2="30" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="26" y1="12" x2="26" y2="22" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="54" y1="12" x2="54" y2="22" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <g fill="#3E6B6E">
+      <rect x="20" y="38" width="8" height="8" rx="1.5"/>
+      <rect x="36" y="38" width="8" height="8" rx="1.5"/>
+      <rect x="52" y="38" width="8" height="8" rx="1.5"/>
+      <rect x="20" y="50" width="8" height="8" rx="1.5"/>
+      <rect x="36" y="50" width="8" height="8" rx="1.5"/>
+    </g>
+  </symbol>
+
+  <symbol id="clock-hours" viewBox="0 0 80 80">
+    <circle cx="40" cy="42" r="26" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="40" y1="42" x2="40" y2="26" stroke="#2A2723" stroke-width="3" stroke-linecap="round"/>
+    <line x1="40" y1="42" x2="52" y2="48" stroke="#2A2723" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="40" cy="42" r="2.5" fill="#C15F3C"/>
+    <line x1="30" y1="12" x2="34" y2="18" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="12" x2="46" y2="18" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="medical-cross" viewBox="0 0 80 80">
+    <circle cx="40" cy="40" r="28" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M33 24 h14 v9 h9 v14 h-9 v9 h-14 v-9 h-9 v-14 h9 z" fill="#C15F3C" stroke="#2A2723" stroke-width="2" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="bank-coin" viewBox="0 0 80 80">
+    <ellipse cx="40" cy="58" rx="24" ry="8" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <ellipse cx="40" cy="48" rx="24" ry="8" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <ellipse cx="40" cy="38" rx="24" ry="8" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="40" y1="20" x2="40" y2="32" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M35 22 Q40 18 45 22 M35 30 Q40 34 45 30" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round"/>
+  </symbol>
+
+  <symbol id="warning-amp" viewBox="0 0 80 80">
+    <path d="M40 10 L72 66 L8 66 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="40" y1="30" x2="40" y2="48" stroke="#2A2723" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="40" cy="56" r="2.6" fill="#2A2723"/>
+  </symbol>
+
+  <symbol id="loop-arrow" viewBox="0 0 100 100">
+    <path d="M20 50 A30 30 0 1 1 35 74" fill="none" stroke="#2A2723" stroke-width="4" stroke-linecap="round"/>
+    <path d="M35 74 L24 70 M35 74 L38 62" fill="none" stroke="#2A2723" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <symbol id="book-context" viewBox="0 0 80 80">
+    <path d="M40 20 Q26 12 12 18 L12 62 Q26 56 40 64 Q54 56 68 62 L68 18 Q54 12 40 20 Z"
+          fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="40" y1="20" x2="40" y2="64" stroke="#2A2723" stroke-width="2" opacity="0.5"/>
+    <line x1="18" y1="28" x2="32" y2="25" stroke="#2A2723" stroke-width="1.6" opacity="0.5"/>
+    <line x1="18" y1="36" x2="32" y2="33" stroke="#2A2723" stroke-width="1.6" opacity="0.5"/>
+    <line x1="48" y1="25" x2="62" y2="28" stroke="#2A2723" stroke-width="1.6" opacity="0.5"/>
+    <line x1="48" y1="33" x2="62" y2="36" stroke="#2A2723" stroke-width="1.6" opacity="0.5"/>
+  </symbol>
+</svg>
+
+<div class="page">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="eyebrow">
+      <svg width="18" height="18" aria-hidden="true"><use href="#sparkle"/></svg>
+      AWS DevOps &amp; Developer Productivity Blog ・AWS発表 2025年7月／OSS公開 2025年11月
+      <svg width="18" height="18" aria-hidden="true"><use href="#sparkle"/></svg>
+    </div>
+    <h1 class="section-title">AI-DLC — AIが起案し、人が決める開発ライフサイクル</h1>
+    <p class="hero-sub">AI-Driven Development Lifecycle：AIを中心に据えたソフトウェア開発の変革的アプローチ。<br>
+    “AI agents draft plans, code, tests, and infrastructure while humans validate each step before execution.”</p>
+    <div class="hero-date">グラレコ作成日 2026-08-07</div>
+
+    <div class="owl-row" style="justify-content:center; margin-top:26px;">
+      <svg class="owl" width="86" height="86" aria-hidden="true"><use href="#owl-doc"/></svg>
+      <div class="bubble">
+        AI-DLCは<strong style="color:var(--terracotta-text)">方法論であって、特定のツールではありません</strong>。
+        Amazon&nbsp;Q&nbsp;Developer・Kiro・GitHub&nbsp;Copilot・Claude&nbsp;Codeなど、複数のツールで実装できます。
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 01 AI-DLCとは何か ===================== -->
+  <section class="section" id="s01">
+    <div class="sec-head">
+      <div class="sec-num">01</div>
+      <div>
+        <h2 class="section-title marker">AI-DLCとは何か</h2>
+        <p class="sec-sub">定義・提唱主体・登場の背景（2025年7月提唱・2025年11月OSS化）</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="quote-row" style="justify-content:flex-start;">
+        <div class="quote-cloud" style="max-width:100%; flex-basis:100%; text-align:left;">
+          <div class="en">“AI-DLC is an AI-centric transformative approach to software development.”</div>
+          <div class="ja">→ AI-DLCは、AIを中心に据えたソフトウェア開発の変革的アプローチ。</div>
+        </div>
+        <div class="quote-cloud" style="max-width:100%; flex-basis:100%; text-align:left;">
+          <div class="en">“…a methodology for software development in which AI agents draft plans, code, tests, and infrastructure while humans validate each step before execution.”</div>
+          <div class="ja">→ AIエージェントが計画・コード・テスト・インフラを起案し、人間が実行前に各ステップを検証する開発方法論。</div>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="info-table">
+          <tr><th>提唱主体</th><td>Raja SP（Principal Solutions Architect / Developer Transformation Programs Lead）ほか、AWSソリューションアーキテクトチーム</td></tr>
+          <tr><th>初出（定義提唱）</th><td>2025年7月31日「AI-Driven Development Life Cycle」（Raja SP）、AWS DevOps &amp; Developer Productivity Blog にて公開</td></tr>
+          <tr><th>OSS化告知</th><td>2025年11月29日「Open-Sourcing Adaptive Workflows for AI-DLC」（Will Matos, Raj Jain, Siddhesh Jog, Raja SP）、同ブログにて公開。GitHubにワークフローを同時公開</td></tr>
+        </table>
+      </div>
+
+      <div style="display:flex; gap:24px; align-items:center; flex-wrap:wrap; margin-top:22px; justify-content:center;">
+        <div style="text-align:center;">
+          <svg width="72" height="72" aria-hidden="true"><use href="#checklist-doc"/></svg>
+          <div style="font-weight:bold; font-size:0.85rem; margin-top:4px;">AI-DLC＝方法論</div>
+        </div>
+        <svg width="52" height="24" aria-hidden="true"><use href="#hand-arrow"/></svg>
+        <div>
+          <div style="font-size:0.82rem; color:var(--teal); font-weight:bold; margin-bottom:8px; text-align:center;">複数のツールで実装可能</div>
+          <div class="chip-row" style="margin-top:0;">
+            <span class="chip">Amazon Q Developer</span>
+            <span class="chip">Kiro</span>
+            <span class="chip">GitHub Copilot</span>
+            <span class="chip">Claude Code</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="explain">
+        AI-DLCは、特定の製品やIDEの機能名ではなく、<strong>ソフトウェア開発の進め方そのものを再定義する方法論</strong>として提唱された。
+        AIエージェントが計画・コード・テスト・インフラ構成までを能動的に起案し、人間は各ステップの実行前にその内容を検証する、という
+        役割分担を骨格に据える。実装手段としては、AWSが提供するAmazon&nbsp;Q&nbsp;DeveloperやKiroのほか、GitHub&nbsp;CopilotやClaude&nbsp;Codeなど
+        既存の開発ツールを組み合わせて運用することも想定されている。
+      </p>
+      <div class="sticky-note"><span class="tape"></span>方法論であってツールではない — 実装手段は問わない</div>
+    </div>
+  </section>
+
+  <!-- ===================== 02 3フェーズの流れ ===================== -->
+  <section class="section" id="s02">
+    <div class="sec-head">
+      <div class="sec-num">02</div>
+      <div>
+        <h2 class="section-title marker">3フェーズの流れ</h2>
+        <p class="sec-sub">Inception → Construction → Operations、そしてOperationsからInceptionへ還流するループ</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="phase-flow">
+        <div class="phase-card">
+          <svg width="54" height="54" aria-hidden="true"><use href="#magnifier"/></svg>
+          <div class="ph-num">PHASE 1</div>
+          <div class="ph-name">Inception（インセプション）</div>
+          <div class="ph-quote">“Mob Elaboration – where the entire team actively validates AI's questions and proposals.”</div>
+          <div class="ph-desc">中核活動は<strong style="color:var(--terracotta-text)">Mob Elaboration</strong>：チーム全体がAIの問いと提案を能動的に検証する場。
+          ビジネス意図を要件・ストーリー・<strong style="color:var(--terracotta-text)">Units of Work</strong>へと変換する。</div>
+        </div>
+        <div class="phase-arrow"><svg width="40" height="24" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="phase-card">
+          <svg width="54" height="54" aria-hidden="true"><use href="#gear"/></svg>
+          <div class="ph-num">PHASE 2</div>
+          <div class="ph-name">Construction（コンストラクション）</div>
+          <div class="ph-quote">“Mob Construction – where the team provides clarification on technical decisions and architectural choices in real time.”</div>
+          <div class="ph-desc">中核活動は<strong style="color:var(--terracotta-text)">Mob Construction</strong>：技術判断・アーキテクチャ選択をチームがリアルタイムに明確化する。
+          成果物はアーキテクチャ、ドメインモデル、コード、テスト、セキュリティ／レジリエンステスト、IaC。</div>
+        </div>
+        <div class="phase-arrow"><svg width="40" height="24" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="phase-card">
+          <svg width="54" height="54" aria-hidden="true"><use href="#laptop"/></svg>
+          <div class="ph-num">PHASE 3</div>
+          <div class="ph-name">Operations（オペレーション）</div>
+          <div class="ph-desc">CI/CDパイプラインがAI生成のIaCを自動デプロイ。Amazon&nbsp;DevOps&nbsp;Agentが本番のインシデント管理を自動で担う。
+          本番監視で得たフィードバックが、次のInceptionへと還流する。</div>
+        </div>
+      </div>
+
+      <div class="loop-row">
+        <svg width="56" height="56" aria-hidden="true"><use href="#loop-arrow"/></svg>
+        <div class="loop-text">Operationsの本番監視フィードバックが次のInceptionへ還流し、3フェーズは一方通行ではなく<strong style="color:var(--terracotta-text)">循環するループ</strong>を形成する。</div>
+      </div>
+
+      <p class="explain">
+        3フェーズは、AWS公式資料に一貫して示されているAI-DLCの骨格そのものである。各フェーズの中心には
+        「Mob」と名の付く活動（Mob Elaboration／Mob Construction）が置かれ、AIが単独で作業を進めるのではなく、
+        チーム全体が節目ごとにAIの提案を検証する構図が一貫している。Operationsフェーズで得られた本番運用の知見は
+        次サイクルのInceptionに反映され、フェーズ間を横断する<strong style="color:var(--terracotta-text)">Persistent context</strong>（後述）が
+        この還流を支える。
+      </p>
+      <div class="sticky-note"><span class="tape"></span>3フェーズは一方通行ではなく、Operations→Inceptionへ還流するループ構造</div>
+    </div>
+  </section>
+
+  <!-- ===================== 03 5つの用語 ===================== -->
+  <section class="section" id="s03">
+    <div class="sec-head">
+      <div class="sec-num">03</div>
+      <div>
+        <h2 class="section-title marker">中核となる5つの用語</h2>
+        <p class="sec-sub">Mob Elaboration / Mob Construction / Units of Work / Bolt / Persistent context</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-head"><svg width="40" height="40" aria-hidden="true"><use href="#talking-person"/></svg><span class="feat-name">Mob Elaboration</span></div>
+          <p>Inceptionの主要活動。チーム全体でAIの提案を検証する。</p>
+          <div class="feat-old">従来の対応物：要件定義ワークショップ</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-head"><svg width="40" height="40" aria-hidden="true"><use href="#gear"/></svg><span class="feat-name">Mob Construction</span></div>
+          <p>Constructionの主要活動。技術判断をリアルタイムに明確化する。</p>
+          <div class="feat-old">従来の対応物：設計・実装レビュー</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-head"><svg width="40" height="40" aria-hidden="true"><use href="#checklist-doc"/></svg><span class="feat-name">Units of Work</span></div>
+          <p>作業の単位。作業タイプに応じてプロセスを可変にする。</p>
+          <div class="feat-old">従来の対応物：Epic</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-head"><svg width="40" height="40" aria-hidden="true"><use href="#clock-hours"/></svg><span class="feat-name">Bolt</span></div>
+          <p>時間／日単位の短い集中サイクル。</p>
+          <div class="feat-old">従来の対応物：Sprint（週単位）</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-head"><svg width="40" height="40" aria-hidden="true"><use href="#book-context"/></svg><span class="feat-name">Persistent context</span></div>
+          <p>アーキテクチャ決定・セキュリティ要件・ビジネス制約を全フェーズで保持し続ける永続文脈。</p>
+          <div class="feat-old">従来：スプリント単位で失われがちだった文脈</div>
+          <div style="font-size:0.72rem; color:var(--teal); margin-top:2px;">※本用語は2025年7月の公式ブログで定義。v2実装（後述08節）の確認範囲では明示的な記述を確認できていない。</div>
+        </div>
+      </div>
+      <div class="note-box">
+        注記：本資料は、公式資料上で定義が確認できた用語のみを扱っている。
+      </div>
+      <p class="explain">
+        いずれの用語も、AWS公式資料で共通して用いられている用語である。特に<strong style="color:var(--terracotta-text)">Bolt</strong>は、
+        後述する「Sprintに代わる作業サイクル」としてAI-DLCを象徴する用語として位置づけられており、
+        <strong style="color:var(--terracotta-text)">Persistent context</strong>はサイクルをまたいでもコンテキストが失われないことを保証する仕組みとして
+        3フェーズすべてを下支えする。
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== 04 人とAIの役割分担 ===================== -->
+  <section class="section" id="s04">
+    <div class="sec-head">
+      <div class="sec-num">04</div>
+      <div>
+        <h2 class="section-title marker">人とAIの役割分担</h2>
+        <p class="sec-sub">“Humans decide and validate, AI plans and executes.”</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="role-flow">
+        <div class="role-card">
+          <svg width="52" height="52" aria-hidden="true"><use href="#talking-person"/></svg>
+          <h3>人間</h3>
+          <ul>
+            <li>決断（decide）</li>
+            <li>検証（validate）</li>
+            <li>確認・指針の提供</li>
+            <li><strong style="color:var(--terracotta-text)">説明責任（accountability）</strong></li>
+          </ul>
+        </div>
+        <div class="flow-arrow-wrap"><svg width="52" height="24" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="role-card ai">
+          <svg width="52" height="52" aria-hidden="true"><use href="#robot-ai"/></svg>
+          <h3>AI</h3>
+          <ul>
+            <li>計画（plans）</li>
+            <li>実行（executes）</li>
+            <li>詳細な作業計画の体系的作成</li>
+            <li>作業の生産（production of work）</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="quote-row">
+        <div class="quote-cloud">
+          <div class="en">“Humans decide and validate, AI plans and executes.”</div>
+          <div class="ja">人間が決断と検証を行い、AIが計画と実行を行う。</div>
+        </div>
+        <div class="quote-cloud">
+          <svg width="30" height="30" style="margin:0 auto 4px;" aria-hidden="true"><use href="#compass"/></svg>
+          <div class="en">“…humans remain the compass, guiding AI's acceleration.”</div>
+          <div class="ja">人間は羅針盤であり続け、AIの加速を導く。</div>
+        </div>
+        <div class="quote-cloud">
+          <div class="en">“…humans cannot take on accountability, AI can take on more of the production of work.”</div>
+          <div class="ja">説明責任は人間が担い続け、AIはより多くの作業の生産を担う。</div>
+        </div>
+      </div>
+
+      <p class="explain">
+        AI-DLCの役割分担は「AIに任せる」構図ではなく、<strong style="color:var(--terracotta-text)">説明責任（accountability）は一貫して人間に残る</strong>点が
+        核心である。原文 “humans cannot take on accountability” は、直訳すると誤読しやすいが、含意は「説明責任は人間からAIへ
+        移譲できない」という意味であり、AIが担うのはあくまで作業の生産量の拡大にとどまる。AIは体系的に作業計画を立て、
+        能動的に確認や指針を求める一方で、重要な意思決定は常に人間に委ねる設計になっている。
+      </p>
+      <div class="sticky-note"><span class="tape"></span>説明責任はAIに移譲できない — 人間が担い続ける</div>
+    </div>
+  </section>
+
+  <!-- ===================== 05 従来アジャイルとの違い ===================== -->
+  <section class="section" id="s05">
+    <div class="sec-head">
+      <div class="sec-num">05</div>
+      <div>
+        <h2 class="section-title marker">従来のアジャイルとの違い</h2>
+        <p class="sec-sub">Sprint → Bolt。週単位から時間・日単位へ</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="flow-wrap">
+        <div class="flow-box before">
+          <div class="flow-label">BEFORE</div>
+          <div class="flow-title"><svg width="30" height="30" aria-hidden="true"><use href="#calendar-week"/></svg>Sprint</div>
+          <div class="flow-desc">週単位で区切る計画駆動の作業サイクル。Sprint Planning・velocityによる進行管理。</div>
+        </div>
+        <div class="flow-arrow-wrap"><svg width="52" height="24" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="flow-box after">
+          <div class="flow-label">AFTER</div>
+          <div class="flow-title"><svg width="30" height="30" aria-hidden="true"><use href="#clock-hours"/></svg>Bolt</div>
+          <div class="flow-desc">時間／日単位で区切る、より短く集中した作業サイクル。</div>
+        </div>
+      </div>
+      <div class="quote-cloud" style="max-width:100%; margin:18px auto 0; text-align:left;">
+        <div class="en">“Traditional 'sprints' are replaced by 'bolts' – shorter, more intense work cycles measured in hours or days rather than weeks.”</div>
+        <div class="ja">→ 従来の「スプリント」は「ボルト」に置き換わる。週単位ではなく時間／日単位の、より短く集中した作業サイクル。</div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="info-table">
+          <tr><th>側面</th><th>従来 SDLC / Agile</th><th>AI-DLC</th></tr>
+          <tr><td>作業サイクル</td><td>Sprint（週単位）</td><td><strong style="color:var(--terracotta-text)">Bolt</strong>（時間／日単位）</td></tr>
+          <tr><td>進め方</td><td>計画駆動（Sprint Planning・velocity）</td><td>AIが起案し、人が検証する進め方</td></tr>
+          <tr><td>ドキュメント</td><td>事前ドキュメント中心</td><td>対話・検証中心＋Persistent contextで知識保持</td></tr>
+          <tr><td>品質保証</td><td>段階的・バッチ的レビュー</td><td>継続的検証（各ステップに検証ゲート）とされる</td></tr>
+          <tr><td>チーム編成</td><td>機能別（frontend / backend 等）</td><td>クロスファンクショナルなMob形式とされる</td></tr>
+          <tr><td>作業単位</td><td>Epic / Story Points</td><td><strong style="color:var(--terracotta-text)">Units of Work</strong> ／ 完了までの時間</td></tr>
+        </table>
+      </div>
+      <div class="note-box">
+        注記：表右2列のうち「品質保証」「チーム編成」の行は、AWS公式記述と技術メディアの解説が混在する内容のため、
+        断定を避け「〜とされる」という表現で記載している。
+      </div>
+      <p class="explain">
+        AI-DLCが従来アジャイルと最も明確に異なるのは、作業サイクルの単位そのものを「週」から「時間・日」へ縮めた点である。
+        AIが計画立案からコード生成までを高速に回すことで、人間が検証すべき単位も小さく・頻繁になり、結果として
+        Sprint Planningのような事前の見積り作業に代わって、対話的な検証とPersistent contextによる文脈保持が
+        進行管理の中心となる。
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== 06 事例と数値 ===================== -->
+  <section class="section" id="s06">
+    <div class="sec-head">
+      <div class="sec-num">06</div>
+      <div>
+        <h2 class="section-title marker">事例と数値</h2>
+        <p class="sec-sub">AWS re:Invent 2025 セッション DVT214 で紹介された事例（測定条件は非公開）</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="episode-list">
+        <div class="episode-card">
+          <svg width="46" height="46" aria-hidden="true"><use href="#medical-cross"/></svg>
+          <div class="episode-body">
+            <div class="episode-title">Vipro（ヘルスケア領域）<span class="episode-star">re:Invent 2025 DVT214</span></div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:6px 0;">
+              <span class="marker">3ヶ月相当の作業量</span>
+              <svg width="40" height="20" aria-hidden="true"><use href="#hand-arrow"/></svg>
+              <span class="big-num" style="font-size:1.8rem;">20<small>時間</small></span>
+            </div>
+          </div>
+        </div>
+        <div class="episode-card">
+          <svg width="46" height="46" aria-hidden="true"><use href="#bank-coin"/></svg>
+          <div class="episode-body">
+            <div class="episode-title">Dun（Fintech）<span class="episode-star">re:Invent 2025 DVT214</span></div>
+            <div style="font-size:0.86rem;">48時間で新規アプリケーションを構築し、翌週にローンチ。</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:22px;">
+        <span class="big-num">3〜10<small>倍</small></span>
+        <div style="font-size:0.86rem; color:var(--teal); font-weight:bold;">生産性向上（複数顧客報告ベース）</div>
+      </div>
+
+      <div class="caveat-card">
+        <svg width="34" height="34" aria-hidden="true"><use href="#warning-amp"/></svg>
+        <div>
+          <strong>測定条件は非公開。</strong>チーム規模・既存コード規模などの前提条件が公表されていないため、
+          上記の数値は<strong style="color:var(--terracotta-text)">条件不明の参考値</strong>として扱うこと。「3〜10倍」はAWSの保証値ではなく、
+          あくまで顧客報告ベースの数値である。
+        </div>
+      </div>
+      <p class="explain">
+        Vipro・Dunの2事例はいずれもAWS re:Invent 2025のセッション「DVT214」で紹介された公式事例である。数値そのものは
+        AWSから公開されているが、比較対象となった作業内容・チーム構成・既存システムの複雑さといった前提条件は
+        明らかにされていない。数値を引用する際は、必ず「測定条件は非公開」という留保を併記する必要がある。
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== 07 前提条件と限界 ===================== -->
+  <section class="section" id="s07">
+    <div class="sec-head">
+      <div class="sec-num">07</div>
+      <div>
+        <h2 class="section-title marker">前提条件と、指摘されている限界</h2>
+        <p class="sec-sub">検証ゲート必須・クロスファンクショナルなMob体制／技術的負債リスク</p>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex; gap:22px; flex-wrap:wrap;">
+        <div style="flex:1 1 320px; min-width:0;">
+          <div style="font-weight:bold; display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <svg width="30" height="30" aria-hidden="true"><use href="#shield"/></svg>前提条件（公式）
+          </div>
+          <ul class="safety-list">
+            <li><svg class="check-icon" width="18" height="16" aria-hidden="true"><use href="#check-mark"/></svg><span class="txt">各段階に人間の検証・承認ゲート（validation gate）が必須。セキュリティレビューも一括ではなく継続的に実施する。</span></li>
+            <li><svg class="check-icon" width="18" height="16" aria-hidden="true"><use href="#check-mark"/></svg><span class="txt">開発者・PM・ビジネスアナリスト・QAがMob形式で同時参加する、クロスファンクショナルな体制。既存コードベースの理解構築が初期段階で必須。</span></li>
+            <li><svg class="check-icon" width="18" height="16" aria-hidden="true"><use href="#check-mark"/></svg><span class="txt">作業タイプに応じてUnits of Workのプロセスを可変にする：単純な不具合修正に精緻な要件分析は不要、純粋なインフラ移行にアプリ設計は不要、新機能・新サービス追加は別の手順を要する。</span></li>
+          </ul>
+        </div>
+        <div style="flex:1 1 320px; min-width:0;">
+          <div style="font-weight:bold; display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+            <svg width="30" height="30" aria-hidden="true"><use href="#warning-amp"/></svg>指摘されている限界（二次情報）
+          </div>
+          <ul class="safety-list">
+            <li><span class="txt">技術的負債の加速リスクが<strong style="color:var(--terracotta-text)">指摘されている</strong>：“AI is spectacular at building software that looks like it works.”（AIは「動くように見える」ソフトを作るのが極めて上手い）→ 隠れた負債が積み上がる懸念。</span></li>
+            <li><span class="txt">DORA 2025の総括として<strong style="color:var(--terracotta-text)">指摘されている</strong>：“AI is an amplifier, not a silver bullet.”（AIは万能薬ではなく増幅器）。</span></li>
+            <li><span class="txt">過度な自動化への警告が<strong style="color:var(--terracotta-text)">指摘されている</strong>：“Excessive automation reduces human oversight and erodes quality.”（過度の自動化は人間の監督を減らし品質を蝕む）。</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="note-box">
+        アジャイルとの関係については賛否両論が<strong>指摘されている</strong>（解釈）。「AIがアジャイル宣言を終わらせた」とする論と、
+        「アジャイルは死んでおらず、AIが既存の制約を照らし出しただけ」とする論が併存している。
+      </div>
+
+      <p class="explain">
+        AI-DLCは検証ゲートとクロスファンクショナルなMob体制を前提に設計されており、これらの前提を欠いたまま「AIに任せて
+        速くする」だけの運用に陥ると、二次情報が指摘する技術的負債やレビュー形骸化のリスクが顕在化しやすい。
+        DORA 2025の総括にある「AIは万能薬ではなく増幅器」という評価は、良い開発プラクティスをAIが増幅する一方で、
+        悪いプラクティスもまた増幅してしまうという両義性を端的に表している。
+      </p>
+      <div class="sticky-note"><span class="tape"></span>“AI is an amplifier, not a silver bullet”（DORA 2025・第三者評価）</div>
+    </div>
+  </section>
+
+  <!-- ===================== 08 実装リポジトリの現在地 ===================== -->
+  <section class="section" id="s08">
+    <div class="sec-head">
+      <div class="sec-num">08</div>
+      <div>
+        <h2 class="section-title marker">実装リポジトリの現在地 — AI-DLC Workflows 2.0</h2>
+        <p class="sec-sub">方法論の核（3フェーズ）は不変。実装v2は準備フェーズを明示化し、5フェーズ32ステージへ拡張</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="quote-cloud" style="max-width:100%; margin:0 auto; text-align:left;">
+        <div class="en">“We're excited to announce the general availability of AI-DLC Workflows 2.0. The new version makes autonomous software development practical by turning AI agents into verifiable, self-correcting engineering workflows.”</div>
+        <div class="ja">→ AI-DLC Workflows 2.0の一般提供開始を発表します。新バージョンは、AIエージェントを検証可能・自己修正的なエンジニアリング・ワークフローへと変えることで、自律的なソフトウェア開発を実用的なものにします。</div>
+      </div>
+
+      <div class="table-scroll">
+        <div class="impl-outer">
+          <div class="grp-label">AI-DLC Workflows 2.0（実装）＝5フェーズ・32ステージ</div>
+          <div class="impl-flow">
+            <div class="prep-group">
+              <div class="grp-label">v2実装が明示化した準備フェーズ</div>
+              <div class="impl-card">
+                <svg width="30" height="30" aria-hidden="true"><use href="#checklist-doc"/></svg>
+                <div class="ic-num">PHASE 0</div>
+                <div class="ic-name">Initialization</div>
+                <div class="ic-stage">3ステージ（0.1–0.3）</div>
+                <div>ワークスペースのブートストラップ</div>
+              </div>
+              <div class="impl-card">
+                <svg width="30" height="30" aria-hidden="true"><use href="#talking-person"/></svg>
+                <div class="ic-num">PHASE 1</div>
+                <div class="ic-name">Ideation</div>
+                <div class="ic-stage">7ステージ（1.1–1.7）</div>
+                <div>構想の妥当性検証・スコープ定義・体制組成・着手承認</div>
+              </div>
+            </div>
+
+            <div class="impl-arrow"><svg width="36" height="20"><use href="#hand-arrow"/></svg></div>
+
+            <div class="impl-group">
+              <div class="grp-label">方法論としてのAI-DLCの3フェーズ（公式ブログ・mainブランチは現在もこの3つ）</div>
+              <div class="impl-card">
+                <svg width="30" height="30" aria-hidden="true"><use href="#magnifier"/></svg>
+                <div class="ic-num">PHASE 2</div>
+                <div class="ic-name">Inception</div>
+                <div class="ic-stage">8ステージ（2.1–2.8）</div>
+                <div>コードベース分析、要件抽出、アーキテクチャ設計、units of workへの分解、デリバリ計画</div>
+              </div>
+              <div class="impl-card">
+                <svg width="30" height="30" aria-hidden="true"><use href="#gear"/></svg>
+                <div class="ic-num">PHASE 3</div>
+                <div class="ic-name">Construction</div>
+                <div class="ic-stage">7ステージ（3.1–3.7）</div>
+                <div>レビュー可能なスライス単位で設計・実装・テスト</div>
+              </div>
+              <div class="impl-card">
+                <svg width="30" height="30" aria-hidden="true"><use href="#laptop"/></svg>
+                <div class="ic-num">PHASE 4</div>
+                <div class="ic-name">Operation</div>
+                <div class="ic-stage">7ステージ（4.1–4.7）</div>
+                <div>デプロイ・運用・observability・フィードバックループ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="info-table">
+          <tr><th>GA日</th><td>2026年7月22日に一般提供開始（2026年6月17日にPreview告知）</td></tr>
+          <tr><th>GitHub Releasesの状況</th><td>v2.0のリリースタグは存在しない。最新タグは<strong style="color:var(--terracotta-text)">v1.0.1</strong>（2026年6月30日）、その前が<strong style="color:var(--terracotta-text)">v1.0.0</strong>（2026年6月19日）。v2は<strong style="color:var(--terracotta-text)">v2ブランチ＋READMEバナーによるGA宣言</strong>という運用形態であり、タグ化された正式リリースではない</td></tr>
+          <tr><th>構成の標語</th><td>“AI-DLC — one core, many harnesses”：方法論の核をharness-neutralな <code>core/</code> に一元化し、各AIコーディングエージェント向けにコンパイル配布する</td></tr>
+          <tr><th>対応ハーネス（5種）</th><td>Claude Code／Kiro IDE／Kiro CLI／Codex CLI／opencode</td></tr>
+          <tr><th>エージェント編成</th><td>14-agent roster（11 domain experts＋2 review-only agents＋the adaptive-workflows composer）</td></tr>
+          <tr><th>適応スコープ</th><td>9 adaptive scopes（プロジェクトの規模・種別に応じて実行ステージを選別）</td></tr>
+          <tr><th>監査証跡</th><td>77-event audit trail</td></tr>
+          <tr><th>ドキュメント</th><td>Harness Engineer Guide</td></tr>
+        </table>
+      </div>
+
+      <div class="chip-row">
+        <span class="chip">Claude Code</span>
+        <span class="chip">Kiro IDE</span>
+        <span class="chip">Kiro CLI</span>
+        <span class="chip">Codex CLI</span>
+        <span class="chip">opencode</span>
+      </div>
+
+      <p class="explain">
+        版が付いているのは<strong style="color:var(--terracotta-text)">AI-DLC Workflows</strong>（実装リポジトリ <code>awslabs/aidlc-workflows</code>）であって、
+        方法論としてのAI-DLCそのものではない。v2のREADMEも<span class="marker">“The methodology lives once, in a harness-neutral core/.”</span>と
+        明記しており、方法論の核は単一のまま保たれている。AWS公式ブログ2本、およびGitHubのmainブランチのREADMEは、
+        いずれも現在も3フェーズ（Inception／Construction／Operations）の記述のままであり、改訂はされていない。
+      </p>
+      <p class="explain">
+        v2実装が定義する5フェーズ・32ステージは、方法論の3フェーズを置き換えるものではなく、その<strong style="color:var(--terracotta-text)">前段に実装上の準備フェーズ
+        （Phase 0 Initialization／Phase 1 Ideation）を明示的に加えたもの</strong>である。中核3フェーズはInception（Phase 2）・
+        Construction（Phase 3）・Operation（Phase 4、単数表記）としてそのまま保存されており、名称・順序・役割に変更はない。
+      </p>
+      <div class="note-box">
+        中核用語の生存：v2の <code>docs/guide/04-phases-and-stages.md</code> には
+        “Stage 2.4 runs as a <strong>mob</strong>”、“Each <strong>Bolt</strong> is one pass through stages 3.1–3.5 for a Unit”、
+        “decompose into <strong>units of work</strong>” の記述が確認でき、Mob・Bolt・Units of Workはv2実装でも現役の用語として使われている。
+      </div>
+      <div class="sticky-note"><span class="tape"></span>版が付くのは実装（AI-DLC Workflows）。方法論の核は単一のまま — “one core, many harnesses”</div>
+    </div>
+  </section>
+
+  <!-- ===================== 09 AWSのエージェント製品との関係 ===================== -->
+  <section class="section" id="s09">
+    <div class="sec-head">
+      <div class="sec-num">09</div>
+      <div>
+        <h2 class="section-title marker">AWSのエージェント製品との関係</h2>
+        <p class="sec-sub">方法論と製品は親子ではなく並列。公式資料は両者の階層関係を示していない</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-scroll">
+        <div class="relation-compare">
+          <div class="relation-wrong">
+            <div class="rw-badge">✕ よくある誤解（公式の説明ではない）</div>
+            <div class="rw-stack">
+              <div class="rw-layer rw-top">Security Agent／DevOps Agent</div>
+              <div class="rw-layer rw-bottom">AI-DLC（方法論）</div>
+              <div class="rw-strike"></div>
+            </div>
+            <div class="rw-caption">「方法論の上に製品が乗る」という階層は、確認できた公式資料には示されていない。</div>
+          </div>
+
+          <div class="relation-right">
+            <div class="rr-badge">実際の関係（公式資料の記述に基づく）</div>
+            <div class="pillar-row">
+              <div class="pillar">
+                <svg width="34" height="34" aria-hidden="true"><use href="#checklist-doc"/></svg>
+                <div class="pillar-name">AI-DLC 系統</div>
+                <div class="pillar-desc">開発の進め方を定める<strong style="color:var(--terracotta-text)">方法論</strong>。特定製品に依存しないことが特徴（08節 “one core, many harnesses”）。</div>
+              </div>
+              <div class="relation-link">
+                <div class="dots"></div>
+                <div class="rl-txt">接点は1文のみ：<br>Operationsフェーズ<br>での選択肢の一例</div>
+              </div>
+              <div class="pillar">
+                <svg width="34" height="34" aria-hidden="true"><use href="#shield"/></svg>
+                <div class="pillar-name">Frontier Agents 系統</div>
+                <div class="pillar-desc">AWSが提供する<strong style="color:var(--terracotta-text)">製品ライン</strong>。DevOps Agent／Security Agent／Kiro Autonomous Agent。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quote-cloud" style="max-width:100%; margin:20px auto 0; text-align:left;">
+        <div class="en">“AI agents, such as Amazon DevOps Agent, can augment incident management by investigating root causes autonomously.”</div>
+        <div class="ja">→ Amazon DevOps Agent のようなAIエージェントは、根本原因を自律的に調査することでインシデント管理を強化できる。（AI-DLC金融サービス向けブログ、Operationsフェーズに関する記述）</div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="info-table">
+          <tr><th>Frontier Agentsの総称</th><td>AWSは DevOps Agent／Security Agent／Kiro Autonomous Agent を<strong style="color:var(--terracotta-text)">“Frontier Agents”</strong>と総称。自律的に数時間〜数日単位で稼働できる新しいクラスのAIエージェントと位置づけられている</td></tr>
+          <tr><th>AWS Security Agent</th><td>2025年12月、re:Invent 2025でプレビュー → <strong style="color:var(--terracotta-text)">2026年3月31日GA</strong>。自動ペネトレーションテスト、脅威モデリング、コードスキャンと修復</td></tr>
+          <tr><th>AWS DevOps Agent</th><td>2025年12月、re:Invent 2025でプレビュー → <strong style="color:var(--terracotta-text)">2026年3月31日GA</strong>。インシデント調査、根本原因分析、運用タスクの自動化。「AWS DevOps Agent」「Amazon DevOps Agent」の両表記が公式資料に見られる</td></tr>
+          <tr><th>Kiro Autonomous Agent</th><td>Frontier Agentsの一員として名称が挙がるのみ。機能・GA日は本資料の調査範囲では確認できていない</td></tr>
+          <tr><th>相互言及の有無</th><td>Frontier Agents紹介ブログはAI-DLCへの言及なし。<code>aidlc-workflows</code>のREADMEもFrontier Agentsを特別扱いせず、Kiro／Amazon Q Developer／Cursor／Cline／Claude Code／GitHub Copilot／OpenAI Codexと同列に列挙している</td></tr>
+        </table>
+      </div>
+
+      <div class="chip-row">
+        <span class="chip">DevOps Agent</span>
+        <span class="chip">Security Agent</span>
+        <span class="chip">Kiro Autonomous Agent</span>
+      </div>
+
+      <p class="explain">
+        AI-DLCとFrontier Agentsは<strong style="color:var(--terracotta-text)">独立に発表された別系統</strong>である。Frontier Agentsを紹介するAWS公式ブログは
+        「AI-DLC」という語を一度も使っておらず、逆に<code>awslabs/aidlc-workflows</code>のREADMEは“AI-DLC is fundamentally a methodology, not a tool”と定義したうえで、
+        Kiro・Amazon Q Developer・Cursor・Cline・Claude Code・GitHub Copilot・OpenAI Codexを同等に列挙しており、Frontier Agentsを特別扱いしていない。
+      </p>
+      <p class="explain">
+        両者の唯一の接点は、AI-DLC金融サービス向けブログにあるAmazon DevOps Agentへの一文のみである。これは「AI-DLCを実現するための必須製品」ではなく、
+        <strong style="color:var(--terracotta-text)">Operationsフェーズで活用できる選択肢の一例</strong>に過ぎない。AI-DLCは開発の進め方を定める方法論であり、特定製品への依存を持たないことがむしろ特徴である（08節参照）。
+        Frontier Agentsは運用・セキュリティの自動化に特化したAWSの製品ラインであり、両者は「AI駆動開発」という同じ潮流から生まれた<strong style="color:var(--terracotta-text)">兄弟</strong>であって、親子ではない。
+      </p>
+      <div class="note-box">
+        「AI-DLC ＞ aidlc-workflows ＞ ツール類 ＞ エージェント ＞ 基盤」という階層整理は、確認できた公式資料には示されていない。本節の対比図はこの誤解を退けるための編集部整理であり、AWSが公式に発表した関係図そのものではない。
+      </div>
+      <div class="sticky-note"><span class="tape"></span>方法論と製品は親子ではなく並列 — 互いにほとんど言及し合っていない</div>
+    </div>
+  </section>
+
+  <!-- ===================== 出典 ===================== -->
+  <footer class="source">
+    <div style="font-weight:bold; margin-bottom:6px;">出典</div>
+    <div class="src-cols">
+      <div><strong>一次情報</strong></div><div></div>
+      <div>AWS Blog（2025-07-31・初出）</div><div><a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle">aws.amazon.com/blogs/devops/ai-driven-development-life-cycle</a></div>
+      <div>AWS Blog（2025-11-29・OSS化告知）</div><div><a href="https://aws.amazon.com/blogs/devops/open-sourcing-adaptive-workflows-for-ai-driven-development-life-cycle-ai-dlc/">aws.amazon.com/blogs/devops/open-sourcing-adaptive-workflows-...</a></div>
+      <div>AWS Blog（Amazon Q Developer活用）</div><div><a href="https://aws.amazon.com/blogs/devops/building-with-ai-dlc-using-amazon-q-developer">aws.amazon.com/blogs/devops/building-with-ai-dlc-using-amazon-q-developer</a></div>
+      <div>AWS Blog（金融サービス領域）</div><div><a href="https://aws.amazon.com/blogs/industries/ai-driven-development-lifecycle-for-financial-services/">aws.amazon.com/blogs/industries/ai-driven-development-lifecycle-for-financial-services</a></div>
+      <div>GitHub：awslabs/aidlc-workflows（main）</div><div><a href="https://github.com/awslabs/aidlc-workflows">github.com/awslabs/aidlc-workflows</a></div>
+      <div>GitHub：aidlc-workflows v2ブランチ</div><div><a href="https://github.com/awslabs/aidlc-workflows/tree/v2">github.com/awslabs/aidlc-workflows/tree/v2</a>（README／docs/guide/04-phases-and-stages.md）</div>
+      <div>GitHub：aws-samples/sample-aidlc-lite</div><div><a href="https://github.com/aws-samples/sample-aidlc-lite">github.com/aws-samples/sample-aidlc-lite</a></div>
+      <div>AWS re:Invent 2025 DVT214</div><div><a href="https://www.youtube.com/watch?v=1HNUH6j5t4A">youtube.com/watch?v=1HNUH6j5t4A</a></div>
+      <div>AWS ML Blog（Frontier Agents紹介）</div><div><a href="https://aws.amazon.com/blogs/machine-learning/aws-launches-frontier-agents-for-security-testing-and-cloud-operations/">aws.amazon.com/blogs/machine-learning/aws-launches-frontier-agents-for-security-testing-and-cloud-operations</a></div>
+      <div>AWS What's New（Security Agent GA・2026-03-31）</div><div><a href="https://aws.amazon.com/about-aws/whats-new/2026/03/aws-security-agent-ondemand-penetration">aws.amazon.com/about-aws/whats-new/2026/03/aws-security-agent-ondemand-penetration</a></div>
+      <div>AWS Blog（DevOps Agent 記事・2026-04-06）</div><div><a href="https://aws.amazon.com/blogs/aws/aws-weekly-roundup-aws-devops-agent-security-agent-ga-product-lifecycle-updates-and-more-april-6-2026/">aws.amazon.com/blogs/aws/aws-weekly-roundup-aws-devops-agent-security-agent-ga-...</a></div>
+      <div style="margin-top:6px;"><strong>二次情報（批評パート出典）</strong></div><div></div>
+      <div>Wiz Academy</div><div><a href="https://www.wiz.io/academy/ai-security/ai-driven-development-lifecycle-ai-dlc">wiz.io/academy/ai-security/ai-driven-development-lifecycle-ai-dlc</a></div>
+      <div>specs.md</div><div><a href="https://specs.md/methodology/ai-dlc-vs-agile">specs.md/methodology/ai-dlc-vs-agile</a></div>
+    </div>
+    <div style="margin-top:14px;">グラフィックレコーディング作成：2026-08-07　素材は一次情報を優先して収録し、二次情報は出所を明示している</div>
+  </footer>
+
+</div>
+</div>
+</body>
+</html>
