@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>各社の品質評価 比較レポート ― 第3分科会 宿題①</title>
+<style>
+  :root{
+    --ink:#1b2430;
+    --sub:#5b6675;
+    --faint:#8d97a4;
+    --line:#e2e6ec;
+    --paper:#fbfbfa;
+    --card:#ffffff;
+    --accent:#2c5f7c;
+    --accent-soft:#e9f1f4;
+    --accent-line:#d3e2e8;
+    --amber:#b9762f;
+    --amber-soft:#faf1e6;
+    --amber-line:#eddcc0;
+    --done:#3f7a5c;
+    --done-soft:#e9f4ee;
+    --red:#a4453c;
+    --red-soft:#f9ecea;
+    --red-line:#e8cdc9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Hiragino Sans","Yu Gothic UI","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    font-size:15px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 24px 100px;}
+
+  /* ---------- header ---------- */
+  header.hero{margin-bottom:32px;}
+  .eyebrow{
+    display:inline-flex;gap:8px;align-items:center;
+    font-size:12.5px;letter-spacing:.06em;color:var(--accent);
+    background:var(--accent-soft);border:1px solid var(--accent-line);
+    padding:5px 12px;border-radius:100px;font-weight:600;
+    margin-bottom:18px;
+  }
+  h1{font-size:31px;margin:0 0 12px;letter-spacing:-0.01em;font-weight:700;line-height:1.4;}
+  .lead{color:var(--sub);font-size:15px;max-width:720px;margin:0;}
+  .meta{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    margin-top:28px;
+  }
+  .meta div{background:var(--card);padding:14px 16px;}
+  .meta .k{font-size:11.5px;color:var(--sub);margin-bottom:4px;}
+  .meta .v{font-size:14px;font-weight:600;}
+  .banner{
+    margin-top:18px;padding:14px 20px;border-radius:10px;
+    background:var(--amber-soft);border:1px solid var(--amber-line);
+    font-size:13.5px;font-weight:600;color:var(--ink);
+  }
+
+  /* ---------- sections ---------- */
+  section{margin-top:56px;}
+  .section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+  .num{font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.03em;}
+  h2{font-size:21px;margin:0;font-weight:700;}
+  h3{font-size:16.5px;margin:32px 0 10px;font-weight:700;}
+  .section-sub{color:var(--sub);font-size:14px;margin:6px 0 22px;max-width:760px;}
+
+  /* ---------- table ---------- */
+  .fig-title{
+    font-size:13px;font-weight:700;color:var(--ink);
+    margin:0 0 8px;padding-left:10px;border-left:3px solid var(--accent);
+  }
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid var(--line);background:var(--card);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{background:#f4f6f8;font-weight:700;font-size:12.5px;color:var(--sub);white-space:nowrap;}
+  tr:last-child td{border-bottom:none;}
+  td.axis{font-weight:700;background:#fafbfc;white-space:nowrap;font-size:13px;}
+  .cmp td{min-width:158px;}
+  .cmp td.axis{min-width:118px;}
+  .hint{font-size:12px;color:var(--faint);margin-top:8px;}
+  mark{background:var(--amber-soft);color:var(--ink);padding:1px 3px;border-radius:3px;font-weight:700;}
+  .sm{font-size:12px;color:var(--faint);}
+
+  /* ---------- cards ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .card h4{margin:0 0 8px;font-size:14.5px;display:flex;align-items:center;gap:8px;line-height:1.5;}
+  .card .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;}
+  .card p{margin:0;color:var(--sub);font-size:13px;}
+
+  /* ---------- 適用課題 ---------- */
+  .issue{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:18px 22px;margin-bottom:12px;
+    display:grid;grid-template-columns:44px 1fr;gap:16px;align-items:start;
+  }
+  .issue.key{border-color:var(--amber-line);background:var(--amber-soft);border-width:2px;}
+  .badge{
+    width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:15px;background:var(--accent-soft);color:var(--accent);
+    border:1px solid var(--accent-line);
+  }
+  .issue.key .badge{background:#fff;color:var(--amber);border-color:var(--amber-line);}
+  .issue h4{margin:0 0 6px;font-size:15.5px;}
+  .issue .now{font-size:13.5px;color:var(--sub);margin:0 0 8px;}
+  .issue .gap{font-size:13.5px;margin:0;padding-left:14px;border-left:2px solid var(--accent-line);}
+  .issue.key .gap{border-left-color:var(--amber);}
+  .issue .src{font-size:11.5px;color:var(--faint);margin-top:8px;}
+  .lbl{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--faint);display:block;}
+
+  /* ---------- callout ---------- */
+  .callout{
+    background:var(--red-soft);border:1px solid var(--red-line);border-radius:12px;
+    padding:22px 26px;font-size:14.5px;margin-top:24px;
+  }
+  .callout .label{font-weight:700;color:var(--red);font-size:12.5px;margin-bottom:8px;display:block;letter-spacing:.03em;}
+  .callout p{margin:0 0 10px;}
+  .callout p:last-child{margin-bottom:0;}
+  .callout strong{color:var(--red);}
+
+  .note{
+    background:var(--amber-soft);border:1px solid var(--amber-line);border-radius:12px;
+    padding:18px 22px;font-size:14px;
+  }
+  .note .label{font-weight:700;color:var(--amber);font-size:12.5px;margin-bottom:6px;display:block;}
+  .note ul{margin:0;padding-left:20px;}
+  .note li{margin-bottom:6px;}
+  .note li:last-child{margin-bottom:0;}
+  .note p{margin:0 0 8px;}
+  .note p:last-child{margin-bottom:0;}
+
+  .premise{
+    background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
+    border-radius:10px;padding:16px 20px;font-size:13.5px;color:var(--sub);margin-bottom:22px;
+  }
+  .premise .label{font-weight:700;color:var(--accent);font-size:12px;margin-bottom:5px;display:block;}
+
+  /* ---------- tiers ---------- */
+  .tier{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;margin-bottom:12px;border-left:4px solid var(--done);
+  }
+  .tier.mid{border-left-color:var(--accent);}
+  .tier.hard{border-left-color:var(--amber);}
+  .tier h4{margin:0 0 4px;font-size:14.5px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  .tier .tag{font-size:11.5px;font-weight:700;color:var(--faint);}
+  .tier .items{font-size:13px;color:var(--sub);margin:0 0 8px;}
+  .tier .use{font-size:13px;margin:0;padding-top:8px;border-top:1px dashed var(--line);}
+
+  /* ---------- steps ---------- */
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
+  .step .n{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:.04em;margin-bottom:6px;}
+  .step h4{margin:0 0 6px;font-size:14.5px;}
+  .step p{margin:0;font-size:13px;color:var(--sub);}
+
+  /* ---------- check ---------- */
+  ul.check{list-style:none;margin:0;padding:0;}
+  ul.check li{position:relative;padding:5px 0 5px 26px;font-size:14px;}
+  ul.check li::before{
+    content:"✓";position:absolute;left:2px;top:5px;
+    color:var(--done);font-weight:700;font-size:14px;
+  }
+  ul.check ul{list-style:disc;margin:6px 0 0;padding-left:20px;}
+  ul.check ul li{padding:2px 0;font-size:13.5px;color:var(--sub);}
+  ul.check ul li::before{content:none;}
+
+  footer{
+    margin-top:64px;padding-top:20px;border-top:1px solid var(--line);
+    color:var(--sub);font-size:12.5px;
+  }
+  footer .row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  footer ul{margin:10px 0 0;padding-left:20px;font-size:12.5px;}
+  footer li{margin-bottom:3px;overflow-wrap:anywhere;}
+  .ai-note{
+    margin-top:18px;padding:14px 18px;background:var(--card);
+    border:1px solid var(--line);border-radius:8px;font-size:12.5px;color:var(--sub);
+  }
+  .ai-note b{color:var(--ink);}
+
+  @media(max-width:720px){
+    .meta{grid-template-columns:repeat(2,1fr);}
+    .issue{grid-template-columns:1fr;gap:10px;}
+    h1{font-size:25px;}
+  }
+  @media print{
+    body{background:#fff;font-size:10pt;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .wrap{max-width:none;padding:0;}
+    section{page-break-inside:avoid;margin-top:28px;}
+    .issue,.tier,.callout,.card,.step,.premise{page-break-inside:avoid;}
+    .scroll{overflow:visible;border-radius:0;}
+    table{table-layout:fixed;font-size:8pt;}
+    th{white-space:normal;}
+    .cmp td{min-width:0;}
+    .cmp td.axis{min-width:0;}
+    .issue.key{border-width:2px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">第3分科会 ／ AI品質保証 ／ 宿題①</span>
+    <h1>各社の品質評価 比較レポート<br>― 現行基準から見た AI駆動開発の適用課題</h1>
+    <p class="lead">
+      各社が「今」何をもって品質OKと判断しているかを持ち寄り、AI駆動開発の適用を阻む要件を適用課題としてカテゴリ化したもの。
+      研究ステップ1の作業版であり、8/6部会への持ち寄り材料である。
+    </p>
+
+    <div class="meta">
+      <div><div class="k">研究会</div><div class="v">三菱CC研究会 第3部会</div></div>
+      <div><div class="k">分科会</div><div class="v">第3分科会(AI品質保証)</div></div>
+      <div><div class="k">作成者</div><div class="v">東京海上日動システムズ・中島</div></div>
+      <div><div class="k">作成日</div><div class="v">2026-08-04<span style="font-size:11px;font-weight:400;color:var(--sub);"> / 更新 08-05</span></div></div>
+    </div>
+
+    <div class="banner">
+      本資料は分科会内の作業用である。Backlog提出時は §07 の注意事項を反映のうえ加工すること。
+    </div>
+  </header>
+
+  <!-- ============ 01 ============ -->
+  <section>
+    <div class="section-head"><span class="num">01</span><h2>提出状況</h2></div>
+    <p class="section-sub">SharePoint「テーマ③品質保証 / 各社の品質評価」への提出分。未提出社は8/6以降に追補する。</p>
+
+    <p class="fig-title">表1: 宿題①の提出状況（2026-08-05時点）</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>提出者</th><th>略称</th><th>件数</th><th>記述の切り口</th></tr></thead>
+        <tbody>
+        <tr><td>福島</td><td>MJIT</td><td>1件</td><td>制度の型 + AI適用時の懸念</td></tr>
+        <tr><td>土山</td><td>MESW</td><td>1件</td><td>実プロジェクト1件の実績値と所感</td></tr>
+        <tr><td>本多</td><td>MUSK</td><td>3件</td><td>社内標準文書の構造整理（2件）／現行基準とAI駆動開発のギャップ整理（1件、v4 2026-07-27）</td></tr>
+        <tr><td>海老名</td><td>MUSK</td><td>1件</td><td>工程横断の評価プロセス</td></tr>
+        <tr><td>増田</td><td>MUIT</td><td>1件</td><td>工程ごとのExitクライテリアとリリース判定資料の構造整理</td></tr>
+        <tr><td>中島</td><td>東京海上日動システムズ</td><td>1件</td><td>全体像 + 意見交換の問い</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">MUSKは2名提出のため、6名・5社となる。略称は SharePoint「ハーネスの定義」配下のフォルダ名に準拠（増田＝MUIT）。</p>
+  </section>
+
+  <!-- ============ 02 ============ -->
+  <section>
+    <div class="section-head"><span class="num">02</span><h2>比較</h2></div>
+    <p class="section-sub">9つの観点で横並びにしたもの。各社の指標の具体的な数値は非開示のため、カテゴリ比較にとどめている。</p>
+
+    <p class="fig-title">表2: 各社の品質評価方式 比較</p>
+    <div class="scroll">
+      <table class="cmp">
+        <thead>
+        <tr>
+          <th>観点</th>
+          <th>MJIT(福島)</th>
+          <th>MESW(土山)</th>
+          <th>MUSK(本多)</th>
+          <th>MUSK(海老名)</th>
+          <th>MUIT(増田)</th>
+          <th>東京海上日動システムズ(中島)</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="axis">品質OKの<br>判断方式</td>
+          <td>プロセス準拠型（会議体・チェックリスト・承認の通過）</td>
+          <td>指標値照合型（工程ごとの指標値と実績の比較）</td>
+          <td>基準・証跡照合型（クライテリア項目 × 確認資料）</td>
+          <td>定量+定性の総合評価型</td>
+          <td>Exitクライテリア型（工程ごとのチェックリスト通過 → リリース判定資料の2段構え）</td>
+          <td>二階建て型（製品品質 + 事業影響）</td>
+        </tr>
+        <tr>
+          <td class="axis">合格ラインの<br>持ち方</td>
+          <td><mark>全社共通の合格ラインを持たない</mark>。案件ごとに計画時設定</td>
+          <td>工程ごとに指標値（上限・下限）あり<br><span class="sm">※1案件の記録であり全社標準かは未確認</span></td>
+          <td>標準項目あり（案件固有項目を追加可）。ガイドは案件ごとに適用度を判断</td>
+          <td>プロジェクト計画で目標、<mark>具体的な基準は各フェーズ計画・テスト計画で設定</mark>。業務領域は指標値、基盤領域は定性</td>
+          <td>工程ごとのExitクライテリアを<strong>全工程充足</strong>が前提。テスト密度・不良密度は<mark>過去実績も踏まえて</mark>妥当性を評価</td>
+          <td><mark>一律の数値「だけ」では判定しない</mark>。変更内容・難易度・過去実績を踏まえて設定</td>
+        </tr>
+        <tr>
+          <td class="axis">主な定量指標</td>
+          <td>（全社共通の閾値なし）</td>
+          <td>レビュー工数(page/hour、p/h、kL/h)、検出誤り数(件/p)、テスト項目数、C0カバレッジ</td>
+          <td>テストケース数・密度、障害件数密度、修正完了率、未消化テストケース数、完了率</td>
+          <td>レビュー作業充当率、レビュー実施密度、レビュー指摘密度、レビュー速度、欠陥指摘ヒット率、テストケース密度、バグ密度</td>
+          <td>修正・新規モジュール数、STEP数、UT/ITa/ITbのテスト件数・不良件数、テスト密度、不良密度、テスト消化状況、障害収束状況</td>
+          <td>テスト密度、障害密度、障害率、消化・収束、性能指標</td>
+        </tr>
+        <tr>
+          <td class="axis">定性・<br>分析手法</td>
+          <td>定性的な工程合否表現（「次工程を開始できる状態」等）</td>
+          <td><span class="sm">※原資料の見出しは「ソフトウェア分析手法」</span><br>ゾーン分析、誤り混入工程分析、誤り分類、残存誤り予測（ゴンペルツ/ロジスティック）</td>
+          <td>障害の複数粒度分析（要件別・テストタイプ別・機能別・プログラム別・検出工程別・原因別）、デグレード傾向</td>
+          <td>指摘の原因分類（要件抜け、記載不明瞭、上位成果物との不整合、トレーサビリティ不足、表記揺れ、ケアレスミス等）</td>
+          <td>障害の内容・原因・混入工程、特定機能への偏り、重大度、類似箇所への横展開、残課題の影響</td>
+          <td>原因の偏り、前工程からのすり抜け、特定機能への集中、仕様変更起因、環境要因</td>
+        </tr>
+        <tr>
+          <td class="axis">工程ゲート</td>
+          <td>工程ごとの開始前/実施中/終了時チェックリスト、上流で第三者レビュー</td>
+          <td>工程ごとの指標値評価</td>
+          <td>フェーズ移行判定（テスト品質評価報告による合否判定基準0〜6）</td>
+          <td>セルフ→チーム内→主管部署→システム間→プロジェクト→顧客の6段階レビュー</td>
+          <td><mark>Exitクライテリアによる8工程のゲート</mark>（基礎検討/プロジェクト計画/基本設計/プログラミング/ITa/ITb/ST/カットオーバー）。各工程に確認観点・確認目的・主な成果物を定義</td>
+          <td><mark>工程の進捗完了と品質評価完了を分離しない</mark>。品質評価未実施のまま工程完了扱いにしない</td>
+        </tr>
+        <tr>
+          <td class="axis">リリース判定</td>
+          <td>リリース判定 + 本番稼働判定会議</td>
+          <td>（資料は工程品質が中心。リリース判定の記述なし）</td>
+          <td>カットオーバークライテリア（評価ランク ◎●○×）、案件承認者・ユーザ部署が判断</td>
+          <td>プロジェクト評価会議で人が移行可否を判断。本番移行時にカットオーバークライテリアを評価</td>
+          <td>リリース判定資料による総合確認 → リリース判定会。確認観点は対応概要・工数・金額／テスト密度・バグ発生状況／修正機能確認テスト／無影響確認テスト／UAT実施有無／本番確認項目・方法／障害発生時の対応方法</td>
+          <td>リスクベース判断（業務継続性・レピュテーション・経済的損失）</td>
+        </tr>
+        <tr>
+          <td class="axis">未達・残課題<br>の扱い</td>
+          <td><mark>全項目クリアではなく、未達項目と残存リスクを明示して合意</mark>（リスク受容の意思決定）</td>
+          <td>（リリース時の扱いは記述なし。単体で未実施の項目が結合テストへ繰り越された事例あり）</td>
+          <td>原則全件修正。未修正時はリスク・対策・合意した品質管理責任者または合意証跡を記載。基準未達で条件付き合格とする場合は合理的根拠が必要</td>
+          <td>基準超過でも収束傾向・重大性・横展開完了を確認して総合判断</td>
+          <td><mark>未達理由・影響・残存リスク・対応方針を説明したうえでリリース可否を判断</mark></td>
+          <td>未解決事項と残存影響を評価したうえで判断</td>
+        </tr>
+        <tr>
+          <td class="axis">証跡</td>
+          <td>レビュー記録・課題管理・リスク管理をセットで残す</td>
+          <td>（分析結果を報告に記載）</td>
+          <td>各評価項目に基準値・実績値・評価ランク・確認資料を紐付け</td>
+          <td>レビュー計画書、レビュー管理票、レビュー指摘票、指摘事項一覧</td>
+          <td>工程ごとの主な成果物を定義（設計書、レビュー記録、テスト仕様書・結果、障害管理票、品質評価資料、移行手順書 等）</td>
+          <td>（判定証跡の記述は乏しい。工数・規模・テストケース数・工程別バグ数を実績データとして蓄積し次案件へ還元）</td>
+        </tr>
+        <tr>
+          <td class="axis">特徴</td>
+          <td>顧客=グループ内業務部門の受託。最終判断が人の合意に寄ると自己分析</td>
+          <td>実測値と指標値の乖離理由を毎回言語化</td>
+          <td>社内標準文書が体系化済み。テスト品質とリリース準備の2段構え</td>
+          <td>レビュー活動そのものを定量評価する指標群</td>
+          <td>工程ゲートがチェックリストとして最も体系化されている。ITbに規制・統制対応（AML等）を含む</td>
+          <td>実績を次案件の見積り・計画へ還元するループ</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">※ 横スクロールで全社分を表示。</p>
+  </section>
+
+  <!-- ============ 03 ============ -->
+  <section>
+    <div class="section-head"><span class="num">03</span><h2>共通項と相違点</h2></div>
+    <p class="section-sub">制度の細部は各社で異なるが、判断の骨格は一致している。該当・非該当を明示する。</p>
+
+    <p class="fig-title">表3: 5社に共通して現れる判断構造</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>共通項</th><th>該当</th><th>非該当</th></tr></thead>
+        <tbody>
+        <tr>
+          <td class="axis">定量指標は補助であり、<br>合否そのものではない</td>
+          <td>MJIT福島 / MUSK本多 / MUSK海老名 / MUIT増田 / 東京海上日動システムズ中島（<mark>6名中5名</mark>が明記）</td>
+          <td>MESW土山<br><span class="sm">1案件の実績記録のため該当記述なし</span></td>
+        </tr>
+        <tr>
+          <td class="axis">最終判断は人の合意</td>
+          <td>本番稼働判定会議(MJIT) / 案件承認者・ユーザ部署(MUSK本多) / プロジェクト評価会議(MUSK海老名) / リリース判定会(MUIT)</td>
+          <td>―</td>
+        </tr>
+        <tr>
+          <td class="axis">未達はゼロ達成ではなく<br>「説明と合意」で通す</td>
+          <td>MJIT / MUSK本多 / MUSK海老名 / MUIT / 中島</td>
+          <td>―</td>
+        </tr>
+        <tr>
+          <td class="axis">判定と証跡が紐付いて<br>いること自体が要件</td>
+          <td>MJIT / MUSK本多 / MUSK海老名 / MUIT</td>
+          <td>―</td>
+        </tr>
+        <tr>
+          <td class="axis">指標の逸脱は分析対象</td>
+          <td>上振れ: MESW / MUSK海老名 / MUSK本多<br>過少側も異常として扱う: <mark>MUSK本多</mark>（「過多・過少等の異常を分析」）／<mark>MUIT</mark>（「潜在的な不具合が埋もれていないか」を評価）</td>
+          <td>―</td>
+        </tr>
+        <tr>
+          <td class="axis">工程を通過するチェックリスト<br>が存在する</td>
+          <td>MJIT（開始前/実施中/終了時）／MUIT（Exitクライテリア・8工程）／MUSK本多（カットオーバークライテリア）</td>
+          <td>―</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">共通項1について、MESW土山資料が非該当なのは方針の相違ではなく、資料の性格（1案件の実績記録）による。</p>
+
+    <p class="fig-title" style="margin-top:28px;">表4: 各社の相違点</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>観点</th><th>内容</th></tr></thead>
+        <tbody>
+        <tr><td class="axis">定量の厳密さ</td><td>MESW・MUSK海老名が指標体系を持つ一方、MJITは全社共通の閾値を持たない</td></tr>
+        <tr><td class="axis">評価の射程</td><td>東京海上日動システムズは製品品質に加えて事業影響（業務継続性・レピュテーション・経済的損失）を二階建てで評価</td></tr>
+        <tr><td class="axis">レビューの階層数</td><td>MUSK海老名は6段階の段階的レビューを定義</td></tr>
+        <tr><td class="axis">工程ゲートの体系化</td><td>MUITはExitクライテリアとして8工程分の確認観点・確認目的・主な成果物を定義。工程ゲートの記述が最も体系化されている</td></tr>
+        <tr><td class="axis">無影響確認の独立</td><td>MUITはリリース判定資料の確認観点に「無影響確認テスト概要」を独立して持つ（修正機能に該当しない既存機能への副作用確認）</td></tr>
+        <tr><td class="axis">AI駆動開発への言及</td><td>MJIT・MUSK本多③のみが、現行基準とAI駆動開発のギャップに踏み込んでいる</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 04 ============ -->
+  <section>
+    <div class="section-head"><span class="num">04</span><h2>適用課題 ― AI駆動開発の適用を阻む要件</h2></div>
+    <p class="section-sub">研究ステップ1の本命成果物。各社基準から抽出した、AI駆動開発を持ち込んだときに引っかかる要件を10カテゴリに整理した。</p>
+
+    <div class="premise">
+      <span class="label">本節の前提</span>
+      MUSK本多③は、自ら「現行資料に明示された評価構造へAI駆動開発を当てはめた際の<strong>導入検討上の懸念・仮説</strong>であり、現行社内資料がAI固有リスクとして規定しているという意味ではない」と位置づけている。本節も同じ扱いとする。すなわち以下は現行制度の記述から導いた仮説であって、各社が公式に認定した課題ではない。
+    </div>
+
+    <p class="fig-title">表5: 適用課題カテゴリ</p>
+
+    <div class="issue">
+      <div class="badge">A</div>
+      <div>
+        <h4>責任の帰属</h4>
+        <p class="now"><span class="lbl">現行の要件</span>成果物に作成者・レビューア・承認者を明示</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>AI生成物の「作成者」を誰にするか。AI利用者・検証者・承認者の役割が定義されていない</p>
+        <p class="src">確認できた社: MJIT / MUSK本多③</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="badge">B</div>
+      <div>
+        <h4>追跡性・証跡の形式</h4>
+        <p class="now"><span class="lbl">現行の要件</span>判定と確認資料が紐付いていること。要件→設計→コード→テスト→結果の追跡</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>プロンプト・参照情報・生成条件が成果物との対応表に含まれない。ハーネスの実行ログを証跡として認めるかが未定義</p>
+        <p class="src">確認できた社: MJIT / MUSK本多②③</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="badge">C</div>
+      <div>
+        <h4>チェックの時間粒度</h4>
+        <p class="now"><span class="lbl">現行の要件</span>工程の節目・週次/隔週でチェック</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>AI駆動で反復が高速化すると、チェックの粒度が合わなくなる</p>
+        <p class="src">確認できた社: MJIT</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="badge">D</div>
+      <div>
+        <h4>網羅性の説明責任</h4>
+        <p class="now"><span class="lbl">現行の要件</span>テスト網羅性は最終的に人が「漏れなし」と判断。網羅性未達は理由・リスク・影響・対策を記載。<strong>修正機能に該当しない既存機能への無影響確認</strong>（MUIT）</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>AI生成テストの網羅性を誰がどう説明するか。自然に見える誤りを見逃す可能性。<strong>AIによる変更で影響範囲が読みにくくなると、無影響確認の網羅性を説明しにくくなる</strong></p>
+        <p class="src">確認できた社: MJIT / MUSK本多②③ / MUIT</p>
+      </div>
+    </div>
+
+    <div class="issue key">
+      <div class="badge">E</div>
+      <div>
+        <h4>【重点】人の作業量を前提とした指標</h4>
+        <p class="now"><span class="lbl">現行の要件</span>レビュー工数(p/h、kL/h)、レビュー作業充当率、レビュー実施密度、レビュー速度、テストケース数、<strong>STEP数・モジュール数・工数・金額</strong>（MUIT）</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span><strong>AIは短時間で大量生成できるため、量や投入時間だけでは品質を説明できない</strong>。本多③は、これらを「進捗・生産性の参考情報にとどめる」ことを提案</p>
+        <p class="src">確認できた社: MESW / MUSK海老名 / MUIT（指標の実在）、MUSK本多③（問題の指摘）</p>
+      </div>
+    </div>
+
+    <div class="issue key">
+      <div class="badge">F</div>
+      <div>
+        <h4>【重点】障害数の異常判定</h4>
+        <p class="now"><span class="lbl">現行の要件</span>障害数とテスト量のバランスを確認し、<strong>過多・過少等の異常</strong>を分析・対策。<strong>過去実績も踏まえて</strong>開発量に対して妥当なテスト量か、潜在的な不具合が埋もれていないかを評価（MUIT）</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>AI生成物で障害が減った場合、品質向上と異常のどちらとして扱うかの基準がない。<strong>過去実績との比較を前提とする以上、AI導入で傾向が変わること自体が異常判定を誘発しうる</strong></p>
+        <p class="src">確認できた社: MUSK本多②③ / MUIT（MESWに下限未満の実績記録あり）</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="badge">G</div>
+      <div>
+        <h4>判定基準側でのAI出力の扱い</h4>
+        <p class="now"><span class="lbl">現行の要件</span>会議体での承認、リスク受容の意思決定、基準未達を条件付き合格とする際の合理的根拠</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>AI出力を判定根拠・証跡としてどこまで採用できるかが基準側で未定義</p>
+        <p class="src">確認できた社: MJIT / MUSK本多 / 東京海上日動システムズ</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="badge">H</div>
+      <div>
+        <h4>レビュー工程への位置づけ</h4>
+        <p class="now"><span class="lbl">現行の要件</span>セルフ→チーム内→主管部署→…の段階的レビュー、上流の第三者レビュー</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>AIレビューを制度上のどの工程に位置づけるか。本多③は「全件一律目視の縮小」の条件（抽出基準・自動検証で代替する範囲・未確認範囲・承認者の事前定義）を提示</p>
+        <p class="src">確認できた社: MUSK海老名 / MJIT / MUSK本多③</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="badge">I</div>
+      <div>
+        <h4>再現性</h4>
+        <p class="now"><span class="lbl">現行の要件</span>（現行基準に該当項目なし）</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>同じ依頼でも結果が変わりうるが、モデル・版・設定・プロンプト等の記録項目がない。不具合再現・原因調査・監査説明が難化</p>
+        <p class="src">確認できた社: MUSK本多③</p>
+      </div>
+    </div>
+
+    <div class="issue">
+      <div class="badge">J</div>
+      <div>
+        <h4>障害の原因分類</h4>
+        <p class="now"><span class="lbl">現行の要件</span>誤りの混入工程・原因別の分類と水平展開</p>
+        <p class="gap"><span class="lbl">AI駆動開発での問題</span>原因分類にAI利用工程・生成方法の区分がなく、AI由来か人手由来かを判別しにくい</p>
+        <p class="src">確認できた社: MUSK本多③</p>
+      </div>
+    </div>
+
+    <h3>4.1 最も重要な論点 ― 作業量を品質の根拠とする指標</h3>
+    <p class="section-sub">適用課題Eは、複数社の資料が独立に同じ場所を指している。</p>
+
+    <p class="fig-title">図: 適用課題Eの根拠の重なり</p>
+    <div class="cards">
+      <div class="card"><h4><span class="dot"></span>指標の実在</h4><p>MESW土山はレビュー工数を page/hour・p/h・kL/h の3工程で計測。MUSK海老名はレビュー作業充当率・レビュー実施密度・レビュー速度を定義。いずれも分母または分子が人の工数である。MUIT増田はリリース判定資料の第1項目に「対応概要・工数・金額」を置き、規模を修正/新規モジュール数・STEP数で測る。</p></div>
+      <div class="card"><h4><span class="dot"></span>過去実績との比較</h4><p>MUIT増田は「<strong>過去実績も踏まえて</strong>、開発量に対して妥当な量のテストが実施されているか、潜在的な不具合が埋もれていないかを評価する」と明記。過去実績＝人が作業していた時代の実績であるため、AI導入で傾向が変わること自体が異常判定の対象になりうる（適用課題F）。</p></div>
+      <div class="card"><h4><span class="dot"></span>問題の指摘</h4><p>MUSK本多③が「設計書のページ数、プログラム本数、テストケース数、レビュー人時、作業消化量は、進捗・生産性の参考情報にとどめる」と明記。</p></div>
+      <div class="card"><h4><span class="dot"></span>置き換え先の提案</h4><p>要件カバレッジ、リスク充足度、重要機能・境界条件・例外処理の網羅性、検証結果（本多③）。</p></div>
+    </div>
+
+    <div class="callout">
+      <span class="label">想定読者への含意</span>
+      <p>現行の品質指標は、人が作業することを前提に組み立てられている。AI駆動開発の導入は、品質そのものより先に<strong>指標の妥当性</strong>を揺らす。</p>
+      <p>「AI駆動開発は品質が悪くなるのでは」という懸念に対しては、品質の高低を論じる前に<strong>「現行指標ではAI駆動開発の品質を測れない」という測定の問題</strong>として提示するほうが、事実に即している。</p>
+      <p>ただし本多③は「テストケース数等を完全に廃止するのではなく、単純件数だけで合否を判断しない」「AI利用による品質向上・低下を事前に断定せず、予定値・実績値・差分・原因・対策を測定して判断する」とも述べている。<strong>指標の全否定にはしない</strong>という立場を取ること。</p>
+    </div>
+
+    <h3>4.2 本多③が示す「維持・置換・縮小・統合」の4区分</h3>
+    <p class="section-sub">適用課題への対処方針として、既に整理されたフレームがある。ステップ4（ハーネス設計）の起点として有力である。</p>
+
+    <p class="fig-title">表6: 現行品質観点の再設計 4区分（MUSK本多③より）</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>区分</th><th>対象</th><th>扱い</th></tr></thead>
+        <tbody>
+        <tr><td class="axis">維持</td><td>要件充足、リスクに応じたテスト網羅性、障害修正、残存リスク、性能・容量、移行、切戻し、運用、保守、関係者承認</td><td>重要度を下げず継続</td></tr>
+        <tr><td class="axis">置換</td><td>作業時間、ページ数、プログラム本数、単純なテストケース数等の作業量中心の指標</td><td>要件カバレッジ、リスク充足度、網羅性、検証結果へ置き換え</td></tr>
+        <tr><td class="axis">縮小</td><td>全成果物の一律な人手目視、作成者別を主軸とした評価</td><td>高リスク領域を重点確認し、自動検証と組み合わせる</td></tr>
+        <tr><td class="axis">統合</td><td>AI利用台帳、AI変更影響評価、AI由来障害分類</td><td>導入初期は独立管理、定着後は既存の構成管理・変更管理・品質評価へ統合</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">「現行の品質保証の骨格は維持できる」（本多③の結論）という立場は、docs/進め方.md §4.1 の「古い品質指標を全否定しない。『ここは従来通りでOK、ここは考え方を変えませんか』という提案スタイルを取る」と一致している。</p>
+
+    <h3>4.3 本節で扱わなかった論点</h3>
+    <div class="note">
+      <span class="label">CLAUDE.md §3「やらないこと」に該当するため除外</span>
+      <ul>
+        <li>セキュリティ・情報管理・PoC統制・ID/アクセス権限管理（本多③ §6.5）→ セキュリティ研究領域</li>
+        <li>AI導入時の役割分担の追加案（本多③ §4.3）→ 人とAIの役割分担モデルは第2分科会の領域</li>
+        <li>AI入力情報の管理（入力可否・情報区分・マスキング・保存条件）→ データの持ち方は第1分科会の領域</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 05 ============ -->
+  <section>
+    <div class="section-head"><span class="num">05</span><h2>基準の測定可能性</h2></div>
+    <p class="section-sub">
+      「その基準は測定可能か」への回答。ステップ5の効果測定に直結するため、計算的統制／推論的統制の観点で三層に分けた。
+    </p>
+
+    <p class="fig-title">表7: 基準の測定可能性</p>
+
+    <div class="tier">
+      <h4>機械的に測定可能<span class="tag">計算的統制</span></h4>
+      <p class="items">テストケース密度、バグ密度、障害率、C0カバレッジ、テストケースの消化状況、完了率、修正完了率、未消化テストケース数、性能値、STEP数・モジュール数</p>
+      <p class="use">センサーで自動取得可能。ハーネス有無の比較にそのまま使える。</p>
+    </div>
+
+    <div class="tier mid">
+      <h4>定義次第で測定可能<span class="tag">記録設計が要る</span></h4>
+      <p class="items">レビュー指摘密度、欠陥指摘ヒット率、収束傾向、水平展開の実施状況、トレーサビリティ、<strong>Exitクライテリアの充足状況</strong></p>
+      <p class="use">記録の取り方を設計すれば取得可能。ハーネス側で記録形式を規定する余地がある。チェックリスト形式は機械可読化しやすい。</p>
+    </div>
+
+    <div class="tier hard">
+      <h4>人の判断が要る<span class="tag">推論的統制</span></h4>
+      <p class="items">網羅性の十分性、<strong>無影響確認の十分性</strong>、レビュー品質の十分性、指摘内容の定性分類、残存リスクの受容可否、事業影響、<strong>過去実績との比較の妥当性</strong></p>
+      <p class="use">効果測定の対象にしにくい。<strong>ここをどう扱うかが研究の核</strong>である。</p>
+    </div>
+
+    <div class="note" style="margin-top:18px;">
+      <span class="label">方針</span>
+      <p>効果測定は上段の指標で行い、下段については「人が判断するために必要な材料をハーネスが揃えられるか」を問う形にするのが現実的である。</p>
+      <p>なお、上段の指標のうち作業量に依存するもの（テストケース数等）は、適用課題Eにより<strong>指標そのものの妥当性が論点</strong>となる。測定できることと、測定する意味があることは別である。</p>
+    </div>
+  </section>
+
+  <!-- ============ 06 ============ -->
+  <section>
+    <div class="section-head"><span class="num">06</span><h2>次ステップへの接続</h2></div>
+    <p class="section-sub">研究の5ステップ設計における、本レポートの位置と次の打ち手。</p>
+
+    <p class="fig-title">図: 本レポートから次ステップへの接続</p>
+    <div class="steps">
+      <div class="step">
+        <div class="n">STEP 2</div>
+        <h4>仮説</h4>
+        <p>「素のワークフローでは各社の品質要件を満たせない」に対し、適用課題 B・D・G・I・J が満たせない候補として具体化された。特に I（再現性）と J（障害の原因分類）は現行基準に該当項目が存在せず、素のワークフローでは記録すら残らない。</p>
+      </div>
+      <div class="step">
+        <div class="n">STEP 3</div>
+        <h4>ギャップ特定</h4>
+        <p>表7の上段=素のワークフローでも満たせる／下段および B・D・I・J=満たせない、という切り分けの見通しが立つ。</p>
+      </div>
+      <div class="step">
+        <div class="n">STEP 4</div>
+        <h4>ハーネス設計</h4>
+        <p>表6の「維持・置換・縮小・統合」4区分を起点にできる。</p>
+      </div>
+      <div class="step">
+        <div class="n">中間報告(10/2)</div>
+        <h4>分量の制約</h4>
+        <p>分科会パートは本編2ページ程度（出典: 260806 部会資料「02_中間報告_分科会用フォーマット.pptx」の「各分科会にて記載（２ページ程度）」）。表5を圧縮した適用課題カテゴリ図1点 + 表2の要約1点が現実的である。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 07 ============ -->
+  <section>
+    <div class="section-head"><span class="num">07</span><h2>未確認事項・取り扱い注意</h2></div>
+
+    <div class="note">
+      <span class="label">未確認</span>
+      <ul>
+        <li>未提出社の品質基準（8/6以降に追補）</li>
+        <li>MESW資料はプロジェクト1件の実績であり、全社標準かは未確認</li>
+        <li>各社の「指標値」の具体的な数値は非開示のため、カテゴリ比較にとどめている</li>
+        <li>MUSK本多③は自ら「カットオーバークライテリア記載要領、プロジェクト管理要領、成果物編は本文全量を再取得できなかったため、<strong>正式利用前に現行正本との最終突合が必要</strong>」と注記している。本資料が本多②③に依拠している箇所も同じ制約を受ける</li>
+        <li>本多③の位置づけは「社内標準そのものではなく、現行標準に基づく整理とAI導入時の提案」である。同資料の提案部分を各社の現行制度と混同しないこと</li>
+      </ul>
+    </div>
+
+    <div class="note" style="margin-top:14px;">
+      <span class="label">Backlog提出時の注意</span>
+      <ul>
+        <li>MUSK本多資料には<strong>社内標準文書の規程名・文書番号・版数・実案件名</strong>が含まれる。社外提出時はこれらを伏せ、構造のみを記述すること。本資料本文には未混入である</li>
+        <li>出典欄の提出ファイル名も、社外提出時は「MUSK本多 提出資料3件」等に丸めること</li>
+        <li>MJIT資料は社外提出版として粒度が調整済み。これ以上の詳細化を求めないこと</li>
+        <li>各社の指標の具体値は本資料に含めていない。今後も含めない方針とする</li>
+        <li>表1・表2・表5の提出者実名は分科会内共有を前提とする。中間報告資料へ転記する際は社名のみへ置換すること（事務局ルールにより公式サイト会員ページへ掲載されるため）</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 08 ============ -->
+  <section>
+    <div class="section-head"><span class="num">08</span><h2>「やらないこと」セルフチェック</h2></div>
+    <p class="section-sub">CLAUDE.md §3 および docs/境界線.md との照合結果。</p>
+    <ul class="check">
+      <li>開発プロセスのループ構造そのものを設計していない（→第2分科会）</li>
+      <li><strong>人とAIの役割分担モデルを設計していない</strong>（→第2分科会）― 本多③の「役割分担の追加案」は 4.3 で明示的に除外した。適用課題Gは「判定基準側がAI出力をどう扱うか」という<strong>基準側の要件</strong>として書いており、人とAIの分担モデルではない</li>
+      <li>データの管理方法・持ち方に踏み込んでいない（→第1分科会）― 本多③の「AI入力情報の管理」は 4.3 で除外した</li>
+      <li>LLM自体の性能比較をしていない</li>
+      <li>人・組織の品質評価能力に踏み込んでいない
+        <ul>
+          <li>適用課題G「判定基準側でのAI出力の扱い」は制度・承認プロセスの話であり、レビュー人材の能力やリテラシーの話ではない</li>
+          <li>適用課題H「レビュー工程への位置づけ」は制度上の工程構成の話である。「AIが人を代替するか」という書き方は避けている</li>
+        </ul>
+      </li>
+      <li>品質に直結しない安全側のガードレールの話になっていない</li>
+      <li>特定ベンダーのフレームワークを推奨していない</li>
+      <li>セキュリティ研究領域に入っていない ― 本多③のセキュリティ・情報管理・PoC統制・権限管理は 4.3 で明示的に除外した。本資料本文にセキュリティ項目の列挙はない</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div class="row">
+      <span>三菱CC研究会 第3部会 ／ 第3分科会(AI品質保証)</span>
+      <span>作成者：東京海上日動システムズ・中島 ／ 2026-08-04 作成</span>
+    </div>
+
+    <p style="margin:18px 0 0;"><strong>出典</strong></p>
+    <p style="margin:4px 0 0;">SharePoint「2026年度研究部会-第3部会メイン / Shared Documents / テーマ③品質保証 / 各社の品質評価」より取得（取得日 2026-08-04）。</p>
+    <ul>
+      <li>【宿題①】品質評価の現状_社外提出版_20260731.md（MJIT 福島、2026-07-31）</li>
+      <li>品質評価_MESW土山.md（MESW 土山、日付記載なし）</li>
+      <li>プロジェクトリリース時の品質評価・品質保証.md（MUSK 本多、日付記載なし）</li>
+      <li>カットオーバークライテリア・テスト品質評価報告ガイド整理.md（MUSK 本多、日付記載なし）</li>
+      <li>AI駆動開発導入に伴う品質保証観点の整理.html 再鑑修正版 v4（MUSK 本多、2026-07-27）</li>
+      <li>品質評価.md（MUSK 海老名、日付記載なし）</li>
+      <li>自社の品質評価の流れ（現状整理）_増田.html（MUIT 増田、日付記載なし）</li>
+      <li>品質保証.html（東京海上日動システムズ 中島、日付記載なし）</li>
+    </ul>
+
+    <div class="ai-note">
+      <b>生成AI利用の明示</b><br>
+      本資料の作成には生成AIツールを使用した（Anthropic, Claude, 2026）。出力箇所の内訳は以下のとおりである。
+      <br>・<b>原資料からの転記</b>: 01、02、04の「現行の要件」欄、表6 ― いずれも各社提出資料の記述に基づく。
+      <br>・<b>生成AIによる整理・分類</b>: 03（共通項の抽出）、04の「AI駆動開発での問題」欄およびカテゴリ分け、05（測定可能性の3層分類）、06（ステップへの接続）。
+      <br>・原資料の記述内容そのものは各社提出者による。
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

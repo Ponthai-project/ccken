@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>事例調査 論点整理 ― 第3分科会 宿題②</title>
+<style>
+  :root{
+    --ink:#1b2430; --sub:#5b6675; --faint:#8d97a4; --line:#e2e6ec;
+    --paper:#fbfbfa; --card:#ffffff;
+    --accent:#2c5f7c; --accent-soft:#e9f1f4; --accent-line:#d3e2e8;
+    --amber:#b9762f; --amber-soft:#faf1e6; --amber-line:#eddcc0;
+    --done:#3f7a5c; --done-soft:#e9f4ee; --done-line:#cfe3d8;
+    --red:#a4453c; --red-soft:#f9ecea; --red-line:#e8cdc9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Hiragino Sans","Yu Gothic UI","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased;font-size:15px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 24px 100px;}
+
+  header.hero{margin-bottom:32px;}
+  .eyebrow{
+    display:inline-flex;gap:8px;align-items:center;
+    font-size:12.5px;letter-spacing:.06em;color:var(--accent);
+    background:var(--accent-soft);border:1px solid var(--accent-line);
+    padding:5px 12px;border-radius:100px;font-weight:600;margin-bottom:18px;
+  }
+  h1{font-size:31px;margin:0 0 12px;letter-spacing:-0.01em;font-weight:700;line-height:1.4;}
+  .lead{color:var(--sub);font-size:15px;max-width:740px;margin:0;}
+  .meta{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:28px;
+  }
+  .meta div{background:var(--card);padding:14px 16px;}
+  .meta .k{font-size:11.5px;color:var(--sub);margin-bottom:4px;}
+  .meta .v{font-size:14px;font-weight:600;}
+  .banner{
+    margin-top:18px;padding:16px 20px;border-radius:10px;
+    background:var(--accent-soft);border:1px solid var(--accent-line);font-size:14px;
+  }
+  .banner b{color:var(--accent);display:block;margin-bottom:4px;font-size:12.5px;letter-spacing:.03em;}
+  .banner p{margin:0 0 8px;}
+  .banner p:last-child{margin:0;}
+
+  section{margin-top:56px;}
+  .section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+  .num{font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.03em;}
+  h2{font-size:21px;margin:0;font-weight:700;}
+  .section-sub{color:var(--sub);font-size:14px;margin:6px 0 22px;max-width:800px;}
+  .fig-title{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 8px;padding-left:10px;border-left:3px solid var(--accent);}
+
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid var(--line);background:var(--card);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{background:#f4f6f8;font-weight:700;font-size:12.5px;color:var(--sub);white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:none;}
+  td.axis{font-weight:700;background:#fafbfc;font-size:13px;}
+  tr.key td{background:var(--amber-soft);}
+  tr.key td.axis{background:#f5e6d0;}
+  tr.me td{background:var(--accent-soft);}
+  tr.me td.axis{background:#dceaf0;}
+  .hint{font-size:12px;color:var(--faint);margin-top:8px;}
+  mark{background:var(--amber-soft);color:var(--ink);padding:1px 3px;border-radius:3px;font-weight:700;}
+  .sm{font-size:12px;color:var(--faint);}
+
+  .pt{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0;margin-bottom:20px;overflow:hidden;}
+  .pt.key{border-color:var(--amber-line);border-width:2px;}
+  .pt-head{
+    padding:18px 24px;border-bottom:1px solid var(--line);
+    display:grid;grid-template-columns:44px 1fr;gap:16px;align-items:center;background:#fcfdfd;
+  }
+  .pt.key .pt-head{background:var(--amber-soft);border-bottom-color:var(--amber-line);}
+  .pt-badge{
+    width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:15px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line);
+  }
+  .pt.key .pt-badge{background:#fff;color:var(--amber);border-color:var(--amber-line);}
+  .pt-head h3{margin:0;font-size:17px;font-weight:700;line-height:1.5;}
+  .pt-tag{
+    display:inline-block;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:100px;
+    background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber-line);margin-left:10px;vertical-align:3px;
+  }
+  .pt.key .pt-tag{background:#fff;}
+  .pt-body{padding:20px 24px;}
+  .pt-lbl{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--faint);display:block;margin-bottom:8px;}
+  .pt-note{
+    background:#f6f8fa;border:1px solid var(--line);border-radius:10px;
+    padding:12px 16px;font-size:13px;color:var(--sub);margin-bottom:16px;
+  }
+  .pt-facts{margin:0 0 18px;padding-left:20px;font-size:13.5px;}
+  .pt-facts li{margin-bottom:8px;}
+  .pt-facts li:last-child{margin-bottom:0;}
+  .pt-facts .src{color:var(--faint);font-size:12px;}
+  .pt-interp{
+    background:#f6f8fa;border:1px dashed var(--faint);border-radius:10px;
+    padding:14px 18px;font-size:13px;margin-bottom:16px;
+  }
+  .pt-interp .pt-lbl{color:var(--faint);}
+  .pt-interp ul{margin:0;padding-left:18px;}
+  .pt-interp li{margin-bottom:6px;}
+  .pt-interp li:last-child{margin-bottom:0;}
+  .pt-imp{background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:10px;padding:14px 18px;font-size:13.5px;margin-bottom:14px;}
+  .pt-imp .pt-lbl{color:var(--accent);}
+  .pt-imp p{margin:0 0 8px;}
+  .pt-imp p:last-child{margin:0;}
+  .pt-ask{font-size:13px;padding-top:12px;border-top:1px dashed var(--line);color:var(--sub);}
+  .pt-ask b{color:var(--red);}
+  .pt-warn{background:var(--red-soft);border:1px solid var(--red-line);border-radius:10px;padding:14px 18px;font-size:13.5px;margin-bottom:14px;}
+  .pt-warn .pt-lbl{color:var(--red);}
+  .pt-warn p{margin:0;}
+
+  .note{background:var(--amber-soft);border:1px solid var(--amber-line);border-radius:12px;padding:18px 22px;font-size:14px;}
+  .note .label{font-weight:700;color:var(--amber);font-size:12.5px;margin-bottom:6px;display:block;}
+  .note ul{margin:0;padding-left:20px;}
+  .note li{margin-bottom:6px;}
+  .note li:last-child{margin-bottom:0;}
+  .note p{margin:0 0 8px;}
+  .note p:last-child{margin-bottom:0;}
+  .own{background:var(--accent-soft);border:2px solid var(--accent-line);border-radius:12px;padding:18px 22px;font-size:14px;margin-top:16px;}
+  .own .label{font-weight:700;color:var(--accent);font-size:12.5px;margin-bottom:6px;display:block;}
+  .own p{margin:0;}
+
+  ul.check{list-style:none;margin:0;padding:0;}
+  ul.check li{position:relative;padding:5px 0 5px 26px;font-size:14px;}
+  ul.check li::before{content:"✓";position:absolute;left:2px;top:5px;color:var(--done);font-weight:700;font-size:14px;}
+
+  ul.plain{margin:0;padding-left:20px;font-size:14px;}
+  ul.plain li{margin-bottom:12px;}
+  ul.plain li:last-child{margin-bottom:0;}
+  ul.plain ul{margin:6px 0 0;font-size:13px;color:var(--sub);}
+  ul.plain ul li{margin-bottom:5px;}
+
+  footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);color:var(--sub);font-size:12.5px;}
+  footer .row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  footer ul{margin:10px 0 0;padding-left:20px;font-size:12.5px;}
+  footer li{margin-bottom:4px;overflow-wrap:anywhere;}
+  .ai-note{margin-top:18px;padding:14px 18px;background:var(--card);border:1px solid var(--line);border-radius:8px;font-size:12.5px;color:var(--sub);}
+  .ai-note b{color:var(--ink);}
+
+  @media(max-width:760px){
+    .meta{grid-template-columns:repeat(2,1fr);}
+    .pt-head{grid-template-columns:1fr;gap:10px;}
+    h1{font-size:25px;}
+  }
+  @media print{
+    body{background:#fff;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .wrap{max-width:none;padding:0;}
+    section{margin-top:26px;}
+    h2,.fig-title{break-after:avoid;page-break-after:avoid;}
+    .pt,.note,.pt-imp,.pt-warn,.own,.pt-interp{page-break-inside:avoid;break-inside:avoid;}
+    .scroll{overflow:visible;border-radius:0;}
+    table{table-layout:fixed;font-size:8.5pt;}
+    thead{display:table-header-group;}
+    th,td.axis{white-space:normal;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">第3分科会 ／ AI品質保証 ／ 宿題②</span>
+    <h1>事例調査 論点整理<br><span style="font-size:.66em;color:var(--sub);font-weight:600;">― 世の中の事例が独立に指している9つの場所</span></h1>
+    <p class="lead">
+      事例の「紹介」ではなく、論点の抽出を目的とする。
+      複数の情報源が独立に同じことを指している箇所を拾い、第3分科会の研究への含意を示す。
+    </p>
+
+    <div class="meta">
+      <div><div class="k">分科会</div><div class="v">第3分科会(AI品質保証)</div></div>
+      <div><div class="k">情報源</div><div class="v">講演16件 + Web5件</div></div>
+      <div><div class="k">作成者</div><div class="v">東京海上日動システムズ・中島</div></div>
+      <div><div class="k">作成日</div><div class="v">2026-08-05</div></div>
+    </div>
+
+    <div class="banner">
+      <b>本資料の範囲と読み方</b>
+      <p><strong>本資料は世の中の事例のみを対象とする。</strong>分科会メンバーが提出した自社の内部整理（宿題①の各社品質基準）は情報源に含めない。外部事例から立てた論点を、既存の整理と 03 で突き合わせる構成としている。</p>
+      <p>各論点は「一致している事実（情報源の記述）」「第3分科会への含意（作成者の解釈）」「8/6で聞きたいこと」の3層。<strong>グレーの点線枠</strong>は、経由した横断整理が「本資料の解釈」と明示した箇所であり、原典の主張ではない。</p>
+      <p>オレンジ枠の <strong>論点3・5・7・9</strong> は既存の整理に新しい情報を足しているもので、他は補強にあたる。</p>
+    </div>
+  </header>
+
+  <!-- 01 -->
+  <section>
+    <div class="section-head"><span class="num">01</span><h2>調べた資料</h2></div>
+
+    <p class="fig-title">表1: 情報源一覧（すべて社外の事例・調査）</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>区分</th><th>資料</th><th>特徴</th></tr></thead>
+        <tbody>
+          <tr><td class="axis">講演</td><td>LINEヤフー「AI開発におけるガバナンス」（新田氏）</td><td>事業横断でのガバナンス</td></tr>
+          <tr><td class="axis">講演</td><td>アイスリーデザイン「経営がAIネイティブにならなければAI駆動開発は浸透しない」</td><td>金融・通信インフラ等での実装。AI-DLCを独自改変</td></tr>
+          <tr class="key"><td class="axis">講演群</td><td><strong>AWS Summit Japan 2026 セッション14件</strong></td><td>AI-DLCとハーネス。エンタープライズ事例8件を含む</td></tr>
+          <tr><td class="axis">Web</td><td>DORA「State of AI-assisted Software Development 2025」</td><td>約5,000名調査。AI＝増幅器</td></tr>
+          <tr><td class="axis">Web</td><td>New Relic「2026 State of AI Coding Report」（@IT記事経由）</td><td>米国のマネージャー級以上200名調査</td></tr>
+          <tr><td class="axis">Web</td><td>三菱UFJ銀行「エンタープライズAI駆動開発のリアル」</td><td>銀行システム開発での適用</td></tr>
+          <tr><td class="axis">Web</td><td>サイバーエージェント「AI時代のコードレビューフロー再設計」</td><td>実測値つきのレビュー体制変更</td></tr>
+          <tr><td class="axis">Web</td><td>CodeZine「大量に生成されたコードがレビューを崩壊させる？」</td><td>キッカケクリエイション調査を掲載</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">講演2件はコーディネーターより提供。<strong>音声書き起こしのため、固有名詞・数値に転記誤りの可能性がある。</strong>AWS Summit 14件は、MUSK本多が作成した横断整理を経由して参照した。同整理は各記述にセッションIDを付し、<strong>独自解釈箇所を「本資料の解釈」として明示</strong>している。本資料でも、同整理が解釈と明示した箇所は解釈として扱う。</p>
+
+    <p class="fig-title" style="margin-top:26px;">表2: AWS Summit で参照した主なセッション</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>ID</th><th>タイトル</th><th>登壇者・組織</th></tr></thead>
+        <tbody>
+          <tr class="me"><td class="axis">AIM213</td><td>AI駆動開発による開発者体験の変革</td><td>山下裕記／<strong>東京海上日動システムズ</strong></td></tr>
+          <tr><td class="axis">AIM203</td><td>ガバメントクラウドでのAI駆動開発の設計と実践</td><td>佐藤智樹／デジタル庁</td></tr>
+          <tr><td class="axis">AIM221</td><td>AI駆動開発ライフサイクル(AI-DLC)のご紹介</td><td>吉村弘明／アマゾンウェブサービスジャパン</td></tr>
+          <tr><td class="axis">AIM222</td><td>AI駆動は上流工程にこそ活きる</td><td>嶺行伸／同</td></tr>
+          <tr><td class="axis">AIM223</td><td>AIでコードは書けても、レビューできる人がいなくなる</td><td>杉本晋吾／同</td></tr>
+          <tr><td class="axis">DVT324</td><td>KiroとAmazonの文化から学ぶAI駆動開発の型</td><td>高野賢司／同</td></tr>
+          <tr><td class="axis">DVT452</td><td>Operation Phase of AI-DLC</td><td>金森政雄／同</td></tr>
+          <tr><td class="axis">AIM310</td><td>AI駆動開発 × 開発標準化</td><td>所年雄／トランスコスモス</td></tr>
+          <tr><td class="axis">PRT213-S</td><td>AI駆動開発 × セキュアな医療インフラ</td><td>山田憲嗣（大阪大学）／中野葉月（KDDIアイレット）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="own">
+      <span class="label">注目 ― AIM213は自社の登壇である</span>
+      <p>AWS Summit Japan 2026 で <strong>東京海上日動システムズ（山下裕記氏）</strong>が登壇しており、14件中もっとも厚くハーネスを扱っている。<strong>社内に一次情報がある可能性が高い。</strong>引用にあたっては登壇者への確認が取れると強い。なお同資料の著作権は当社に帰属する旨が原典に明記されている。</p>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="section-head"><span class="num">02</span><h2>論点</h2></div>
+
+    <!-- 1 -->
+    <div class="pt">
+      <div class="pt-head"><div class="pt-badge">1</div><h3>実装だけをAI化しても、全体効果は出ない</h3></div>
+      <div class="pt-body">
+        <span class="pt-lbl">一致している事実</span>
+        <ul class="pt-facts">
+          <li>工程割合は概ね 要件定義15% / 設計20% / 実装25% / テスト30%。<mark>実装だけをAI化しても全体インパクトは25%程度</mark> <span class="src">（アイスリーデザイン。※口頭の概算であり合計は90%）</span></li>
+          <li>手戻りコストは下流ほど跳ね上がる。<mark>上流を放置して下流だけAI化すると「早く大量に作るほど手戻りが増える」</mark> <span class="src">（同）</span></li>
+          <li>AI駆動開発を「<strong>AIがすべての成果物を作り、それに合わせてプロセス・体制・成果物を再定義する</strong>」と定義し、<strong>部分活用の限界</strong>を出発点とする <span class="src">（AIM213 東京海上日動システムズ）</span></li>
+          <li>AI-Assisted（AIを狭いタスクに適用）は「SDLC全体で見るとアジリティ向上は限定的。コーディングで節約した時間はSDLCの他の部分でまだ失われている」 <span class="src">（AIM221）</span></li>
+          <li>大規模既存システムでは、数百万行がLLMのコンテキストに収まらず修正箇所の特定が困難 <span class="src">（三菱UFJ銀行）</span></li>
+        </ul>
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p>7/23に決めた<strong>「評価対象＝開発プロセス全体」</strong>が、外部事例からも裏付けられた。実装工程だけを見ていると、品質の議論そのものが的を外す。</p>
+        </div>
+        <p class="pt-ask"><b>8/6で聞きたいこと</b> ― 各社で、AI適用が進んでいるのはどの工程か。</p>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="pt">
+      <div class="pt-head"><div class="pt-badge">2</div><h3>ボトルネックは「実装」から「判断」へ移る</h3></div>
+      <div class="pt-body">
+        <span class="pt-lbl">一致している事実</span>
+        <ul class="pt-facts">
+          <li><mark>「開発のボトルネックは実装から判断へ移動している」</mark>。判断待ち時間を減らすため、AIエージェントの環境整備が重要 <span class="src">（AIM203 デジタル庁）</span></li>
+          <li><mark>「製造工程が圧縮できたと思ったら、レビュー工数が膨張して結果的に納期が変わらない」</mark> <span class="src">（アイスリーデザイン、ハーネスなしの場合）</span></li>
+          <li>東京海上日動システムズが挙げた課題に <strong>「Markdown形式の大量ドキュメントを判断者が捌けない」</strong> <span class="src">（AIM213）</span>。アイスリーデザインは同じ問題に対し <strong>MarkdownとHTMLの両方を出力</strong>して対処している</li>
+          <li>最大の課題は <mark>「『問い』のスピードに人が追いつく」</mark>。AIは問いを量産し、人はチームで議論・検証・判断する。この回転数が劇的に上がることが最大の課題である <span class="src">（AIM213）</span></li>
+          <li>レビュー担当者の約9割が<strong>AI生成コードの普及による</strong>負担増を実感 <span class="src">（キッカケクリエイション調査。CodeZine掲載）</span></li>
+          <li><strong>レビュー対象は激増するがシニアエンジニアの人数は増えていない</strong> <span class="src">（CodeRabbit 中津川氏の講演。同記事）</span></li>
+          <li>セッション設計の実務的助言として「<strong>レビュー疲れ</strong>に注意」 <span class="src">（AIM222）</span></li>
+        </ul>
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p>適用課題H（レビュー工程への位置づけ）に直結する。<strong>品質保証の中心が「検査する」から「人が判断しやすくする」へ移る。</strong></p>
+          <p>比較レポート §5 の方針「人が判断するために必要な材料をハーネスが揃えられるか」は、<strong>別々の3組織が独立に同じ問題に突き当たっている</strong>ことで裏付けられた（東京海上＝課題として認識、アイスリーデザイン＝二重出力で対処、デジタル庁＝環境整備で対処）。</p>
+          <p>なお AIM213 は上記に続けて「特にビジネスオーナー側の変革が最も大きなチャレンジ」とも述べているが、原典では意識改革・スキル向上の文脈にある。<strong>本資料は判断の回転数と判断材料の問題としてのみ扱い、役割分担や人材育成の設計には踏み込まない。</strong></p>
+        </div>
+        <p class="pt-ask"><b>8/6で聞きたいこと</b> ― レビュー工数・判断待ち時間の増加を、各社は測っているか。</p>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="pt key">
+      <div class="pt-head"><div class="pt-badge">3</div><h3>文書に書くだけでは効かない ― ガイドとセンサーの二分に「強度」の軸がない<span class="pt-tag">新情報</span></h3></div>
+      <div class="pt-body">
+        <span class="pt-lbl">一致している事実</span>
+        <ul class="pt-facts">
+          <li><mark>「ガイドラインの策定だけだと漏れてしまう部分がある」</mark>ため、仕組みとしてのガードレール導入が必要 <span class="src">（LINEヤフー）</span></li>
+          <li><mark>「環境が品質を強制する」「設計通りを人の注意力ではなく仕組みで担保する」</mark> <span class="src">（アイスリーデザイン）</span>
+            <ul style="margin-top:6px;">
+              <li><strong>設計書を読まないと実装に進めない</strong></li>
+              <li>依存方向の違反はビルドエラー／レビューなしのマージは禁止／ユビキタス言語の逸脱を静的解析で検出</li>
+            </ul>
+          </li>
+          <li>Linter・Formatter で「階層ごとのコード間依存関係の逸脱防止などを<strong>決定論的に</strong>定義」。Security Test は「AIエージェントによる検査と決定論的チェックが可能なツールを<strong>併用</strong>」 <span class="src">（AIM203 デジタル庁）</span></li>
+          <li>これらの仕組みを<strong>ローカルとCI/CD環境の両方に実装</strong>し、常に検査が走る状態を維持する。CI/CDがない場合は最低限のガードレールとして<strong>AIエージェントのHook機能</strong>で検査を共通化 <span class="src">（同）</span></li>
+          <li>AI-DLC Workflows V2.0 の各ステージは「生成＝宣言的な<strong>指示</strong>／検証＝定性的検証の<strong>指示</strong>＋決定論的検証のための<strong>スクリプト/コード</strong>／自己学習」の3要素で構成 <span class="src">（DVT452）</span></li>
+        </ul>
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p>上記の仕組みを <code>docs/用語.md</code> の定義に照らすと、<strong>依存方向のビルドエラー・静的解析・Linter/Formatter は既に「センサー（事後）」に分類される</strong>。事前側で決定論的に効いているのは「設計書を読まないと実装に進めない」である。</p>
+          <p>つまり用語.mdの定義そのものが誤っているわけではない。問題は別のところにある。</p>
+          <p><strong>ガイドとセンサーの二分は「事前／事後」の軸であり、「どれだけ強く効くか」の軸を持たない。</strong>同じ事前の統制でも、強度はまったく違う。</p>
+          <p class="fig-title" style="margin-top:10px;">表: 同じ「事前の統制」でも強度が異なる例</p>
+          <div class="scroll" style="margin:0 0 10px;">
+            <table>
+              <thead><tr><th>同じ「コーディング規約を守らせる」でも</th><th>強度</th></tr></thead>
+              <tbody>
+                <tr><td class="axis">規約を CLAUDE.md に書く</td><td>破っても止まらない。守られたかは事後に確認するしかない</td></tr>
+                <tr><td class="axis">同じ規約を pre-commit / CI で強制する</td><td>破ると先へ進めない</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>どちらも生成前に振る舞いを導く「ガイド（事前）」だが、効き方が違う。センサー側も同様で、レビュー観点を文書で示すのと、静的解析で機械的に落とすのとでは強度が異なる。</p>
+          <p>用語.mdへの提起は「<strong>事前／事後の軸に加えて、文書か実行環境埋め込みかの軸を足すか</strong>」という形になる。</p>
+        </div>
+        <p class="pt-ask"><b>8/6で聞きたいこと</b> ― 用語の定義に「統制の強度（文書か、実行環境への埋め込みか）」の軸を足すか。</p>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="pt">
+      <div class="pt-head"><div class="pt-badge">4</div><h3>レビューを通っても本番で壊れる</h3></div>
+      <div class="pt-body">
+        <span class="pt-lbl">一致している事実</span>
+        <ul class="pt-facts">
+          <li><mark>94%のエンジニアリーダーが「AI生成コードは人間の書いたコードより品質が低い」と評価</mark> <span class="src">（New Relic、米国マネージャー級以上200名）</span></li>
+          <li><mark>82%が過去6ヶ月でAI生成コードによる問題の発生を経験</mark>。78%が問題の増加を確認、86%がシニアエンジニアの対応工数の増加を報告 <span class="src">（同）</span><br><span class="sm">※ 内訳の数値（欠陥の程度別）は原文との突合が未了のため記載していない。中間報告へ載せる場合は原典本体の確認が要る</span></li>
+          <li>生成AIは「読みやすい」コードを作るが、本番環境での実行結果が異なる <span class="src">（@IT）</span></li>
+          <li>DORA 2025でも <strong>AI採用は不安定性（instability）との関連が続く</strong>と報告</li>
+          <li>「<strong>AIをシニアエンジニアと同じようには信頼しない</strong>。アイディア豊富なインターンと捉えて監督する」 <span class="src">（AIM221 教訓6）</span></li>
+          <li>AIが過剰な機能追加や意図しない変更を行うことがある <span class="src">（AIM213 東京海上日動システムズ）</span></li>
+        </ul>
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p>適用課題D（網羅性の説明責任）の裏付け。<strong>レビューという推論的統制の限界</strong>を示すデータである。</p>
+        </div>
+        <div class="pt-warn">
+          <span class="pt-lbl">取り扱い注意</span>
+          <p>この数値は想定読者（品質を疑う層）の主張を<strong>補強する側</strong>でもある。「だから品質保証の仕組みが要る」という文脈でのみ使うべきである。</p>
+        </div>
+        <p class="pt-ask"><b>8/6で聞きたいこと</b> ― この数値をそのまま中間報告に載せるか、扱いを決めたい。</p>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="pt key">
+      <div class="pt-head"><div class="pt-badge">5</div><h3>計算的統制 → 推論的統制 の順で自動化する<span class="pt-tag">新情報</span></h3></div>
+      <div class="pt-body">
+        <div class="pt-note">
+          本節では検証の関門を「ゲート」と呼ぶ。<code>docs/用語.md</code> の <strong>計算的統制／推論的統制</strong> に対応する概念を、工程上の関門として実装したものを指す。
+        </div>
+
+        <span class="pt-lbl">一致している事実</span>
+        <p style="margin:0 0 12px;font-size:13.5px;color:var(--sub);">アイスリーデザインが段階を明示している。</p>
+
+        <p class="fig-title">表3: ゲート自動化の段階</p>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>フェーズ</th><th>内容</th></tr></thead>
+            <tbody>
+              <tr><td class="axis">01（現在地）</td><td><strong>人がゲートを担う</strong> ― 業務判断、例外、リスク承認</td></tr>
+              <tr class="key"><td class="axis">02（半歩先）</td><td><strong>計算的ゲートを自動化</strong> ― Lint・型・依存方向をCIゲートでブロック</td></tr>
+              <tr><td class="axis">03（一歩先）</td><td><strong>推論的ゲートも自律化</strong> ― レビューエージェント。人は意思決定とトレードオフ判断、例外承認に集中</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ul class="pt-facts" style="margin-top:14px;">
+          <li>サイバーエージェントも同方向で、最終ゲートキーパーをAIに任せる運用に移行（コミット数は導入前の約2倍、テスト行/コード行比率は 78.6% → 112.6%）</li>
+          <li>トランスコスモスは Waterfall Boost で、ウォーターフォールの Phase1〜7 を維持したまま <strong>QA Agent（7人のペルソナAIによる「七賢者のドキュメントレビュー」をマルチLLMで実施）</strong> を各フェーズに差し込む <span class="src">（AIM310）</span></li>
+          <li>アイスリーデザインは実装したAIとは<strong>別モデルで独立検証</strong>する（Claudeで作りCodexで検証）</li>
+        </ul>
+
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p><code>docs/進め方.md</code> §4.3 の未決事項<strong>「計算的統制と推論的統制、どちらから着手するか」</strong>に対して、<strong>実例としての回答が存在する</strong>。順序は<strong>計算的が先</strong>。機械的に白黒つくものを先に潰さないと、人および推論的統制の負荷が下がらないためである。</p>
+          <p>推論的ゲートの実装形態には複数の型がある（レビューエージェント／複数ペルソナによるレビュー／別モデルによる独立検証）。</p>
+        </div>
+        <p class="pt-ask"><b>8/6で聞きたいこと</b> ― この順序を分科会の前提として採用してよいか。</p>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="pt">
+      <div class="pt-head"><div class="pt-badge">6</div><h3>効果測定は「正の価値」と「負の価値」を複合で見る</h3></div>
+      <div class="pt-body">
+        <span class="pt-lbl">一致している事実</span>
+        <p class="fig-title">表4: 効果測定の指標セット（LINEヤフー）</p>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>区分</th><th>指標</th><th>望ましい方向</th></tr></thead>
+            <tbody>
+              <tr><td class="axis">正の価値</td><td>Gitアクティビティ（PR数、マージ数、レビュー数）</td><td>増加</td></tr>
+              <tr><td class="axis">正の価値</td><td>チェンジリードタイム</td><td><mark>減少</mark></td></tr>
+              <tr><td class="axis">負の価値</td><td>インシデント件数、MTTD、MTTR</td><td>減少</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ul class="pt-facts" style="margin-top:14px;">
+          <li><mark>「PR数が増えました、マージ数が増えました、ただインシデントも増えました、では本末転倒」</mark> <span class="src">（LINEヤフー）</span></li>
+          <li>「何でもかんでも増えていればいいという話ではない」 <span class="src">（同）</span></li>
+          <li>KDDIアイレットは AIMS（AI Management System）の管理サイクルで <mark>「指示・ハーネス・ツール使用ログを可視化し改善」</mark> と述べる <span class="src">（PRT213-S）</span></li>
+          <li>「<strong>AIコーディングエージェントの導入により見積りはより困難になっている</strong>」 <span class="src">（AIM203 デジタル庁）</span></li>
+          <li>数値は各社の自己申告値であり、測定条件・対象範囲が異なるため単純比較はできない <span class="src">（本多の横断整理による注記）</span></li>
+        </ul>
+
+        <div class="pt-interp">
+          <span class="pt-lbl">参考 ― 本多の横断整理による解釈（原典の主張ではない）</span>
+          <p style="margin:0;">同整理は PRT213-S について「ハーネスに言及する<strong>3件の中で唯一</strong>『ハーネスが効いているかをどう測るか』に踏み込んでいる」「設計対象ではなく観測対象として現れている」と読んでいる。</p>
+        </div>
+
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p>研究ステップ5（効果測定）の設計に直結する。<strong>単一指標では判断できない</strong>点は、比較レポートの適用課題E（人の作業量を前提とした指標）と整合する。</p>
+          <p>上記の解釈を採るなら、<strong>ハーネスそのものが測定対象になりうる</strong>という軸が立つ。「ハーネスを入れたら品質が上がったか」だけでなく「ハーネスが実際に使われ、効いているか」を測る。</p>
+        </div>
+        <p class="pt-ask"><b>8/6で聞きたいこと</b> ― 効果測定の指標セットを、この方向で仮置きしてよいか。</p>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="pt key">
+      <div class="pt-head"><div class="pt-badge">7</div><h3>エンタープライズの本丸は説明責任<span class="pt-tag">主軸候補</span></h3></div>
+      <div class="pt-body">
+        <span class="pt-lbl">一致している事実</span>
+        <ul class="pt-facts">
+          <li><mark>「銀行システム開発において『よく分からないけど動いてます』は許されない」</mark> <span class="src">（三菱UFJ銀行）</span></li>
+          <li>ジュニアエンジニアには「自分が説明できるレベルまで知識を付け、手の内化した上でマージリクエストを送ること」を求める <span class="src">（同）</span></li>
+          <li>「設計通りを人の注意力ではなく仕組みで担保する。<mark>これは説明責任、なぜそう作ったかの土台になる</mark>」 <span class="src">（アイスリーデザイン）</span></li>
+          <li>「エンタープライズ領域は説明責任を伴う。これができないと『AIがこうやって作りました』というわけにはいかない」 <span class="src">（同）</span></li>
+          <li>設計書照合レポートを <code>audit.md</code> に自動記録 <span class="src">（同）</span></li>
+          <li><mark>「最終的なコードの所有者は人間。コミットログに著者として載るのはあなたの名前です」</mark> <span class="src">（AIM221 教訓9）</span></li>
+          <li>AI-Managed（人の関与を最小限にする方式）の課題として「めったに機能しない」「信頼できない」「<strong>説明できない</strong>」「開発者がコードとつながらない」 <span class="src">（AIM221）</span></li>
+        </ul>
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p>適用課題A（責任の帰属）・B（追跡性・証跡）・I（再現性）が、外部事例でも同じ場所を指している。</p>
+          <p><strong>「品質が良いこと」ではなく「良いと説明できること」がエンタープライズの要件</strong>であり、これが本分科会の最も強い軸になりうる。想定読者（品質保証部門・技術判定層）が求めているのは品質の保証ではなく、<strong>保証したと言える根拠</strong>だからである。</p>
+        </div>
+        <p class="pt-ask"><b>8/6で聞きたいこと</b> ― 研究の主軸を「説明責任」に置くことをどう考えるか。</p>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="pt">
+      <div class="pt-head"><div class="pt-badge">8</div><h3>品質を個人に依存させない ― ハーネスを組織資産にする</h3></div>
+      <div class="pt-body">
+        <span class="pt-lbl">一致している事実</span>
+        <ul class="pt-facts">
+          <li><mark>「AIの出力品質を決めるのはモデルではなく、モデルを取り巻く環境（ハーネス）の設計品質。当社はこれを組織資産として整え、どのチームが案件に取り組んでも一定以上の高い品質を担保する」</mark> <span class="src">（AIM213 東京海上日動システムズ）</span></li>
+          <li>「必要なのは<strong>スーパーPOではなく、誰でも再現できる仕組みづくり</strong>」 <span class="src">（AIM203 デジタル庁）</span>。整備したユーザーハーネスは GCAS DevStack から<strong>共通基盤として配布</strong>する</li>
+          <li><strong>「品質はエンジニア個人に依存させない」</strong>。一部の人がAIをフル活用している現場は、組織としてスケールしない <span class="src">（アイスリーデザイン）</span></li>
+          <li>トランスコスモスは Agent Knowledge Base にルール・規約・知財を登録し、<strong>ルールがある限りAgentはエンジニアの指示よりKnowledge Baseの情報に必ず従う</strong>。「エンジニアに意識をさせない開発標準化」 <span class="src">（AIM310）</span></li>
+        </ul>
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p>7/10に整理した「なぜここにいるのか」の3つ目、<strong>再現性の追求（属人性を排除し、誰がやっても同じ品質を出したい）</strong>の裏付けになる。</p>
+          <p>「ハーネス＝組織資産」という位置づけは、<strong>ハーネスを個人のプロンプト運用ではなく組織のインフラとして扱う</strong>という設計思想である。第3分科会が扱うべきはこの層であると整理できる。</p>
+        </div>
+        <div class="pt-warn">
+          <span class="pt-lbl">境界に注意</span>
+          <p>これを「人のスキルを上げる話」として展開すると、<code>CLAUDE.md</code> §3 の「人・組織の品質評価能力」に抵触する。<strong>あくまで「仕組みで属人性を吸収する」という書き方に留める。</strong>同じ理由で、AIM213 が課題として挙げている人材・スキル面の記述は本資料では採用していない。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <div class="pt key">
+      <div class="pt-head"><div class="pt-badge">9</div><h3>ハーネスは方法論の公式語彙ではなく、実践側から立ち上がった語<span class="pt-tag">新情報</span></h3></div>
+      <div class="pt-body">
+        <span class="pt-lbl">一致している事実（本多のセッション別要約14件を突合して確認済み）</span>
+        <ul class="pt-facts">
+          <li><mark>ハーネスの語が登場するのは14件中3件のみ</mark> ― AIM213 東京海上日動システムズ（最も厚く扱う）／AIM203 デジタル庁（Fowlerを引き構成要素を列挙）／PRT213-S KDDIアイレット（1箇所のみ）</li>
+          <li><mark>AI-DLC本体を解説する AIM221・AIM222・DVT452 には「ハーネス」の語が一度も現れない</mark></li>
+          <li>語るのは方法論の提唱側ではなく、<strong>実装する事業会社側</strong>である</li>
+          <li>DVT324「KiroとAmazonの文化から学ぶAI駆動開発の型」は冒頭で <strong>AI-DLCを明示的に除外</strong>して独自の「Design for Evaluation」を展開する。AWS側のセッション間でも位置づけに幅がある</li>
+        </ul>
+
+        <div class="pt-interp">
+          <span class="pt-lbl">参考 ― 本多の横断整理による解釈（原典の主張ではない）</span>
+          <ul>
+            <li>同整理は、DVT452 の AI-DLC Workflows V2.0 の構造（宣言的な指示＋決定論的な検証スクリプト＋ツール固有形態への変換）が事業会社の言う「ハーネス」とほぼ一対一で対応すると読んでいる。ただし<strong>同整理自身が「資料がそう述べているわけではない」と明記している</strong></li>
+            <li>同様に、トランスコスモスの Agent Knowledge Base と3Agent構成についても「同じ問題に別の語彙で到達している好例と読める（本資料の解釈であり、資料はハーネスに言及していない）」としている</li>
+          </ul>
+        </div>
+
+        <div class="pt-imp">
+          <span class="pt-lbl">第3分科会への含意</span>
+          <p>上記の解釈を採らなくても、<strong>語の出現分布という事実だけで結論は立つ</strong>。</p>
+          <p>・<code>docs/進め方.md</code> §4.2「特定ベンダーのワークフレームワークをそのまま採用・推奨しない」― <strong>AI-DLC自体がハーネスを語っていない</strong>以上、AI-DLCに乗ることとハーネスを整えることは別の意思決定である。</p>
+          <p>・§4.1補足「ハーネスは唯一の正解ではなく<strong>知識の一つ</strong>として扱う」― 語が実践側から立ち上がったばかりであることの確認になる。</p>
+          <p>・用語の統一が分科会の課題であることの裏付けにもなる。<strong>世の中でもまだ語彙が固まっていない。</strong></p>
+        </div>
+        <p class="pt-ask"><b>8/6で聞きたいこと</b> ― 「ハーネス」という語に依存するか（§4.3の未決事項）の判断材料として使えるか。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="section-head"><span class="num">03</span><h2>分科会の既存整理との対応</h2></div>
+    <p class="section-sub">比較レポート（宿題①）で整理した適用課題A〜Jとの関係。外部事例で立てた論点を、既存整理と一方向に突き合わせている。</p>
+
+    <p class="fig-title">表5: 論点と適用課題の対応</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>論点</th><th>対応する適用課題</th><th>関係</th></tr></thead>
+        <tbody>
+          <tr><td class="axis">1. 実装だけでは効果が出ない</td><td>―</td><td>評価対象＝開発プロセス全体の裏付け</td></tr>
+          <tr><td class="axis">2. ボトルネックは判断へ移る</td><td>H（レビュー工程）、E（作業量指標）</td><td>補強（3組織が独立に同じ問題に到達）</td></tr>
+          <tr class="key"><td class="axis">3. 文書に書くだけでは効かない</td><td>―（適用課題ではなく用語定義への提起）</td><td><strong><code>docs/用語.md</code> に「統制の強度」の軸を足すか</strong></td></tr>
+          <tr><td class="axis">4. レビューを通っても本番で壊れる</td><td>D（網羅性の説明責任）</td><td>補強</td></tr>
+          <tr class="key"><td class="axis">5. 計算的→推論的の順</td><td>―</td><td><strong>未決事項への回答候補</strong></td></tr>
+          <tr><td class="axis">6. 正/負の複合評価</td><td>E（作業量指標）、F（障害数の異常判定）</td><td>代替指標の候補</td></tr>
+          <tr class="key"><td class="axis">7. 説明責任</td><td>A（責任の帰属）、B（追跡性）、I（再現性）</td><td><strong>研究の主軸候補</strong></td></tr>
+          <tr><td class="axis">8. 品質を個人に依存させない</td><td>―</td><td>エレベーターピッチの裏付け</td></tr>
+          <tr class="key"><td class="axis">9. ハーネスは実践側の語</td><td>―</td><td><strong>§4.2・§4.3の方針の裏付け</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">論点3・5・7・9 が既存の整理に新しい情報を足している。他は補強である。</p>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="section-head"><span class="num">04</span><h2>本資料で扱わなかった論点</h2></div>
+    <p class="section-sub">
+      いずれも情報源には含まれるが、<code>CLAUDE.md</code> §3「やらないこと」に該当するため除外した。<strong>除外したこと自体を記録しておく。</strong>
+    </p>
+
+    <p class="fig-title">表6: 除外した論点と理由</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>除外した論点</th><th>情報源</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td class="axis">自動化のパラドックス（スキル侵食の悪循環、心理的オーナーシップの欠如、AI禁止令の事例）</td><td>AIM223</td><td>人・組織の品質評価能力。※用語.md に「パラドックス」として既出だが本資料では扱わない</td></tr>
+          <tr class="key"><td class="axis"><strong>AI-DLCマスター（牽引人材）の不在、AI提案を判断しきれないスキル不足</strong></td><td>AIM213</td><td>原典で「人材・スキル」に分類された記述。人・組織の品質評価能力</td></tr>
+          <tr><td class="axis">モブワーク（モブエラボレーション／モブコンストラクション）、人の働き方の設計</td><td>AIM221、AIM222</td><td>人とAIの役割分担・ループ構造は第2分科会</td></tr>
+          <tr class="key"><td class="axis"><strong>案件横断のループ（全案件の知見からスペック雛形を自動生成）</strong></td><td>アイスリーデザイン</td><td>ゲートの話ではなく知見還流の仕組み。ループ構造そのものは第2分科会</td></tr>
+          <tr><td class="axis">機密情報・個人情報の外部送信、脆弱性の混入、サプライチェーン攻撃</td><td>LINEヤフー</td><td>セキュリティ研究領域</td></tr>
+          <tr><td class="axis">データの国内完結、学習利用の遮断、認証連携、アクセス権限設計</td><td>AIM203</td><td>セキュリティおよびデータの持ち方（第1分科会）</td></tr>
+          <tr><td class="axis">トークンコストの管理、コスト配分タグ、費用対効果</td><td>LINEヤフー、アイスリーデザイン、AIM203</td><td>品質に直結しない部分</td></tr>
+          <tr><td class="axis">経営層のAI活用度、AI成熟度レベル（L0〜L5）、人材のAIシフト</td><td>アイスリーデザイン、DORA</td><td>人・組織の評価能力、第1分科会の成熟度モデル領域</td></tr>
+          <tr><td class="axis">コンテキスト基盤・データエコシステムの整備</td><td>アイスリーデザイン、DORA</td><td>データの持ち方は第1分科会</td></tr>
+          <tr><td class="axis">生産性のパラドックス4調査（Thoughtworks 10〜15%、METR ▲19%、McKinsey EBIT貢献5%未満、DORA/Bain トレードオフ）</td><td>AIM221、AIM223</td><td>生産性の議論であり品質そのものではない。※METRは用語.md に参考データとして既出</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note" style="margin-top:18px;">
+      <span class="label">境界が微妙な1件 ― 8/6で線引きを確認したい</span>
+      <p><strong>コンテキストとコストの関係</strong> ― アイスリーデザインは「トークンマネジメントよりコンテキストマネジメントが先。順番を逆にして先にコストを絞ると、必要な文脈まで削ってAIの精度が落ち、手戻りが増え、結局コストは下がらない」と述べている。<strong>文脈の削りすぎが品質を落とす</strong>という部分は第3分科会の射程に入りうる。</p>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="section-head"><span class="num">05</span><h2>次にやるとよいこと</h2></div>
+    <ul class="plain">
+      <li><strong>AIM213（自社登壇）の一次情報を当たる。</strong> 同セッションは Agent = Model + Harness とし、Harness を内部ハーネス（ツール標準機能）と外部ハーネス（社内プラットフォーム）に分ける。<strong>外部ハーネスの4要素（仕様書テンプレート／検証スクリプト／ワークフロー定義／AIレビューエージェント）</strong>は、分科会のステップ4（ハーネス設計）の骨格にそのまま使える構造である（出典: AIM213）。社内に登壇者・資料がある可能性が高い。
+        <ul>
+          <li>なお「内部ハーネス／外部ハーネス」「ユーザーハーネス」（AIM203）はいずれも <code>docs/用語.md</code> 未定義語であり、同ファイルの「ハーネス」の下位区分にあたる</li>
+          <li>今後<strong>非公開の社内資料</strong>を取り込む場合は、公開可否の判定を先に行うこと</li>
+        </ul>
+      </li>
+      <li><strong>講演2件（LINEヤフー、アイスリーデザイン）の原典スライドの入手、および引用可否の確認。</strong> 音声書き起こしからの引用であり、数値を中間報告に載せるなら裏取りが要る。<strong>論点1の工程割合（15/20/25/30、合計90%）は特に確認対象。</strong></li>
+      <li><strong>speakers Deck 27件は未読。</strong> ハーネスエンジニアリング系の登壇資料が中心で、本多による横断整理「ハーネスエンジニアリング 解説」がある。</li>
+    </ul>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="section-head"><span class="num">06</span><h2>転記時の注意</h2></div>
+    <p class="section-sub">本資料は分科会内の作業用である。中間報告資料等へ転記する際は以下を反映すること。</p>
+    <div class="note">
+      <span class="label">社外提出時に必要な処理</span>
+      <ul>
+        <li><code>inbox/2026-08-04/sharepoint/...</code> の<strong>社内ファイルパス</strong>は削除する</li>
+        <li>分科会メンバー実名（本多）は「MUSK提出の横断整理」等へ置換する。事務局ルールにより中間報告資料は公式サイト会員ページへ掲載されるため</li>
+        <li><strong>AIM213 の引用は自社（東京海上日動システムズ）の著作物である。</strong>公開セッションからの引用であり内容上の支障はないが、社外提出時は形式的にも社内の了承ラインを通すこと</li>
+        <li>講演2件の引用可否が未確認である（05参照）。確認が取れるまで、書き起こし由来の逐語引用を社外資料へ転記しない</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section>
+    <div class="section-head"><span class="num">07</span><h2>「やらないこと」セルフチェック</h2></div>
+    <p class="section-sub"><code>CLAUDE.md</code> §3 および <code>docs/境界線.md</code> との照合結果。</p>
+    <ul class="check">
+      <li>開発プロセスのループ構造そのものを設計していない（→第2分科会）― 論点5は<strong>ゲートの自動化順序</strong>に限定し、当初含めていた「案件横断のループ」は 04 で除外した。モブワークも 04 で除外</li>
+      <li>人とAIの役割分担モデルを設計していない（→第2分科会）― モブワーク、人の働き方の設計は 04 で除外。論点2は<strong>判断の回転数と判断材料</strong>の問題として扱い、役割分担の設計には踏み込んでいない</li>
+      <li>データの管理方法・持ち方に踏み込んでいない（→第1分科会）― コンテキスト基盤、データの国内完結は 04 で除外</li>
+      <li>LLM自体の性能比較をしていない ― 「Claudeで作りCodexで検証」は<strong>別モデルによる独立検証という手法</strong>として扱い、モデルの優劣は論じていない</li>
+      <li>人・組織の品質評価能力に踏み込んでいない ― 論点8は「仕組みで属人性を吸収する」に限定し、<strong>AIM213の人材・スキル面の記述（AI-DLCマスター不在等）は不採用</strong>とした。自動化のパラドックス、AI成熟度レベル、経営層の関与も 04 で除外</li>
+      <li>品質に直結しない安全側のガードレールの話になっていない ― セキュリティ・コストは 04 で除外</li>
+      <li>特定ベンダーのフレームワークを推奨していない ― AI-DLC、Spec Kit、Kiro等は<strong>事例内での使用例</strong>として記述するにとどめている。むしろ論点9は、AI-DLCに乗ることとハーネスを整えることが別の意思決定であることを示している</li>
+      <li>セキュリティ研究領域に入っていない ― 04 で明示的に除外</li>
+      <li><strong>分科会メンバーの自社内部整理を外部事例として扱っていない</strong> ― 宿題①の各社品質基準は情報源に含めず、03 の照合先としてのみ参照している</li>
+      <li><strong>他人の解釈を自分の事実として提示していない</strong> ― 本多の横断整理が「本資料の解釈」と明示した箇所は、論点6・論点9でグレーの点線枠に分離して記載している</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div class="row">
+      <span>三菱CC研究会 第3研究部会 ／ 第3分科会(AI品質保証)</span>
+      <span>作成者：東京海上日動システムズ・中島 ／ 2026-08-05 作成</span>
+    </div>
+
+    <p style="margin:18px 0 0;"><strong>出典</strong></p>
+    <ul>
+      <li>LINEヤフー株式会社 新田氏「AI開発におけるガバナンス」講演（音声書き起こし）</li>
+      <li>株式会社アイスリーデザイン「経営がAIネイティブにならなければAI駆動開発は浸透しない」講演（音声書き起こし）</li>
+      <li>AWS Summit Japan 2026 セッション資料14件。MUSK本多による横断整理「AI-DLCとハーネス 総まとめ」を経由して参照。セッションIDと登壇者は表2のとおり</li>
+      <li>DORA "State of AI-assisted Software Development 2025", Google Cloud https://dora.dev/dora-report-2025/</li>
+      <li>New Relic "2026 State of AI Coding Report"（@IT記事経由） https://atmarkit.itmedia.co.jp/ait/articles/2607/28/news058.html</li>
+      <li>株式会社三菱UFJ銀行「三菱UFJ銀行におけるエンタープライズAI駆動開発のリアル」 https://speakerdeck.com/muit/enterprise-ai-driven-development-at-mufg-bank-the-real-story</li>
+      <li>株式会社サイバーエージェント「コミット数2倍でもレビュー品質を維持！AI時代のコードレビューフロー再設計」 https://developers.cyberagent.co.jp/blog/archives/60882/</li>
+      <li>CodeZine「大量に生成されたコードがレビューを崩壊させる？ CodeRabbitが語るAI時代の開発生産性向上のコツ」（キッカケクリエイション調査を掲載） https://codezine.jp/article/detail/29127</li>
+    </ul>
+    <p style="margin:10px 0 0;">以下2件は、上記資料の記述を確認するために参照した背景資料である（表1の情報源一覧には含めていない）。</p>
+    <ul>
+      <li>Martin Fowler "Harness engineering for coding agent users"（AIM203が典拠として引用） https://martinfowler.com/articles/harness-engineering.html</li>
+      <li>IT Revolution "AI's Mirror Effect"（DORA 2025の内容確認用） https://itrevolution.com/articles/ais-mirror-effect-how-the-2025-dora-report-reveals-your-organizations-true-capabilities/</li>
+    </ul>
+
+    <div class="ai-note">
+      <b>生成AI利用の明示</b><br>
+      本資料の作成には生成AIツールを使用した（Anthropic, Claude, 2026）。
+      <br>・<b>情報源からの抽出・転記</b>: 01、各論点の「一致している事実」。
+      <br>・<b>生成AIによる整理・分類</b>: 論点9件への集約、各論点の「第3分科会への含意」、03の対応表、04の除外判断。
+      <br>・AWS Summit 14件については、MUSK本多による横断整理を経由している。同整理内で「本資料の解釈」と明示された箇所は、本資料でも<b>解釈として区別して記載</b>している（論点6・論点9のグレー点線枠）。
+      <br>・講演2件は音声書き起こしからの抽出であり、原典スライドとの突合は未実施。
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

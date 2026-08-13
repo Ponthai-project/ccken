@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-DLC Workflows 2.0 とは — 一般エンジニア向け解説</title>
+<style>
+:root{
+  --bg:#fbfaf8; --panel:#ffffff; --ink:#1c1b19; --ink-2:#4a4843; --ink-3:#7a776f;
+  --line:#e3e0d9; --line-2:#efece6;
+  --accent:#1f6f5c; --accent-soft:#e6f2ee; --accent-ink:#14503f;
+  --warn:#8a5a12; --warn-soft:#fdf3e0;
+  --code-bg:#f4f2ed;
+  --p1:#7b3fa0; --p2:#2e7d4f; --p3:#1565a8; --p4:#c2660b; --p5:#b4306a;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#15161a; --panel:#1c1e23; --ink:#e9e7e2; --ink-2:#b8b5ae; --ink-3:#8b877f;
+    --line:#2e3138; --line-2:#262930;
+    --accent:#5ec2a4; --accent-soft:#17302a; --accent-ink:#8fd9c1;
+    --warn:#d9a441; --warn-soft:#2e2416;
+    --code-bg:#22252b;
+    --p1:#c193dd; --p2:#7fc99b; --p3:#7bb6e8; --p4:#e8a45e; --p5:#e588ac;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15161a; --panel:#1c1e23; --ink:#e9e7e2; --ink-2:#b8b5ae; --ink-3:#8b877f;
+  --line:#2e3138; --line-2:#262930;
+  --accent:#5ec2a4; --accent-soft:#17302a; --accent-ink:#8fd9c1;
+  --warn:#d9a441; --warn-soft:#2e2416;
+  --code-bg:#22252b;
+  --p1:#c193dd; --p2:#7fc99b; --p3:#7bb6e8; --p4:#e8a45e; --p5:#e588ac;
+}
+:root[data-theme="light"]{
+  --bg:#fbfaf8; --panel:#ffffff; --ink:#1c1b19; --ink-2:#4a4843; --ink-3:#7a776f;
+  --line:#e3e0d9; --line-2:#efece6;
+  --accent:#1f6f5c; --accent-soft:#e6f2ee; --accent-ink:#14503f;
+  --warn:#8a5a12; --warn-soft:#fdf3e0;
+  --code-bg:#f4f2ed;
+  --p1:#7b3fa0; --p2:#2e7d4f; --p3:#1565a8; --p4:#c2660b; --p5:#b4306a;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",Meiryo,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.85; letter-spacing:.01em;
+  overflow-x:hidden;
+}
+.wrap{max-width:900px; margin:0 auto; padding:0 24px 120px}
+
+/* ---- header ---- */
+header.hero{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--accent-soft),transparent);
+  padding:56px 0 40px; margin-bottom:8px;
+}
+.kicker{
+  font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--accent-ink); font-weight:700; margin:0 0 14px;
+}
+h1{font-size:clamp(27px,4.4vw,40px); line-height:1.35; margin:0 0 16px; letter-spacing:.005em}
+.lede{font-size:17px; color:var(--ink-2); margin:0; max-width:46em}
+.byline{
+  margin:22px 0 0; font-size:14px; color:var(--ink-2);
+  padding-top:16px; border-top:1px solid var(--line);
+  display:inline-block;
+}
+.byline .label{
+  font-size:11px; letter-spacing:.14em; color:var(--ink-3);
+  display:block; margin-bottom:2px; font-weight:700;
+}
+.byline b{font-weight:700; color:var(--ink)}
+.meta{
+  margin-top:26px; display:flex; flex-wrap:wrap; gap:8px;
+}
+.chip{
+  font-size:12.5px; padding:4px 11px; border-radius:999px;
+  border:1px solid var(--line); background:var(--panel); color:var(--ink-2);
+  white-space:nowrap;
+}
+.chip b{color:var(--ink); font-weight:600}
+
+/* ---- structure ---- */
+section{margin:0; padding-top:12px}
+h2{
+  font-size:23px; line-height:1.5; margin:56px 0 4px; padding-top:20px;
+  border-top:1px solid var(--line); letter-spacing:.01em;
+}
+h2 .num{
+  display:inline-block; min-width:1.9em; color:var(--accent);
+  font-variant-numeric:tabular-nums; font-weight:700;
+}
+h3{font-size:17px; margin:34px 0 8px; color:var(--ink)}
+p{margin:14px 0}
+a{color:var(--accent-ink); text-underline-offset:3px}
+strong{font-weight:700}
+ul,ol{padding-left:1.4em; margin:14px 0}
+li{margin:7px 0}
+li::marker{color:var(--ink-3)}
+code{
+  font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Noto Sans Mono",monospace;
+  font-size:.875em; background:var(--code-bg); padding:.12em .4em; border-radius:4px;
+  border:1px solid var(--line-2); word-break:break-word;
+}
+pre{
+  background:var(--code-bg); border:1px solid var(--line); border-radius:10px;
+  padding:16px 18px; overflow-x:auto; margin:18px 0; line-height:1.7;
+}
+pre code{background:none; border:none; padding:0; font-size:13.5px; white-space:pre}
+
+/* ---- callouts ---- */
+.note,.warnbox{
+  border-radius:10px; padding:16px 18px; margin:22px 0; font-size:15px;
+  border:1px solid var(--line);
+}
+.note{background:var(--accent-soft); border-color:transparent}
+.warnbox{background:var(--warn-soft); border-color:transparent}
+.note .t,.warnbox .t{font-weight:700; display:block; margin-bottom:5px; font-size:13px; letter-spacing:.06em}
+.note .t{color:var(--accent-ink)}
+.warnbox .t{color:var(--warn)}
+.note p,.warnbox p{margin:6px 0}
+.note :last-child,.warnbox :last-child{margin-bottom:0}
+
+/* ---- tables ---- */
+.tablewrap{overflow-x:auto; margin:22px 0; border:1px solid var(--line); border-radius:10px; background:var(--panel)}
+table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:520px}
+th,td{padding:10px 14px; text-align:left; border-bottom:1px solid var(--line-2); vertical-align:top}
+thead th{
+  background:var(--code-bg); font-size:12.5px; letter-spacing:.04em;
+  color:var(--ink-2); font-weight:700; white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:none}
+td.num,th.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+td code{white-space:nowrap}
+
+/* ---- figures ---- */
+figure{margin:26px 0; padding:0}
+figure svg{display:block; width:100%; height:auto}
+figcaption{font-size:13px; color:var(--ink-3); margin-top:10px; text-align:left}
+.figframe{
+  border:1px solid var(--line); border-radius:12px; background:var(--panel);
+  padding:20px; overflow-x:auto;
+}
+
+/* ---- cards ---- */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin:22px 0}
+.card{
+  border:1px solid var(--line); border-radius:10px; padding:15px 17px; background:var(--panel);
+}
+.card h4{margin:0 0 6px; font-size:15px}
+.card p{margin:0; font-size:14px; color:var(--ink-2); line-height:1.75}
+
+/* ---- misc ---- */
+.lead-in{font-size:16.5px; color:var(--ink-2)}
+hr.soft{border:none; border-top:1px solid var(--line-2); margin:34px 0}
+.footer{
+  margin-top:72px; padding-top:24px; border-top:1px solid var(--line);
+  font-size:13.5px; color:var(--ink-3);
+}
+.footer a{color:var(--ink-2)}
+.qa{margin:22px 0}
+.qa dt{font-weight:700; margin-top:18px}
+.qa dd{margin:6px 0 0; color:var(--ink-2)}
+@media (max-width:600px){
+  body{font-size:15.5px}
+  .wrap{padding:0 18px 90px}
+  h2{font-size:20px; margin-top:44px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">研究会資料 ／ 第1部</p>
+    <h1>AI-DLC Workflows 2.0 とは何か</h1>
+    <p class="lede">
+      AWS Labs が公開している「AI駆動開発のためのライフサイクル実装」を、AI駆動開発に馴染みのないエンジニア向けに解説します。
+      前提知識は「Claude Code のようなコーディングエージェントを触ったことがある」程度で十分です。
+    </p>
+    <p class="byline">
+      <span class="label">作成</span>
+      <b>東京海上日動システムズ・中島</b>
+    </p>
+    <div class="meta">
+      <span class="chip">対象 <b>一般エンジニア</b></span>
+      <span class="chip">実装 <b>awslabs/aidlc-workflows</b></span>
+      <span class="chip">版 <b>v2.5.59（2.0 GA）</b></span>
+      <span class="chip">ライセンス <b>MIT-0</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section>
+<h2><span class="num">1.</span>一言でいうと</h2>
+
+<p class="lead-in">
+AI-DLC は、<strong>AIエージェントによる開発に「工程」と「承認」を持ち込む方法論</strong>です。
+そして <code>aidlc-workflows</code> は、それを Claude Code などの CLI エージェント上でそのまま動く形にした実装です。
+</p>
+
+<p>
+使い方はコマンド1行から始まります。</p>
+
+<pre><code>/aidlc 在庫管理の REST API を作りたい</code></pre>
+
+<p>
+これだけで、要求の整理 → 実現性の検討 → 要件定義 → アーキテクチャ設計 → 作業単位への分解 → 実装 → テスト → デプロイまでを、
+決められた順番のステージとして進行させます。<strong>各ステージの終わりには必ず人間の承認ゲート</strong>があり、
+承認しない限り次に進みません。生成された成果物と、そこに至った判断はすべてファイルとして残ります。
+</p>
+
+<div class="note">
+  <span class="t">用語の整理</span>
+  <p><strong>AI-DLC（方法論）</strong>＝ AWS が定義した「AI駆動開発ライフサイクル」という考え方。ブログとメソッド定義論文がある。</p>
+  <p><strong>aidlc-workflows（実装）</strong>＝ その方法論を、スキル・エージェント・フック・CLIツールとして書き下ろした OSS。今回の研究対象はこちら。</p>
+  <p><strong>2.0 / v2</strong>＝ この実装のメジャーバージョン。1本のソース（<code>core/</code>）から Claude Code / Kiro IDE / Kiro CLI / Codex CLI / opencode 向けの配布物を生成する構造になった世代。</p>
+</div>
+</section>
+
+<section>
+<h2><span class="num">2.</span>なぜこれが要るのか</h2>
+
+<p>
+コーディングエージェントに「このアプリ作って」と投げる、いわゆるアドホックな AI コーディングは、
+小さいうちはよく動きます。破綻するのはプロジェクトが本気になってからで、だいたい次の3つが起きます。
+</p>
+
+<div class="cards">
+  <div class="card">
+    <h4>コンテキストが流れる</h4>
+    <p>プロンプトをまたぐうちに、最初に合意したはずの前提が薄れていく。会話が長くなるほど、初期の決定は「なかったこと」になりやすい。</p>
+  </div>
+  <div class="card">
+    <h4>判断の根拠が残らない</h4>
+    <p>なぜその設計にしたのかがチャットログの中に埋もれる。3週間後に読み返せる形にはなっていない。</p>
+  </div>
+  <div class="card">
+    <h4>頼んでいないことをやる</h4>
+    <p>気づいたら別のファイルが書き換わっている。どこで方針が変わったのかを後から特定できない。</p>
+  </div>
+</div>
+
+<p>
+AI-DLC の答えは単純で、<strong>工程に構造を入れる</strong>ことです。
+ステージごとに担当（エージェント）が決まっていて、次に進む前に必ず承認ゲートを通り、
+やり取りの結果はファイルと監査ログに落ちる。加えて、人間が入れた訂正を記録して次回以降に引き継ぐ仕組み（後述の学習ループ）を持ちます。
+</p>
+
+<p>
+重要なのは、<strong>同じエンジンで使い捨ての PoC も規制産業向けの本番機能も回せる</strong>ように設計されている点です。
+違いは「どれだけのステージを、どれだけの深さで走らせるか」だけで、別のツールに乗り換える必要はありません。
+</p>
+</section>
+
+<section>
+<h2><span class="num">3.</span>全体像 — 5フェーズ32ステージ</h2>
+
+<p>
+ライフサイクルは 5 つのフェーズに分かれ、その中に合計 32 のステージがあります。
+フェーズの境目には <strong>検証ゲート</strong> があり、成果物同士のトレーサビリティ（要件がストーリーに、ストーリーが作業単位に紐づいているか等）を自動チェックします。
+</p>
+
+<figure>
+<div class="figframe">
+<svg viewBox="0 0 860 300" role="img" aria-label="5フェーズのライフサイクル図">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <g font-family="inherit" color="var(--ink-3)">
+
+    <!-- phase boxes -->
+    <g>
+      <rect x="8" y="60" width="150" height="82" rx="9" fill="var(--panel)" stroke="var(--p1)" stroke-width="1.6"/>
+      <text x="83" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="var(--p1)">0. Initialization</text>
+      <text x="83" y="106" text-anchor="middle" font-size="11.5" fill="var(--ink-3)">3 ステージ</text>
+      <text x="83" y="124" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">作業場の初期化</text>
+    </g>
+
+    <g>
+      <rect x="182" y="60" width="150" height="82" rx="9" fill="var(--panel)" stroke="var(--p2)" stroke-width="1.6"/>
+      <text x="257" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="var(--p2)">1. Ideation</text>
+      <text x="257" y="106" text-anchor="middle" font-size="11.5" fill="var(--ink-3)">7 ステージ</text>
+      <text x="257" y="124" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">やることの合意</text>
+    </g>
+
+    <g>
+      <rect x="356" y="60" width="150" height="82" rx="9" fill="var(--panel)" stroke="var(--p3)" stroke-width="1.6"/>
+      <text x="431" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="var(--p3)">2. Inception</text>
+      <text x="431" y="106" text-anchor="middle" font-size="11.5" fill="var(--ink-3)">8 ステージ</text>
+      <text x="431" y="124" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">要件と設計</text>
+    </g>
+
+    <g>
+      <rect x="530" y="60" width="150" height="82" rx="9" fill="var(--panel)" stroke="var(--p4)" stroke-width="1.6"/>
+      <text x="605" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="var(--p4)">3. Construction</text>
+      <text x="605" y="106" text-anchor="middle" font-size="11.5" fill="var(--ink-3)">7 ステージ</text>
+      <text x="605" y="124" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">実装とテスト</text>
+    </g>
+
+    <g>
+      <rect x="704" y="60" width="150" height="82" rx="9" fill="var(--panel)" stroke="var(--p5)" stroke-width="1.6"/>
+      <text x="779" y="86" text-anchor="middle" font-size="13" font-weight="700" fill="var(--p5)">4. Operation</text>
+      <text x="779" y="106" text-anchor="middle" font-size="11.5" fill="var(--ink-3)">7 ステージ</text>
+      <text x="779" y="124" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">デプロイと運用</text>
+    </g>
+
+    <!-- arrows -->
+    <g stroke="var(--ink-3)" stroke-width="1.4" fill="none" marker-end="url(#ar)" color="var(--ink-3)">
+      <path d="M160,101 L178,101"/>
+      <path d="M334,101 L352,101"/>
+      <path d="M508,101 L526,101"/>
+      <path d="M682,101 L700,101"/>
+    </g>
+
+    <!-- gate labels -->
+    <text x="343" y="46" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">検証ゲート1</text>
+    <text x="517" y="46" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">検証ゲート2</text>
+    <text x="691" y="46" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">検証ゲート3</text>
+    <text x="169" y="46" text-anchor="middle" font-size="10.5" fill="var(--ink-3)">自動</text>
+
+    <!-- feedback loop -->
+    <path d="M779,146 L779,196 Q779,208 767,208 L269,208 Q257,208 257,196 L257,148"
+          stroke="var(--ink-3)" stroke-width="1.3" fill="none" stroke-dasharray="5 4" marker-end="url(#ar)" color="var(--ink-3)"/>
+    <text x="518" y="228" text-anchor="middle" font-size="11.5" fill="var(--ink-3)">フィードバックループ（運用の学びを次のサイクルへ）</text>
+
+    <!-- gate note -->
+    <text x="431" y="266" text-anchor="middle" font-size="12" fill="var(--ink-2)">
+      Initialization の3ステージを除き、すべてのステージ末尾に人間の承認ゲートがある
+    </text>
+  </g>
+</svg>
+</div>
+<figcaption>フェーズは順に進み、境界ごとに自動の検証ゲートが入る。最後の 4.7 は次のサイクルの起点にもなる。</figcaption>
+</figure>
+
+<h3>各フェーズで何が起きるか</h3>
+
+<div class="tablewrap">
+<table>
+<thead>
+<tr><th>フェーズ</th><th>目的</th><th>代表的なステージ</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>0. Initialization</strong></td><td>作業場を用意する。ここだけ承認ゲートなしで、1回のツール呼び出しの中で瞬時に終わる</td><td>ワークスペース作成、既存コードの検出、状態初期化</td></tr>
+<tr><td><strong>1. Ideation</strong></td><td>「そもそも何をやるのか」を固める</td><td>意図の言語化、市場調査、実現性・制約、スコープ定義、チーム編成、ラフモック、承認と引き継ぎ</td></tr>
+<tr><td><strong>2. Inception</strong></td><td>要件を詳細化し、設計して、作業単位に割る</td><td>リバースエンジニアリング（既存コードがある場合）、開発プラクティス発見、要件分析、ユーザーストーリー、アプリケーション設計、ユニット生成、デリバリー計画</td></tr>
+<tr><td><strong>3. Construction</strong></td><td>作る。レビュー可能な大きさに切って進める</td><td>機能設計、非機能要件と設計、インフラ設計、コード生成、ビルド＆テスト、CIパイプライン</td></tr>
+<tr><td><strong>4. Operation</strong></td><td>出して、運用する</td><td>デプロイパイプライン、環境構築、デプロイ実行、可観測性、インシデント対応、性能検証、フィードバック</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+なお「32ステージ全部を毎回走らせる」わけではありません。これを制御するのが次のスコープです。
+</p>
+</section>
+
+<section>
+<h2><span class="num">4.</span>スコープ — 儀式の量を決めるダイヤル</h2>
+
+<p>
+バグ修正に市場調査は要りませんし、規制産業の機能追加でコンプライアンス確認を飛ばすわけにもいきません。
+そこで <strong>スコープ</strong>が「32のうちどれを走らせるか」を決めます。標準で 9 種類が同梱されています。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead>
+<tr><th>スコープ</th><th class="num">実行ステージ</th><th>既定の深さ</th><th>使いどころ</th></tr>
+</thead>
+<tbody>
+<tr><td><code>enterprise</code></td><td class="num">32 / 32</td><td>Comprehensive</td><td>規制対象・監査証跡が要る機能</td></tr>
+<tr><td><code>feature</code></td><td class="num">32 / 32</td><td>Standard</td><td>通常の新機能（既定のフォールバック）</td></tr>
+<tr><td><code>workshop</code></td><td class="num">25 / 32</td><td>Standard</td><td>ワークショップ・研修（題材は事前決定済み）</td></tr>
+<tr><td><code>mvp</code></td><td class="num">22 / 32</td><td>Standard</td><td>グリーンフィールドの MVP。運用フェーズは省略</td></tr>
+<tr><td><code>infra</code></td><td class="num">13 / 32</td><td>Standard</td><td>インフラ変更、CDK/CloudFormation</td></tr>
+<tr><td><code>security-patch</code></td><td class="num">10 / 32</td><td>Minimal</td><td>CVE 対応</td></tr>
+<tr><td><code>poc</code></td><td class="num">8 / 32</td><td>Minimal</td><td>実現性の検証、スパイク</td></tr>
+<tr><td><code>refactor</code></td><td class="num">8 / 32</td><td>Minimal</td><td>挙動を変えないリファクタ</td></tr>
+<tr><td><code>bugfix</code></td><td class="num">7 / 32</td><td>Minimal</td><td>既知のバグ修正</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+スコープは明示指定（<code>/aidlc bugfix ログイン不具合の修正</code>）もできますが、
+自由文から自動判定もされます。「fix」「bug」なら <code>bugfix</code>、「CVE」「脆弱性」なら <code>security-patch</code>、といった具合です。
+判定結果は必ず実行前に、こういう1行で確認されます。
+</p>
+
+<pre><code>Starting a "bugfix" workflow for: "fix login bug" - 7 of 32 stages,
+4 approval gates, 1 stage repeats per unit of work in Construction.</code></pre>
+
+<p>
+<strong>何ステージ走って承認ゲートが何回あるのか</strong>を、始める前に必ず数字で提示する。
+これはコンパイル済みのグリッドから計算された実数で、推測値ではありません。ここで違うと思えば別のスコープを指定できます。
+</p>
+
+<h3>深さとテスト戦略は別ダイヤル</h3>
+
+<p>
+スコープが「どのステージを走らせるか」なのに対し、<strong>深さ（Depth）</strong> は「各ステージの成果物をどれだけ詳しく書くか」、
+<strong>テスト戦略</strong> は「テストをどれだけ書くか」を独立に制御します。3段階（Minimal / Standard / Comprehensive）で、
+どちらも実行中の承認ゲートで変更できます。
+</p>
+
+<p>
+テスト戦略の Minimal は「ナイキストモデル」と呼ばれていて、
+<em>要件1つにつきテスト1本</em>（＋各コンポーネントに最低1本のハッピーパス）という考え方です。
+信号を復元するのに必要な最小サンプリング周波数、という比喩から来ています。
+</p>
+
+<div class="note">
+  <span class="t">当てはまるスコープがないときは</span>
+  <p>
+  リッチな文章を投げると、既存スコープに無理やり寄せるのではなく「専用の計画を組みましょうか？」と <strong>composer（構成エージェント）</strong> が提案してきます。
+  タスクの曖昧さ・コードベースの不確実性・検証コスト・リスクなどを見積もって、必要十分な最小のステージ集合を組み立て、
+  <em>各ステージについて実行/スキップの理由を添えた表</em>を提示します。承認するまで何も書き込まれません。
+  </p>
+</div>
+</section>
+
+<section>
+<h2><span class="num">5.</span>誰が働くのか — 14エージェント</h2>
+
+<p>
+AI-DLC は「30個の細かい専門エージェント」を作りません。理由は、専門を細かく割るほど<strong>引き継ぎの連鎖（＝ウォーターフォール）が復活する</strong>からです。
+代わりに、<strong>広い守備範囲を持つ11のドメインエージェント</strong>が、複数のステージ・複数のフェーズをまたいで働きます。
+3〜5人のモブが機能ひとつを最初から最後まで見る、という人間のチームの形を写したものです。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead>
+<tr><th>エージェント</th><th>担当領域</th></tr>
+</thead>
+<tbody>
+<tr><td>product</td><td>要求、ユーザーストーリー、スコープ、市場調査</td></tr>
+<tr><td>design</td><td>UX/UI、ワイヤーフレーム、アクセシビリティ</td></tr>
+<tr><td>delivery</td><td>チーム編成、キャパシティ計画、デリバリー順序</td></tr>
+<tr><td>architect</td><td>アプリケーション設計、ドメインモデル、非機能要件、コンポーネント分解（関与ステージ最多）</td></tr>
+<tr><td>aws-platform</td><td>AWS インフラ、CDK/CloudFormation、コスト最適化</td></tr>
+<tr><td>compliance</td><td>規制・統制要件</td></tr>
+<tr><td>devsecops</td><td>セキュリティ、脅威モデリング</td></tr>
+<tr><td>developer</td><td>コード生成、既存コードのスキャン</td></tr>
+<tr><td>quality</td><td>テスト設計、ビルド＆テスト、性能検証</td></tr>
+<tr><td>pipeline-deploy</td><td>CI/CD、デプロイ</td></tr>
+<tr><td>operations</td><td>可観測性、インシデント対応、SRE</td></tr>
+<tr><td colspan="2" style="color:var(--ink-3); font-size:13.5px; padding-top:14px">上記11に加えて、レビュー専任2体（product-lead / architecture-reviewer）と、適応ワークフローの composer で計14体</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+エージェント同士が勝手に呼び合うことはありません。<strong>すべての委譲は指揮役（conductor）が行います</strong>。
+1つのステージには「リード」が1体いて成果物の責任を持ち、必要に応じて「サポート」が加わります。
+</p>
+
+<p>
+サポートの参加の仕方は、ステージが宣言する<strong>通信トポロジ</strong>で決まります。
+ほとんど（32のうち28）は <em>inline</em> ＝ 指揮役が自分のコンテキスト内で各ペルソナを被って進める形。
+残りの4つだけが、実際に独立したサブエージェントを起動する形（ハブ&スポーク／パイプライン／モブ）になっています。
+</p>
+</section>
+
+<section>
+<h2><span class="num">6.</span>人間はどこで関わるのか</h2>
+
+<h3>ステージ中：3つの対話モード</h3>
+
+<p>ステージが人間の入力を必要とするとき、3つのやり方から選べます。</p>
+
+<ul>
+  <li><strong>Guide Me</strong> — エージェントが構造化された質問を出し、それに答える。抜け漏れが出にくい</li>
+  <li><strong>Edit File</strong> — 空欄つきの質問ファイルが作られるので、自分のペースで直接書き込む</li>
+  <li><strong>Chat</strong> — 自由に議論して、エージェントが決定事項を抽出して質問ファイルに書き戻す</li>
+</ul>
+
+<p>
+途中でモードを切り替えても進捗は失われません。3つとも <strong>質問ファイルという同じ着地点</strong>に収束するよう設計されているためです。
+</p>
+
+<h3>ステージ末：承認ゲート</h3>
+
+<pre><code>▸ How would you like to proceed?
+  (1) Approve — Continue to [次のステージ名]
+  (2) Request Changes — 修正内容を伝える</code></pre>
+
+<p>
+Initialization の3ステージを除く全ステージに、このゲートがあります。
+「次のステージ名」は推測ではなくエンジンが計算した実際の遷移先です。
+</p>
+
+<p>
+面白いのは、このゲートが <strong>本物の人間の操作を要求する</strong> ことです。
+プロンプトを打つ、あるいは選択ウィジェットに答えると監査台帳に「人間のターン」が記録され、
+前回のゲート解決以降にそれが1件もなければ承認は拒否されます。
+モデルが自動運転のまま「承認されました」と自作自演することを構造的に防いでいます。
+</p>
+
+<div class="note">
+  <span class="t">3ストライク・エスケープハッチ</span>
+  <p>
+  同じステージで修正依頼が3周目に入ると、「このまま受け入れる（Accept as-is）」という選択肢が現れます。
+  2周目の時点で「次から出ます」と予告されます。エージェントと平行線になったときに無限ループしないための逃げ道です。
+  </p>
+</div>
+</section>
+
+<section>
+<h2><span class="num">7.</span>成果物はどこに残るのか</h2>
+
+<p>
+実行するとプロジェクト直下に <code>aidlc/</code> ができ、AI-DLC が作るものはすべてここに入ります。
+エンジン本体（<code>.claude/</code> 等）とは分離されていて、<strong>人間が読む側は <code>aidlc/</code> だけ見ればいい</strong>構造です。
+</p>
+
+<pre><code>my-project/
+├── .claude/                    エンジン（ツール・フック・スキル・エージェント）
+│                               ※ 普段は開かない
+├── aidlc/
+│   └── spaces/
+│       └── default/            ← 「スペース」＝ 1チームの世界
+│           ├── memory/         方法（org.md / team.md / project.md / phases/）
+│           ├── knowledge/      ドメイン知識（自分たちで足す）
+│           ├── codekb/         コードベースの知識
+│           └── intents/        ← 「インテント」＝ 1つの仕事
+│               ├── 260620-inventory-api/     ✓ 完了した仕事
+│               └── 260624-export-bug/        ◷ 進行中の仕事
+│                   ├── aidlc-state.md          今どのステージにいるか
+│                   ├── audit/                  決定の証跡
+│                   └── inception/requirements-analysis/requirements.md
+└── repo-a/  repo-b/            コードのリポジトリは兄弟として置く</code></pre>
+
+<p>
+覚えるべき概念は2つだけです。
+</p>
+
+<ul>
+  <li><strong>インテント</strong>＝ 仕事1件。ライフサイクルの1回分の実行。機能開発の途中で緊急バグが来ても、
+      別インテントとして並走でき、元の進捗は一切触られません</li>
+  <li><strong>スペース</strong>＝ 1チームの世界（方法・知識・仕事の記録一式）。
+      ひとりまたは1チームなら <code>default</code> のまま、存在を意識する必要はありません</li>
+</ul>
+
+<p>
+<code>aidlc/</code> は git にコミットする前提です。方法も、監査証跡も、成果物もチームで共有されます。
+例外は「いま自分がどこにいるか」を示すカーソル2つ（<code>active-space</code> / <code>active-intent</code>）で、
+これはユーザーごとにローカル（gitignore 対象）です。同僚と別々のインテントに座れるようにするためです。
+</p>
+</section>
+
+<section>
+<h2><span class="num">8.</span>訂正が資産になる — 学習ループ</h2>
+
+<p>
+AI-DLC の面白い部分がここです。ステージの実行中、フレームワークは裏で <strong>日誌（<code>memory.md</code>）</strong> をつけています。
+記録されるのは4種類。
+</p>
+
+<ul>
+  <li><strong>Interpretations</strong> — 指示が曖昧だったので、エージェントがこう解釈した</li>
+  <li><strong>Deviations</strong> — 意図的にステージの手順から外れた、その理由</li>
+  <li><strong>Tradeoffs</strong> — 検討した代替案と、それを採らなかった理由</li>
+  <li><strong>Open questions</strong> — 次回までに確認したいこと</li>
+</ul>
+
+<p>
+承認ゲートの直前に、この日誌の各行が<strong>そのままの文言で</strong>候補として提示されます（要約も「面白そうなもの」の選別もしません）。
+加えて「次回のために何か追加することは？」と必ず聞かれます。残したい項目にチェックを入れると、
+それが <code>memory/project.md</code> にプラクティスとして書き込まれます。
+</p>
+
+<p>具体例で言うと——</p>
+
+<div class="note">
+  <span class="t">実例（公式ガイドより）</span>
+  <p>
+  銀行案件で、担当者が「リトライで transaction が二重にならないように」と書いた。
+  エージェントはこれを<em>データベーストランザクション</em>と解釈し、ACID の要件として起票した。担当者が「いや、決済のことだ」と訂正した。
+  </p>
+  <p>
+  この訂正がゲートで候補として上がり、チェックすると <code>project.md</code> に残る。
+  <strong>次のワークフローからは、最初のステージから「このプロジェクトの transaction は決済のこと」として動く。</strong>
+  一度払ったコストが以降ずっと効き続ける、という設計です。
+  </p>
+</div>
+
+<p>
+1点だけ挙動として知っておくべきこと：<strong>ここで記録したルールは実行中のワークフローには反映されません</strong>。次回からです。
+ルールやステージ定義は「ワークフロー開始時に1回だけ」コンパイルされ、実行中は解決済みの結果だけを読む設計になっているためです
+（ルーターの経路計算とパケット転送を分けるのと同じ発想）。
+途中でルールが変わらないので、序盤に承認したゲートの前提が後から書き換わることがありません。
+</p>
+
+<h3>センサー：決定論的なセカンドオピニオン</h3>
+
+<p>
+ルールが「エージェントが読む散文」なのに対し、<strong>センサー</strong>はエージェントがファイルを書いた瞬間に自動で走る決定論的なチェックです。
+標準で5本（必須見出しの有無、上流成果物への参照カバレッジ、主張のソースタグ、リンター、型チェック）。
+現在の版では<strong>助言的</strong>で、失敗しても承認ゲートを止めません。監査ログに記録され、何が足りないかを指す詳細ファイルが残ります。
+</p>
+</section>
+
+<section>
+<h2><span class="num">9.</span>正直なところ、どうなのか</h2>
+
+<p>研究会で議論する材料として、良い面と引っかかる面を並べておきます。</p>
+
+<div class="cards">
+  <div class="card">
+    <h4>✓ 決定が残る</h4>
+    <p>82種類の監査イベントと成果物ファイルで、「なぜこうなったか」がチャットログの外に残る。監査が要る現場では効く。</p>
+  </div>
+  <div class="card">
+    <h4>✓ 儀式の量を選べる</h4>
+    <p>7ステージから32ステージまで、同じエンジンで連続的に変えられる。重い方法論にありがちな「全部か無か」ではない。</p>
+  </div>
+  <div class="card">
+    <h4>✓ カスタマイズがデータ側</h4>
+    <p>ステージもエージェントもスコープも Markdown + YAML。TypeScript を書かずに方法論を組み替えられる（詳細は第2部）。</p>
+  </div>
+  <div class="card">
+    <h4>△ ゲートは多い</h4>
+    <p><code>feature</code> なら承認29回。Construction は「Bolt」単位でまとめる設計になったが、それでも人間の時間は要る。</p>
+  </div>
+  <div class="card">
+    <h4>△ トークンを食う</h4>
+    <p>32ステージ×成果物生成。フルスコープを回すコストは相応。ステータスラインにトークン数と概算コストが出るのはそのため。</p>
+  </div>
+  <div class="card">
+    <h4>△ モデル依存が強い</h4>
+    <p>公式に「Claude Opus 4.8 推奨」。弱いモデルでは指揮役がレビューや学習ループを飛ばしたり、ゲートを急いだりすると明記されている。</p>
+  </div>
+</div>
+
+<p>
+配布物の既定設定は <strong>AWS Bedrock 前提</strong>（リージョンとモデルIDが固定で入っている）です。
+Bedrock のモデルアクセスと AWS 認証情報がないと起動しません。手元の Claude Code の認証で動かしたい場合は、
+設定から Bedrock 関連の環境変数を外す必要があります。
+</p>
+
+<p>
+もう1点、公式 README 自身が但し書きしている通り、<strong>これは「レビューせずに信じる」ためのものではありません</strong>。
+承認ゲートが全ステージにあるのは、まさに人間が読むことを前提にしているからです。
+</p>
+</section>
+
+<section>
+<h2><span class="num">10.</span>手元で触ってみる</h2>
+
+<p>
+必要なものは <strong>bun</strong> と、対応するハーネス（Claude Code など）だけです。
+フックと CLI ツールが全部 bun で動くので、これが唯一の共通要件になります。
+</p>
+
+<pre><code># bun（Windows PowerShell）
+irm bun.sh/install.ps1 | iex
+
+# bun（macOS / Linux）
+curl -fsSL https://bun.sh/install | bash</code></pre>
+
+<p>
+次に、リポジトリを取得して配布物を自分のプロジェクトにコピーします（Claude Code の例）。
+<code>aidlc/</code> は <code>.claude/</code> の<strong>中ではなく兄弟</strong>として置くのがポイントで、
+これを忘れると <code>--doctor</code> の「workspace shell ready」チェックが落ちます。
+</p>
+
+<pre><code>git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows &amp;&amp; git checkout v2
+
+cp -r dist/claude/.claude/ your-project/.claude/
+cp -r dist/claude/aidlc/   your-project/aidlc/
+
+cd your-project &amp;&amp; claude</code></pre>
+
+<p>セッションの中で：</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>コマンド</th><th>やること</th></tr></thead>
+<tbody>
+<tr><td><code>/aidlc --doctor</code></td><td>セットアップの健全性チェック（まずこれ）</td></tr>
+<tr><td><code>/aidlc --help</code></td><td>全オプション一覧</td></tr>
+<tr><td><code>/aidlc --status</code></td><td>進行中ワークフローの状態</td></tr>
+<tr><td><code>/aidlc &lt;やりたいこと&gt;</code></td><td>ワークフロー開始（スコープは文面から自動判定）</td></tr>
+<tr><td><code>/aidlc compose "..."</code></td><td>タスクに合わせた専用のステージ計画を提案させる</td></tr>
+<tr><td><code>/aidlc intent</code></td><td>スペース内のインテント一覧／切り替え</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+  <span class="t">試すなら使い捨てのワークスペースで</span>
+  <p>
+  AI-DLC は自分自身の状態ファイルや監査ログも書き込むので、<strong>本番のリポジトリではなく空のディレクトリで始める</strong>のがおすすめです。
+  コピー直後に <code>git init</code> してタグを打っておくと、<code>git reset --hard &lt;tag&gt; &amp;&amp; git clean -fd</code> でいつでも初期状態に戻せます。
+  ついでに、フレームワーク自身の書き込みと生成された成果物を <code>git diff</code> で区別して観察できるようになります。
+  </p>
+</div>
+
+<div class="warnbox">
+  <span class="t">2つのハマりどころ</span>
+  <p>
+  <strong>起動場所</strong> — <code>.claude/</code> を置いたプロジェクトのルートでハーネスを起動してください。別の場所で起動しても <code>/aidlc</code> は出てきません。
+  </p>
+  <p>
+  <strong>Bedrock 設定</strong> — 配布物の <code>.claude/settings.json</code> は AWS Bedrock 前提（リージョンとモデル ID が固定）です。
+  Bedrock のモデルアクセスと AWS 認証情報がない場合は起動しません。手元のハーネスの認証をそのまま使いたいなら、
+  <code>.claude/settings.local.json</code>（gitignore 対象）で env の Bedrock 関連キーを上書き・除去してください。
+  </p>
+</div>
+</section>
+
+<section>
+<h2><span class="num">11.</span>まとめ</h2>
+
+<p>この資料の内容を5行にすると：</p>
+
+<ol>
+  <li><strong>AI-DLC は方法論、aidlc-workflows はその実装。</strong>1本のソースから複数の CLI ハーネス向けに配布物を生成する</li>
+  <li><strong>5フェーズ32ステージ、14エージェント、全ステージに人間の承認ゲート。</strong>決定はファイルと監査ログに残る</li>
+  <li><strong>スコープが儀式の量を決める。</strong>bugfix は 7 ステージ、enterprise は 32 ステージ。開始前に必ず数字で提示される</li>
+  <li><strong>人間の訂正がルールとして蓄積する。</strong>ただし反映は次のワークフローから（実行中は前提が動かない）</li>
+  <li><strong>カスタマイズはコードではなくデータ。</strong>ステージもスコープもエージェントも Markdown + YAML で組み替えられる</li>
+</ol>
+
+<p>
+最後の点、つまり「じゃあ実際どうやって自分たちの方法論に組み替えるのか」が第2部のテーマです。
+</p>
+
+<div class="footer">
+  <p>
+    <strong>参照元</strong>：
+    <a href="https://github.com/awslabs/aidlc-workflows">awslabs/aidlc-workflows</a>（v2 ブランチ, v2.5.59）の
+    <code>README.md</code> / <code>docs/guide/</code>、および
+    <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/">AWS AI-DLC ブログ記事</a>。
+    数値（32ステージ・14エージェント・9スコープ・82監査イベント・センサー5本）はいずれも同リポジトリのドキュメントおよびソースツリーで確認したもの。
+  </p>
+  <p>研究会資料 第1部 ／ 第2部「v2 の内部構造とカスタマイズ」に続く</p>
+  <p>作成：東京海上日動システムズ・中島</p>
+</div>
+</section>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中間報告 4-3 構成案 ― 第3分科会</title>
+<style>
+  :root{
+    --ink:#1b2430; --sub:#5b6675; --faint:#8d97a4; --line:#e2e6ec;
+    --paper:#fbfbfa; --card:#ffffff;
+    --accent:#2c5f7c; --accent-soft:#e9f1f4; --accent-line:#d3e2e8;
+    --amber:#b9762f; --amber-soft:#faf1e6; --amber-line:#eddcc0;
+    --done:#3f7a5c; --done-soft:#e9f4ee; --done-line:#cfe3d8;
+    --red:#a4453c; --red-soft:#f9ecea; --red-line:#e8cdc9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Hiragino Sans","Yu Gothic UI","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased;font-size:15px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:56px 24px 100px;}
+
+  header.hero{margin-bottom:32px;}
+  .eyebrow{
+    display:inline-flex;gap:8px;align-items:center;
+    font-size:12.5px;letter-spacing:.06em;color:var(--accent);
+    background:var(--accent-soft);border:1px solid var(--accent-line);
+    padding:5px 12px;border-radius:100px;font-weight:600;margin-bottom:18px;
+  }
+  h1{font-size:30px;margin:0 0 12px;letter-spacing:-0.01em;font-weight:700;line-height:1.4;}
+  .lead{color:var(--sub);font-size:15px;max-width:740px;margin:0;}
+  .meta{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:28px;
+  }
+  .meta div{background:var(--card);padding:14px 16px;}
+  .meta .k{font-size:11.5px;color:var(--sub);margin-bottom:4px;}
+  .meta .v{font-size:14px;font-weight:600;}
+  .banner{
+    margin-top:18px;padding:16px 20px;border-radius:10px;
+    background:var(--red-soft);border:1px solid var(--red-line);font-size:14px;
+  }
+  .banner b{color:var(--red);display:block;margin-bottom:4px;font-size:12.5px;letter-spacing:.03em;}
+  .banner p{margin:0 0 8px;}
+  .banner p:last-child{margin:0;}
+
+  section{margin-top:56px;}
+  .section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:6px;}
+  .num{font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.03em;}
+  h2{font-size:21px;margin:0;font-weight:700;}
+  .section-sub{color:var(--sub);font-size:14px;margin:6px 0 22px;max-width:800px;}
+  .fig-title{font-size:13px;font-weight:700;color:var(--ink);margin:0 0 8px;padding-left:10px;border-left:3px solid var(--accent);}
+
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid var(--line);background:var(--card);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card);}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{background:#f4f6f8;font-weight:700;font-size:12.5px;color:var(--sub);white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:none;}
+  td.axis{font-weight:700;background:#fafbfc;font-size:13px;}
+  tr.rec td{background:var(--done-soft);}
+  tr.rec td.axis{background:#dcece3;}
+  td.blank{color:#c3cad2;font-style:italic;}
+  .hint{font-size:12px;color:var(--faint);margin-top:8px;}
+  mark{background:var(--amber-soft);color:var(--ink);padding:1px 3px;border-radius:3px;font-weight:700;}
+  .sm{font-size:12px;color:var(--faint);}
+
+  /* スライド枠 */
+  .slide{
+    background:var(--card);border:2px solid var(--accent-line);border-radius:12px;
+    margin-bottom:20px;overflow:hidden;
+  }
+  .slide-head{
+    background:var(--accent-soft);padding:14px 22px;border-bottom:1px solid var(--accent-line);
+    display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;
+  }
+  .slide-head .pg{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.04em;}
+  .slide-head h4{margin:0;font-size:17px;font-weight:700;}
+  .slide-body{padding:22px 24px;}
+  .blk{margin-bottom:20px;}
+  .blk:last-child{margin-bottom:0;}
+  .blk-lbl{
+    font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--faint);
+    display:block;margin-bottom:8px;
+  }
+  .blk ul{margin:0;padding-left:20px;font-size:14px;}
+  .blk li{margin-bottom:6px;}
+  .blk li:last-child{margin-bottom:0;}
+  .blk > p{font-size:14px;margin:0 0 8px;}
+  .tobe{
+    background:var(--done-soft);border:1px solid var(--done-line);border-radius:10px;
+    padding:16px 20px;font-size:14px;
+  }
+  .tobe .blk-lbl{color:var(--done);}
+  .tobe p{margin:0 0 8px;font-size:14px;}
+  .tobe p:last-child{margin:0;}
+  .hypo{
+    background:var(--card);border:1px solid var(--accent-line);border-left:4px solid var(--accent);
+    border-radius:10px;padding:16px 20px;font-size:14px;
+  }
+  .hypo .blk-lbl{color:var(--accent);}
+  .hypo p{margin:0;font-size:14px;}
+  .msg{
+    background:var(--amber-soft);border:1px solid var(--amber-line);border-radius:10px;
+    padding:16px 20px;font-size:14.5px;font-weight:600;line-height:1.7;
+  }
+  .msg .blk-lbl{color:var(--amber);}
+  .fig-slot{
+    background:#f6f8fa;border:1px dashed var(--faint);border-radius:10px;
+    padding:14px 18px;font-size:13px;color:var(--sub);
+  }
+  .fig-slot b{color:var(--ink);}
+
+  .note{background:var(--amber-soft);border:1px solid var(--amber-line);border-radius:12px;padding:18px 22px;font-size:14px;}
+  .note .label{font-weight:700;color:var(--amber);font-size:12.5px;margin-bottom:6px;display:block;}
+  .note ul{margin:0;padding-left:20px;}
+  .note li{margin-bottom:6px;}
+  .note li:last-child{margin-bottom:0;}
+  .note p{margin:0 0 8px;}
+  .note p:last-child{margin-bottom:0;}
+  .key{background:var(--accent-soft);border:2px solid var(--accent-line);border-radius:12px;padding:18px 22px;font-size:14px;}
+  .key .label{font-weight:700;color:var(--accent);font-size:12.5px;margin-bottom:6px;display:block;}
+  .key p{margin:0 0 8px;}
+  .key p:last-child{margin:0;}
+
+  ul.check{list-style:none;margin:0;padding:0;}
+  ul.check li{position:relative;padding:5px 0 5px 26px;font-size:14px;}
+  ul.check li::before{content:"✓";position:absolute;left:2px;top:5px;color:var(--done);font-weight:700;font-size:14px;}
+
+  footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);color:var(--sub);font-size:12.5px;}
+  footer .row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  footer ul{margin:8px 0 0;padding-left:20px;font-size:12.5px;}
+  footer li{margin-bottom:4px;overflow-wrap:anywhere;}
+  .ai-note{margin-top:18px;padding:14px 18px;background:var(--card);border:1px solid var(--line);border-radius:8px;font-size:12.5px;color:var(--sub);}
+  .ai-note b{color:var(--ink);}
+
+  @media(min-width:1400px){
+    body{font-size:17px;}
+    .wrap{max-width:1180px;}
+    table{font-size:15px;}
+    .blk ul,.blk > p,.tobe,.tobe p,.hypo,.hypo p,.section-sub,.key,.note{font-size:16px;}
+    .msg{font-size:16.5px;}
+    .fig-slot,.hint,.sm{font-size:14px;}
+    .slide-head h4{font-size:19px;}
+  }
+  @media(max-width:760px){
+    .meta{grid-template-columns:repeat(2,1fr);}
+    h1{font-size:24px;}
+  }
+  @media print{
+    body{background:#fff;font-size:10pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .wrap{max-width:none;padding:0;}
+    section{margin-top:26px;}
+    h2,.fig-title{break-after:avoid;page-break-after:avoid;}
+    .slide,.note,.key,.msg,.tobe,.hypo{page-break-inside:avoid;break-inside:avoid;}
+    .scroll{overflow:visible;border-radius:0;}
+    table{table-layout:fixed;font-size:8.5pt;}
+    thead{display:table-header-group;}
+    th,td.axis{white-space:normal;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">第3分科会 ／ AI品質保証 ／ 8/6 分科会活動用</span>
+    <h1>中間報告 4-3 構成案<br><span style="font-size:.66em;color:var(--sub);font-weight:600;">― 仮説と検証計画（As-Is / To-Be）を2ページで</span></h1>
+    <p class="lead">
+      8/6の分科会活動（85分）と、その後の発表に向けた叩き台。
+      事務局が示すゴール「合宿幹事の決定」「活動の目的(ゴール)、研究の進め方を決める」「役割分担を決める」「活動計画をたてる」に対応する。
+    </p>
+
+    <div class="meta">
+      <div><div class="k">分科会</div><div class="v">第3分科会(AI品質保証)</div></div>
+      <div><div class="k">用途</div><div class="v">8/6 分科会活動の叩き台</div></div>
+      <div><div class="k">作成者</div><div class="v">東京海上日動システムズ・中島</div></div>
+      <div><div class="k">作成日</div><div class="v">2026-08-05</div></div>
+    </div>
+
+    <div class="banner">
+      <b>本資料の位置づけ</b>
+      <p>作成者1名の叩き台であり、分科会として合意した内容ではない。<strong>「これでよいか」を判断する材料として使い、違う部分は差し替えを前提とする。</strong></p>
+      <p>ゼロから85分で決めるより速いはず、という前提で用意した。</p>
+    </div>
+  </header>
+
+  <!-- 01 -->
+  <section>
+    <div class="section-head"><span class="num">01</span><h2>前提 ― 求められている型は As-Is / To-Be</h2></div>
+    <p class="section-sub">
+      8/6配布資料「成果物フォーマット：中間報告書の構成とシナリオ（線）設計」で確定した制約。
+      <strong>各分科会が注力するのは④のみ</strong>で、他は共通パートである。
+    </p>
+
+    <p class="fig-title">表1: 中間報告資料の基本構成と担当</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>#</th><th>項目</th><th>担当</th></tr></thead>
+        <tbody>
+          <tr><td class="axis">①</td><td>研究会の目的と背景</td><td>共通パート</td></tr>
+          <tr><td class="axis">②</td><td>4つの分科会の編成と切り口の根拠</td><td>共通パート</td></tr>
+          <tr><td class="axis">③</td><td>分科会を「線」でつなぐストーリー（全体シナリオ）</td><td>共通パート（第3分科会からエッセンス提出）</td></tr>
+          <tr class="rec"><td class="axis">④</td><td><strong>各分科会の仮説と検証計画（As-Is / To-Be）</strong></td><td><strong>各分科会（2スライド程度）</strong></td></tr>
+          <tr><td class="axis">⑤</td><td>今後の活動スケジュールと深堀り計画（下期の検証ロードマップ）</td><td>共通パート</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">
+      各分科会は④の作成に注力し、<strong>共通パートに必要な情報やエッセンスを取りまとめ担当者へ提出する</strong>フローとされている。
+      ④に書くのは「理想形(To-Be)の仮説」「現実(As-Is)の課題」「PoCやヒアリングを通じた検証の進め方」の3点。
+    </p>
+
+    <div class="note" style="margin-top:18px;">
+      <span class="label">③ 全体シナリオへ提出する内容（案）</span>
+      <p>slide10 は③について次の並びを示している。第3分科会はこの<strong>3番目</strong>にあたる。</p>
+      <p style="padding-left:14px;border-left:3px solid var(--amber);">
+        第1で定義された仕様（インプット）→ 第2の開発プロセスで処理 → <strong>そこで得られたシステムが第3のテスト・品質保証に渡る</strong> → 第4の運用での成果が再び上流へフィードバック
+      </p>
+      <p>提出するエッセンス（案）: 「第2から受け取った成果物を、<strong>何をもって『使ってよい』と判定するか</strong>。判定の材料を第4の運用実績から受け取り、判定基準そのものを更新する」</p>
+    </div>
+
+    <p class="fig-title" style="margin-top:26px;">表2: 雛型ファイル上の制約</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>項目</th><th>分量</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td class="axis">3. 体制</td><td>―</td><td>分科会名・氏名・会社名を提出（スライド自体は副主査作成）</td></tr>
+          <tr class="rec"><td class="axis"><strong>4-3. 背景・目的</strong></td><td><strong>2ページ程度</strong></td><td>雛型のボックス名は<strong>「当分科会の目的（われわれはなぜここにいるのか）」</strong>。※活動の目的(ゴール)、課題、研究の進め方を記載</td></tr>
+          <tr><td class="axis">5. 今後の活動計画</td><td>ガントに1行程度の幅</td><td>分科会の活動のみ記載（全体イベントは別行）</td></tr>
+          <tr><td class="axis">Appendix</td><td>自由</td><td>インセプションデッキの結果を含む。色味・レイアウトは本編に揃える</td></tr>
+          <tr><td class="axis">参考文献</td><td>―</td><td>指定フォーマットで統一。分科会名の列あり</td></tr>
+          <tr><td class="axis">体裁</td><td>―</td><td><strong>16:9 / 推奨フォント24pt程度</strong>。1ページに載る行数は限られる（本文で約400字が上限の目安）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section>
+    <div class="section-head"><span class="num">02</span><h2>本編2ページの構成案</h2></div>
+    <p class="section-sub">
+      ページ1で「なぜここにいるのか、どこを目指すのか」、ページ2で「何が足りず、どう確かめるか」を語る。
+      報告13分は部会全体の時間であり、共通パートを除くと<strong>1分科会あたり数分</strong>と見込まれるため、言いたいことを1つに絞っている。
+      <span class="sm">（分科会別の時間配分は配布資料に記載がなく、作成者の試算）</span>
+    </p>
+
+    <div class="key" style="margin-bottom:24px;">
+      <span class="label">この2ページで言いたいこと（1つに絞る）</span>
+      <p>「AI駆動開発は品質が悪くなるのでは」への回答は、<strong>品質の高低ではなく「測定」と「説明」の問題である。</strong></p>
+      <p>現行の品質保証の骨格は維持できる。変わるのは<strong>「満たしたと言える材料」の作り方</strong>であり、必要なのは基準を緩めることではない。</p>
+    </div>
+
+    <!-- ページ1 -->
+    <div class="slide">
+      <div class="slide-head">
+        <h4>当分科会の目的（われわれはなぜここにいるのか）</h4>
+        <span class="pg">ページ 1 / 2</span>
+      </div>
+      <div class="slide-body">
+
+        <div class="blk">
+          <span class="blk-lbl">目的</span>
+          <p>AI生成物を信頼して利用するための<strong>品質保証モデル</strong>の確立。理想は「AIに全部任せて開発が完結」だが、<strong>AIを信頼して使える仕組みがない</strong>。根本原因は<strong>評価・検証の仕組みが不在</strong>であることにある。</p>
+        </div>
+
+        <div class="blk">
+          <div class="tobe">
+            <span class="blk-lbl">To-Be ― 理想形</span>
+            <p><strong>AI駆動開発の成果物について、現行と同じ「リリースしてよいか」の判断を、現行と同じ確からしさで下せる状態。</strong></p>
+            <p>ただし判断の材料は、<strong>人の作業量の記録</strong>から、<strong>ハーネスが自動的に残す検証結果と証跡</strong>へ置き換わっている。</p>
+          </div>
+        </div>
+
+        <div class="blk">
+          <div class="hypo">
+            <span class="blk-lbl">検証する仮説</span>
+            <p><strong>汎用的なAI駆動開発ワークフローの素の状態では、各社が要求する品質基準・リリース判定基準は満たせない。</strong></p>
+          </div>
+        </div>
+
+        <div class="msg">
+          <span class="blk-lbl">ページ1の締め</span>
+          満たせないのは<strong>品質そのものではなく、「満たした」と説明するための材料</strong>である。
+        </div>
+      </div>
+    </div>
+
+    <!-- ページ2 -->
+    <div class="slide">
+      <div class="slide-head">
+        <h4>As-Is の課題と、検証の進め方</h4>
+        <span class="pg">ページ 2 / 2</span>
+      </div>
+      <div class="slide-body">
+
+        <div class="blk">
+          <span class="blk-lbl">As-Is ― 現行基準では、To-Beを評価できない</span>
+          <p class="fig-title">表: AI駆動開発の適用を阻む要件（4群・10項目）</p>
+          <div class="scroll">
+            <table>
+              <thead><tr><th>群</th><th>問題になる点</th></tr></thead>
+              <tbody>
+                <tr><td class="axis">責任と証跡<br><span class="sm">A・B・I・J</span></td><td>AI生成物の作成者・検証責任が未定義。<strong>再現条件とAI由来かの区分は、現行基準に項目自体がない</strong></td></tr>
+                <tr class="rec"><td class="axis"><strong>指標の妥当性</strong><br><span class="sm">E・F</span></td><td><strong>指標の分母・分子が人の作業量。量や投入時間だけでは品質を説明できない</strong></td></tr>
+                <tr><td class="axis">判断の粒度と網羅性<br><span class="sm">C・D</span></td><td>反復の高速化にチェック粒度が合わない。網羅性をどの記録で担保するか</td></tr>
+                <tr><td class="axis">判定への組み込み<br><span class="sm">G・H</span></td><td>AI出力を判定根拠としてどこまで採用するか、AIレビューを制度上どの工程に置くかが未定義</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="hint">各社提出資料の記述から導いた整理であり、各社の公式見解ではない。<strong>現行の骨格は維持でき、問題になるのは上記4群に限られる。</strong>各項目の詳細はAppendix。</p>
+        </div>
+
+        <div class="blk">
+          <span class="blk-lbl">検証の進め方</span>
+          <ul>
+            <li>各社の品質基準を持ち寄り、適用課題を言語化する（ヒアリング）</li>
+            <li>ハーネスの有無で品質がどう変わるかを検証する（PoC。実施可否・規模は検討中）</li>
+            <li>評価対象は<strong>開発プロセス全体</strong></li>
+          </ul>
+        </div>
+
+        <div class="blk">
+          <span class="blk-lbl">研究の全体設計と現在地</span>
+          <p class="fig-title">図: 研究の全体設計 5ステップと現在地</p>
+          <div class="fig-slot">
+            <b>図の枠</b> ― ①各社の品質基準（4社完了・追補中） → ②仮説の設定（提示済） → ③ギャップ特定（着手・<strong>10/2までに完了</strong>） → ④ハーネス設計 → ⑤効果測定と提言<br>
+            <span class="sm">①〜③に「中間報告」、④〜⑤に「最終報告」のバッジを付す。中間報告時点で「計画通り」と言えるようにする。</span>
+          </div>
+        </div>
+
+        <div class="msg">
+          <span class="blk-lbl">ページ2の締め</span>
+          中間報告は<strong>「何が測れないか」を特定するところまで</strong>。最終報告で、それを測れるようにする仕組み（ハーネス）を設計し、効果を測る。
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <span class="label">Appendixへ送るもの</span>
+      <ul>
+        <li><strong>適用課題A〜Jの全文</strong>（本編の4群表は要約のため、詳細はここ）</li>
+        <li>各社品質基準の比較表（9観点 × 5名・4社）</li>
+        <li>事例調査の論点（9件）</li>
+        <li><strong>インセプションデッキの結果</strong>（雛型の指示。8/27に改訂予定）</li>
+        <li>基準の測定可能性の3層整理</li>
+      </ul>
+      <p style="margin-top:10px;"><strong>転記時の制約（Appendix担当が押さえること）</strong></p>
+      <ul>
+        <li>提出者実名は社名のみへ置換する。社内標準文書の規程名・文書番号・実案件名は伏せる</li>
+        <li>社内ファイルパスは削除する</li>
+        <li>講演2件（LINEヤフー／アイスリーデザイン）は<strong>引用可否が未確認</strong>。確認が取れるまで逐語引用を社外資料へ転記しない</li>
+        <li>AWS Summit AIM213 は<strong>自社の著作物</strong>。社外提出時は社内の了承ラインを通す</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section>
+    <div class="section-head"><span class="num">03</span><h2>役割分担の案</h2></div>
+    <p class="section-sub">事務局ゴール「役割分担を決める（記載担当、調査担当など）」への叩き台。</p>
+
+    <div class="key" style="margin-bottom:22px;">
+      <span class="label">先に確認したいこと</span>
+      <p><strong>本編は2ページ程度のため、記載担当を人数分に割ることは現実的でない。</strong></p>
+      <p>記載担当は1〜2名に絞り、<strong>分担するのはAppendixと調査領域</strong>とすることを提案する。あわせて<strong>共通パートへエッセンスを提出する窓口</strong>が別途必要になる。</p>
+    </div>
+
+    <p class="fig-title">表3: 分担の単位 ― 4案</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>案</th><th>単位</th><th>評価</th></tr></thead>
+        <tbody>
+          <tr><td class="axis">案1</td><td>5ステップ（①基準収集〜⑤効果測定）</td><td>時系列で分かりやすい。ただし④⑤は最終報告のため、中間報告の記載担当としては空く</td></tr>
+          <tr><td class="axis">案2</td><td>5本柱 ― ガイド設計／センサー設計／eval（評価）・KPI／<strong>ガードレール設計（承認ゲート＝HITL/HOTLの線引き、監査ログ）</strong>／事例調査<br><span class="sm">※7/23部会向けの整理（アプローチ転換前）</span></td><td>ハーネス設計に踏み込む単位。<strong>④は承認ゲート・監査ログを含み、適用課題B・Gと重なるため本分科会のスコープ内</strong>（除外対象の「品質に直結しない安全側のガードレール」とは別物）。権限管理のみセキュリティ研究領域として除外</td></tr>
+          <tr class="rec"><td class="axis"><strong>案3</strong></td><td><strong>適用課題の4群</strong>（責任と証跡／指標の妥当性／判断の粒度と網羅性／判定への組み込み）</td><td><strong>今の成果にそのまま乗る。</strong>調査担当の単位として機能し、各群が本編のAs-Is欄に直結する</td></tr>
+          <tr><td class="axis">案4</td><td>成果物5点（フレームワーク／ハーネス設計ガイド／KPI／レビュー基準／プロセスモデル）<br><span class="sm">※8/6部会資料の記載</span></td><td>最終報告のアウトプットに直結。中間報告時点では実体がなく着手対象が定まらないため、最終報告に近づいた段階で有効</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">推奨は<strong>案3</strong>。中間報告の記載担当は別に1〜2名を置く。最終報告に近づいたら案4へ移行する。</p>
+
+    <p class="fig-title" style="margin-top:26px;">表4: 割り振り（空欄。8/6で埋める）</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>役割</th><th>担当</th><th>担当範囲</th></tr></thead>
+        <tbody>
+          <tr class="rec"><td class="axis">合宿 幹事</td><td class="blank">未定</td><td>11/6〜7（候補）。自薦がない場合は主査指名</td></tr>
+          <tr><td class="axis">8/6 発表担当</td><td class="blank">未定</td><td>16:40からの発表スライド作成と登壇</td></tr>
+          <tr><td class="axis">中間報告 記載担当</td><td class="blank">未定</td><td>本編2ページ（④仮説と検証計画）の執筆</td></tr>
+          <tr class="rec"><td class="axis">共通パート窓口</td><td class="blank">未定</td><td>①②③⑤へのエッセンス提出（③は01のとおり）。取りまとめ担当者との連絡。<strong>8/27までに提出</strong></td></tr>
+          <tr><td class="axis">レビュー担当</td><td class="blank">未定</td><td>記載内容の確認、事務局ルールとの照合</td></tr>
+          <tr><td class="axis">調査 ①責任と証跡</td><td class="blank">未定</td><td>作成者・レビューア・承認者、証跡の形式、再現性、AI由来の原因分類</td></tr>
+          <tr><td class="axis">調査 ②指標の妥当性</td><td class="blank">未定</td><td>作業量ベース指標の代替、障害数の異常判定</td></tr>
+          <tr><td class="axis">調査 ③判断の粒度と網羅性</td><td class="blank">未定</td><td>チェックの時間粒度、網羅性の記録による担保</td></tr>
+          <tr><td class="axis">調査 ④判定への組み込み</td><td class="blank">未定</td><td>AI出力の採用範囲、AIレビューの工程への位置づけ</td></tr>
+          <tr><td class="axis">Appendix 取りまとめ</td><td class="blank">未定</td><td>適用課題全文・比較表・論点整理・インセプションデッキ結果。転記時の制約（02参照）を担保</td></tr>
+          <tr><td class="axis">参考文献 取りまとめ</td><td class="blank">未定</td><td>指定フォーマットへの整形</td></tr>
+          <tr><td class="axis">ツール検証</td><td class="blank">未定</td><td>使用ツール決定後。試すメンバーを絞る前提</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">役割の粒度・数も議論の対象である。行の統合・削除・追加は自由。1人が複数を兼ねる前提でよい。</p>
+  </section>
+
+  <!-- 04 -->
+  <section>
+    <div class="section-head"><span class="num">04</span><h2>活動計画の案</h2></div>
+    <p class="section-sub">事務局ゴール「9/10中間報告レビューに向けた活動計画をたてる」への叩き台。雛型では<strong>ガントに1行程度の幅</strong>で記載する。</p>
+
+    <p class="fig-title">表5: 9/10までの活動計画</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>期間</th><th>やること</th><th>成果物</th></tr></thead>
+        <tbody>
+          <tr class="rec"><td class="axis">8/6 → 8/27</td><td>ステップ③ギャップ特定／未提出分の品質基準を追補／インセプションデッキ改訂／<strong>第1・第2分科会との境界線すり合わせ</strong>／<strong>共通パートへのエッセンス提出</strong>／8/27の発表準備</td><td>ギャップ整理／改訂版デッキ／資料骨子</td></tr>
+          <tr><td class="axis">8/27 → 9/10</td><td>本編2ページの執筆／Appendix取りまとめ／参考文献の整形</td><td>中間報告資料（レビュー版）</td></tr>
+          <tr><td class="axis">9/10</td><td>レビュー</td><td>―</td></tr>
+          <tr><td class="axis">9/10 → 9/24</td><td>指摘反映、事務局ルールとの最終照合</td><td>提出版</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="fig-title" style="margin-top:26px;">表6: ガント1行に書く内容（案）</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>月</th><th>5〜6月</th><th>7月</th><th>8月</th><th>9月</th><th>10月</th><th>11月</th><th>12〜2月</th><th>3月</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="axis">AI品質保証</td>
+            <td>テーマ選定</td>
+            <td>各社基準の収集</td>
+            <td>事例調査・ギャップ特定</td>
+            <td>資料作成</td>
+            <td>ハーネス設計の準備</td>
+            <td>ハーネス設計</td>
+            <td>効果測定・検証</td>
+            <td>提言まとめ</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">中間報告(10月)・合宿(11月)・最終報告(3月)は雛型の<strong>「全体イベント」行</strong>に既に置かれているため、分科会行には書かない。</p>
+  </section>
+
+  <!-- 05 -->
+  <section>
+    <div class="section-head"><span class="num">05</span><h2>85分の使い方（案）</h2></div>
+    <p class="section-sub">
+      15:15-16:40 の分科会活動。<strong>進行は主査・副主査に委ねる。</strong>時間配分の目安として提示する。
+    </p>
+
+    <p class="fig-title">表7: タイムテーブル案</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>時間</th><th>内容</th><th>使う資料</th></tr></thead>
+        <tbody>
+          <tr class="rec"><td class="axis">15:15-15:20<br>(5分)</td><td><strong>合宿の幹事</strong> ― 第3分科会から自薦を出すか</td><td>本資料 03 表4</td></tr>
+          <tr><td class="axis">15:20-15:30<br>(10分)</td><td>宿題の要点確認 ― 各社品質基準が4社そろったこと、事例調査の論点9件</td><td>各社品質基準_比較／論点整理</td></tr>
+          <tr class="rec"><td class="axis">15:30-15:52<br>(22分)</td><td><strong>研究の進め方の確認</strong> ― 5ステップでよいか／中間報告の到達目標をステップ1〜3とするか／<strong>研究の主軸を「説明責任」に置くか</strong></td><td>進め方_共有版 08／論点整理 論点7</td></tr>
+          <tr class="rec"><td class="axis">15:52-16:15<br>(23分)</td><td><strong>To-Be・As-Isの確認＋役割分担</strong></td><td>本資料 02・03</td></tr>
+          <tr><td class="axis">16:15-16:25<br>(10分)</td><td>活動計画／使用ツールの期限確認／境界線すり合わせの段取り</td><td>本資料 04</td></tr>
+          <tr><td class="axis">16:25-16:40<br>(15分)</td><td>発表スライドの仕上げ</td><td>―</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">合宿幹事は8/6資料 slide3 の「＜各分科会での活動＞」の第1項目にあたるため、冒頭に置いている（オープニングで主査から指名条件の説明がある想定）。</p>
+
+    <div class="note" style="margin-top:18px;">
+      <span class="label">時間が足りない場合</span>
+      <ul>
+        <li>宿題の要点確認（15:20-15:30）― 事前共有が済んでいれば、当日は確認のみに圧縮できる</li>
+        <li>活動計画（16:15-16:25）― 叩き台をそのまま出せば確認だけで終わる</li>
+        <li>事務局ゴールの本体は <strong>15:30-16:15 の45分</strong> にあたると考える</li>
+      </ul>
+    </div>
+
+    <div class="note" style="margin-top:14px;">
+      <span class="label">論点整理で立てた問い（時間があれば）</span>
+      <p>事例調査の論点整理には、8/6で確認したい問いを各論点に立てている。上記15:30-15:52に入れているのは論点7（研究の主軸）のみで、残りは持ち越しになる。特に次の2件は中間報告の書き方に影響する。</p>
+      <ul>
+        <li>New Relicの数値（AI生成コードの品質評価）を中間報告に載せるか ― 想定読者の主張を補強する側でもあるため、扱いを決めたい</li>
+        <li>用語の定義に「統制の強度（文書か、実行環境への埋め込みか）」の軸を足すか</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section>
+    <div class="section-head"><span class="num">06</span><h2>「やらないこと」セルフチェック</h2></div>
+    <p class="section-sub"><code>CLAUDE.md</code> §3 および <code>docs/境界線.md</code> との照合結果。</p>
+    <ul class="check">
+      <li>開発プロセスのループ構造そのものを設計していない（→第2分科会）</li>
+      <li>人とAIの役割分担モデルを設計していない（→第2分科会）― 03の「役割分担」は<strong>分科会メンバーの担当割り</strong>であり、人とAIの分担ではない</li>
+      <li>データの管理方法・持ち方に踏み込んでいない（→第1分科会）</li>
+      <li>LLM自体の性能比較をしていない</li>
+      <li>人・組織の品質評価能力に踏み込んでいない ― As-Is 4群はいずれも制度・基準側の要件である。「網羅性を誰が説明するか」ではなく<strong>「どの記録で担保するか」</strong>と書いている</li>
+      <li>品質に直結しない安全側のガードレールの話になっていない ― <strong>案2の「ガードレール設計」は承認ゲート（HITL/HOTL）と監査ログを指し、§3が除外する「品質に直結しない安全側のガードレール」には当たらない</strong>（前版で誤って除外扱いとしていたものを訂正）</li>
+      <li>特定ベンダーのフレームワークを推奨していない</li>
+      <li>セキュリティ研究領域に入っていない ― 案2の「権限管理」のみ該当するため、評価欄で切り分けている</li>
+    </ul>
+  </section>
+
+  <footer>
+    <div class="row">
+      <span>三菱CC研究会 第3研究部会 ／ 第3分科会(AI品質保証)</span>
+      <span>作成者：東京海上日動システムズ・中島 ／ 2026-08-05 作成</span>
+    </div>
+
+    <p style="margin:18px 0 0;"><strong>出典</strong></p>
+    <p style="margin:4px 0 0;">本資料は以下の資料を再構成したものである。外部情報源は各元資料の出典欄を参照。</p>
+    <ul>
+      <li>8/6配布資料「成果物フォーマット：中間報告書の構成とシナリオ（線）設計」（0806部会資料）― 基本構成①〜⑤、As-Is/To-Beの型、全体シナリオ、共通パート提出フロー</li>
+      <li>8/6配布資料「活動概要（本日のゴール）」（同）― 合宿幹事、分科会での活動項目</li>
+      <li>8/6配布 中間報告 雛型3件（全体構成／副主査用／分科会用フォーマット）― 目次、分量、Appendix、参考文献、ガントの行構成</li>
+      <li><code>docs/進め方.md</code>（2026-08-05更新版）― 研究の全体設計、5ステップ、検証する仮説、体裁ルール</li>
+      <li><code>research/各社品質基準/各社品質基準_比較.md</code> ― 適用課題A〜J、測定可能性の3層、転記時の注意</li>
+      <li><code>research/事例調査/論点整理_事例調査.md</code> ― 論点9件、転記時の注意</li>
+      <li><code>inbox/2026-08-04/sharepoint/第3分科会_やることリスト_0722.html</code>（2026-07-23作成）― 案2の5本柱とその定義</li>
+    </ul>
+
+    <div class="ai-note">
+      <b>生成AI利用の明示</b><br>
+      本資料の作成には生成AIツールを使用した（Anthropic, Claude, 2026）。
+      <br>・<b>既存資料からの再構成</b>: 01（基本構成・雛型制約）、02の目的・検証する仮説・As-Is 4群（適用課題A〜Jの集約）・現在地、03の案2・案4。
+      <br>・<b>生成AIによる作成</b>: 01の③提出エッセンス案、02の「To-Be 理想形」と「言いたいこと」および各ページの締め、03の分担案の評価と推奨、04の活動計画、05のタイムテーブル案。
+      <br>・いずれも<b>作成者1名の叩き台であり、分科会の合意事項ではない</b>。
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

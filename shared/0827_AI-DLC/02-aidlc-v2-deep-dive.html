@@ -1,0 +1,1170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-DLC Workflows 2.0 の内部構造とカスタマイズ — AI駆動開発エンジニア向け</title>
+<style>
+:root{
+  --bg:#fbfaf8; --panel:#ffffff; --ink:#1c1b19; --ink-2:#4a4843; --ink-3:#7a776f;
+  --line:#e3e0d9; --line-2:#efece6;
+  --accent:#2a5aa8; --accent-soft:#e8eef8; --accent-ink:#1d4585;
+  --warn:#8a5a12; --warn-soft:#fdf3e0;
+  --danger:#a13a2e; --danger-soft:#fbeceb;
+  --code-bg:#f4f2ed;
+  --tag-data:#1f6f5c; --tag-code:#a13a2e;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#15161a; --panel:#1c1e23; --ink:#e9e7e2; --ink-2:#b8b5ae; --ink-3:#8b877f;
+    --line:#2e3138; --line-2:#262930;
+    --accent:#7ba9e8; --accent-soft:#182333; --accent-ink:#9cc2f0;
+    --warn:#d9a441; --warn-soft:#2e2416;
+    --danger:#e88a7d; --danger-soft:#331d1a;
+    --code-bg:#22252b;
+    --tag-data:#5ec2a4; --tag-code:#e88a7d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15161a; --panel:#1c1e23; --ink:#e9e7e2; --ink-2:#b8b5ae; --ink-3:#8b877f;
+  --line:#2e3138; --line-2:#262930;
+  --accent:#7ba9e8; --accent-soft:#182333; --accent-ink:#9cc2f0;
+  --warn:#d9a441; --warn-soft:#2e2416;
+  --danger:#e88a7d; --danger-soft:#331d1a;
+  --code-bg:#22252b;
+  --tag-data:#5ec2a4; --tag-code:#e88a7d;
+}
+:root[data-theme="light"]{
+  --bg:#fbfaf8; --panel:#ffffff; --ink:#1c1b19; --ink-2:#4a4843; --ink-3:#7a776f;
+  --line:#e3e0d9; --line-2:#efece6;
+  --accent:#2a5aa8; --accent-soft:#e8eef8; --accent-ink:#1d4585;
+  --warn:#8a5a12; --warn-soft:#fdf3e0;
+  --danger:#a13a2e; --danger-soft:#fbeceb;
+  --code-bg:#f4f2ed;
+  --tag-data:#1f6f5c; --tag-code:#a13a2e;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%; scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",Meiryo,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px; line-height:1.85; letter-spacing:.01em; overflow-x:hidden;
+}
+.wrap{max-width:920px; margin:0 auto; padding:0 24px 120px}
+
+header.hero{
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,var(--accent-soft),transparent);
+  padding:56px 0 40px;
+}
+.kicker{font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent-ink); font-weight:700; margin:0 0 14px}
+h1{font-size:clamp(26px,4.2vw,38px); line-height:1.38; margin:0 0 16px}
+.lede{font-size:17px; color:var(--ink-2); margin:0; max-width:47em}
+.byline{
+  margin:22px 0 0; font-size:14px; color:var(--ink-2);
+  padding-top:16px; border-top:1px solid var(--line);
+  display:inline-block;
+}
+.byline .label{
+  font-size:11px; letter-spacing:.14em; color:var(--ink-3);
+  display:block; margin-bottom:2px; font-weight:700;
+}
+.byline b{font-weight:700; color:var(--ink)}
+.meta{margin-top:26px; display:flex; flex-wrap:wrap; gap:8px}
+.chip{font-size:12.5px; padding:4px 11px; border-radius:999px; border:1px solid var(--line); background:var(--panel); color:var(--ink-2); white-space:nowrap}
+.chip b{color:var(--ink); font-weight:600}
+
+nav.toc{
+  border:1px solid var(--line); border-radius:12px; background:var(--panel);
+  padding:18px 22px; margin:36px 0 8px; font-size:14.5px;
+}
+nav.toc h2{all:unset; display:block; font-size:12px; letter-spacing:.14em; color:var(--ink-3); font-weight:700; margin-bottom:10px}
+nav.toc ol{margin:0; padding-left:1.5em; columns:2; column-gap:36px}
+nav.toc li{margin:4px 0; break-inside:avoid}
+nav.toc a{color:var(--ink-2); text-decoration:none}
+nav.toc a:hover{color:var(--accent-ink); text-decoration:underline}
+@media (max-width:640px){nav.toc ol{columns:1}}
+
+h2{font-size:23px; line-height:1.5; margin:60px 0 4px; padding-top:22px; border-top:1px solid var(--line); scroll-margin-top:20px}
+h2 .num{display:inline-block; min-width:1.9em; color:var(--accent); font-variant-numeric:tabular-nums; font-weight:700}
+h3{font-size:17px; margin:34px 0 8px}
+h4{font-size:15px; margin:26px 0 6px; color:var(--ink-2)}
+p{margin:14px 0}
+a{color:var(--accent-ink); text-underline-offset:3px}
+ul,ol{padding-left:1.4em; margin:14px 0}
+li{margin:7px 0}
+li::marker{color:var(--ink-3)}
+code{font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Noto Sans Mono",monospace; font-size:.875em; background:var(--code-bg); padding:.12em .4em; border-radius:4px; border:1px solid var(--line-2); word-break:break-word}
+pre{background:var(--code-bg); border:1px solid var(--line); border-radius:10px; padding:16px 18px; overflow-x:auto; margin:18px 0; line-height:1.7}
+pre code{background:none; border:none; padding:0; font-size:13.5px; white-space:pre}
+pre.yaml .k{color:var(--accent)}
+
+.note,.warnbox,.dangerbox{border-radius:10px; padding:16px 18px; margin:22px 0; font-size:15px; border:1px solid transparent}
+.note{background:var(--accent-soft)}
+.warnbox{background:var(--warn-soft)}
+.dangerbox{background:var(--danger-soft)}
+.note .t,.warnbox .t,.dangerbox .t{font-weight:700; display:block; margin-bottom:5px; font-size:13px; letter-spacing:.06em}
+.note .t{color:var(--accent-ink)}
+.warnbox .t{color:var(--warn)}
+.dangerbox .t{color:var(--danger)}
+.note p,.warnbox p,.dangerbox p{margin:6px 0}
+.note :last-child,.warnbox :last-child,.dangerbox :last-child{margin-bottom:0}
+
+.tablewrap{overflow-x:auto; margin:22px 0; border:1px solid var(--line); border-radius:10px; background:var(--panel)}
+table{border-collapse:collapse; width:100%; font-size:14.5px; min-width:560px}
+th,td{padding:10px 14px; text-align:left; border-bottom:1px solid var(--line-2); vertical-align:top}
+thead th{background:var(--code-bg); font-size:12.5px; letter-spacing:.04em; color:var(--ink-2); font-weight:700; white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+td code{white-space:nowrap}
+
+.tag{display:inline-block; font-size:11px; font-weight:700; letter-spacing:.05em; padding:2px 8px; border-radius:5px; vertical-align:middle; margin-left:8px}
+.tag.data{color:var(--tag-data); border:1px solid currentColor}
+.tag.code{color:var(--tag-code); border:1px solid currentColor}
+
+figure{margin:26px 0}
+figure svg{display:block; width:100%; height:auto}
+.figframe{border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:20px; overflow-x:auto}
+figcaption{font-size:13px; color:var(--ink-3); margin-top:10px}
+
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin:22px 0}
+.card{border:1px solid var(--line); border-radius:10px; padding:15px 17px; background:var(--panel)}
+.card h4{margin:0 0 6px; font-size:15px; color:var(--ink)}
+.card p{margin:0; font-size:14px; color:var(--ink-2); line-height:1.75}
+
+.recipe{border-left:3px solid var(--accent); padding-left:18px; margin:26px 0}
+.recipe h3{margin-top:0}
+
+.footer{margin-top:72px; padding-top:24px; border-top:1px solid var(--line); font-size:13.5px; color:var(--ink-3)}
+.footer a{color:var(--ink-2)}
+
+@media (max-width:600px){
+  body{font-size:15.5px}
+  .wrap{padding:0 18px 90px}
+  h2{font-size:20px; margin-top:46px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">研究会資料 ／ 第2部</p>
+    <h1>v2 の内部構造とカスタマイズ</h1>
+    <p class="lede">
+      AI-DLC Workflows 2.0 が「どういう部品でできていて、どこをどう触れば自分たちの方法論になるのか」を扱います。
+      第1部（一般向け）で扱った 5フェーズ32ステージ・14エージェント・9スコープ・承認ゲートは前提とし、ここではその<em>下の層</em>を見ます。
+    </p>
+    <p class="byline">
+      <span class="label">作成</span>
+      <b>東京海上日動システムズ・中島</b>
+    </p>
+    <div class="meta">
+      <span class="chip">対象 <b>AI駆動開発エンジニア</b></span>
+      <span class="chip">版 <b>v2.5.59</b></span>
+      <span class="chip">前提 <b>第1部の内容</b></span>
+      <span class="chip">キーワード <b>engine / conductor / core→dist</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<nav class="toc">
+  <h2>目次</h2>
+  <ol>
+    <li><a href="#s1">v2 の設計思想：ルーティングを LLM から剥がす</a></li>
+    <li><a href="#s2">one core, many harnesses</a></li>
+    <li><a href="#s3">3つのプレーンとコンパイル境界</a></li>
+    <li><a href="#s4">ステージファイルの解剖</a></li>
+    <li><a href="#s5">グラフのコンパイル</a></li>
+    <li><a href="#s6">カスタマイズの入口（全体地図）</a></li>
+    <li><a href="#s7">レシピ：ステージ／エージェント／スコープ</a></li>
+    <li><a href="#s8">レシピ：ルール・センサー・知識</a></li>
+    <li><a href="#s9">プラグイン機構</a></li>
+    <li><a href="#s10">Construction：Bolt と swarm</a></li>
+    <li><a href="#s11">composer と in-flight recompose</a></li>
+    <li><a href="#s12">決定論的スパイン：フックと監査</a></li>
+    <li><a href="#s13">落とし穴集</a></li>
+    <li><a href="#s14">研究会向け実験メニュー</a></li>
+  </ol>
+</nav>
+
+<section id="s1">
+<h2><span class="num">1.</span>v2 の設計思想：ルーティングを LLM から剥がす</h2>
+
+<p>
+1.x 系の <code>SKILL.md</code> は、それ自体がルーティングロジックの塊でした。
+「今どのステージか」「次はどれか」「このスコープではこれを飛ばす」——を全部プロンプトの散文で書いていたわけです。
+v2 はここを分割しました。これが 2.0 でいちばん重要な変更点です。
+</p>
+
+<div class="cards">
+  <div class="card">
+    <h4>engine（決定的コード）</h4>
+    <p><code>aidlc-orchestrate.ts</code>。状態ファイルとコンパイル済みグラフを読み、「次に何をするか」を <strong>1つの型付き directive（JSON）</strong> として出力する。サブコマンドは <code>next</code> / <code>continue</code> / <code>report</code> / <code>park</code> の4つだけ。</p>
+  </div>
+  <div class="card">
+    <h4>conductor（LLM）</h4>
+    <p><code>skills/aidlc/SKILL.md</code>。directive を受け取って実行し、結果を <code>report</code> で返す<strong>薄い転送ループ</strong>。ルーティングの判断は一切しない。</p>
+  </div>
+</div>
+
+<p>
+分担の言い方をすると、<strong>engine がルーティングを持ち、conductor が実行品質を持つ</strong>。
+どのステージが次かは決定論的コードが決め、そのステージをうまく走らせる（良い質問をする、判断を人間に見せる）のは LLM の仕事、という切り分けです。
+</p>
+
+<h3>転送ループ</h3>
+
+<pre><code>1. directive = bun .claude/tools/aidlc-orchestrate.ts next $ARGUMENTS
+2. directive.kind で分岐して実行
+3. bun .claude/tools/aidlc-orchestrate.ts report --stage &lt;slug&gt; --result &lt;outcome&gt;
+4. directive.kind == done になるまで繰り返す</code></pre>
+
+<p>
+directive は <code>aidlc-directive.ts</code> の判別可能ユニオンで、<strong>10種類</strong>定義されているうち<strong>8種類</strong>が現在 emit されます
+（残り2つは将来枠のプレースホルダで、実装してはいけないと明記されています）。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th><code>kind</code></th><th>conductor がやること</th></tr></thead>
+<tbody>
+<tr><td><code>run-stage</code></td><td>ステージ本文を読んで実行し、<code>produces</code> を書き、日誌をつけ、<code>gate</code> フィールドに従ってゲートを出す。ルーティング情報はグラフノードから解決済みで載ってくる</td></tr>
+<tr><td><code>load-steering</code></td><td>ルール束を順に適用して保持し、即座に <code>continue &lt;token&gt;</code> を呼ぶ（分割配送のトランスポート）</td></tr>
+<tr><td><code>ask</code></td><td>質問を人間に出し、答えを次の <code>report --user-input</code> で返す。<strong>engine 自身は人間に聞かない</strong></td></tr>
+<tr><td><code>invoke-swarm</code></td><td>Construction の並列バッチを swarm に展開して収束ループを回す</td></tr>
+<tr><td><code>print</code></td><td>メッセージ通りに実行。終端型（status/doctor 等を出して停止）と継続型（scope 変更等の mutation ツールを走らせてループに戻る）の2形</td></tr>
+<tr><td><code>error</code> / <code>done</code> / <code>parked</code></td><td>それぞれ、そのまま出して停止／完了サマリを出して停止／再開方法を伝えて停止</td></tr>
+<tr><td colspan="2" style="color:var(--ink-3); font-size:13.5px">未実装枠：<code>dispatch-subagent</code>, <code>present-gate</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+directive は出力前に必ず契約に対して検証され、不正なら「conductor が信じてしまう嘘」を出す代わりに非ゼロ終了します。
+</p>
+
+<h3>Stop フックがループを保証する</h3>
+
+<p>
+このループは「LLM のお行儀」に依存させていません。conductor がターンを終えようとすると
+<strong>Stop フック</strong>（<code>aidlc-continue-workflow.ts</code>）が走り、<code>next</code> を叩いて未処理の directive があれば停止をブロックし、
+directive を <code>reason</code> フィールドで注入し直します。
+</p>
+
+<p>ただし無制限ではなく、いくつもの逃がし弁があります。ここは実装の丁寧さがよく出ている部分です。</p>
+
+<ul>
+  <li><strong>human-wait カーブアウト</strong>：現ステージが承認待ち <code>[?]</code>／修正中 <code>[R]</code>／質問未回答、あるいは直前が単なる雑談だった場合はブロックしない（人間待ちで正しく止まっているため）</li>
+  <li><strong>no-progress カウンタ</strong>：進捗のないブロックが上限に達したら手を離す。上限は実行モード依存で、対話時2回・自律 Construction 時8回</li>
+  <li><strong>fail open</strong>：アクティブなワークフローがない、あるいは想定外のエラー時は絶対にブロックしない（AI-DLC 以外のセッションを人質にしない）</li>
+</ul>
+
+<div class="note">
+  <span class="t">設計上の含意</span>
+  <p>
+  「ルーティングをツールに置く」という決定は、カスタマイズの性質も決めています。
+  <strong>あなたが書き換えるのは engine が読む<em>データ</em>であって、engine のコードではない。</strong>
+  ステージを足す・スコープを定義する・ルールを教える——すべて Markdown + YAML で、TypeScript は一切触りません。
+  この線引き（データ／コード）が、後半のカスタマイズ章の全体を貫きます。
+  </p>
+</div>
+</section>
+
+<section id="s2">
+<h2><span class="num">2.</span>one core, many harnesses</h2>
+
+<p>
+v2 のもう1つの柱が配布構造です。方法論の本体は<strong>ハーネス中立な <code>core/</code> に1回だけ</strong>存在し、
+各 CLI 向けの配布物はそこから生成されます。
+</p>
+
+<pre><code>aidlc-workflows/
+│  ── 手書きソース（ここを編集する）──
+├── core/                    ハーネス中立な単一の正本
+│   ├── tools/                 aidlc-*.ts エンジンツール群
+│   ├── aidlc-common/          ステージプロトコル + 32ステージ + conductor.md
+│   ├── agents/                14エージェント
+│   ├── knowledge/ memory/ scopes/ sensors/ hooks/
+│   └── skills/ templates/
+│       ※ 散文中のハーネスディレクトリは {{HARNESS_DIR}} トークンで書く
+│
+├── harness/                 CLI ごとの薄い表層（意図的に発散させる部分）
+│   ├── claude/  kiro/  kiro-ide/  codex/  opencode/
+│   │   manifest.ts · orchestrator skill · settings · onboarding
+│
+├── plugins/                 任意・所有権つきの AIDLC プラグイン
+│
+├── scripts/package.ts       ビルド入口。--check が全体のドリフトガード
+│
+│  ── 生成物・コミット対象・ドリフト監視下（手で触るとCI落ち）──
+└── dist/
+    ├── claude/.claude/        Claude Code ユーザーがコピーするもの
+    ├── kiro/ kiro-ide/ codex/ opencode/
+    └── plugins/&lt;name&gt;/&lt;harness&gt;/</code></pre>
+
+<p>
+編集フローは常にこれです。
+</p>
+
+<pre><code># 1. core/ を編集（dist/ は絶対に触らない）
+$EDITOR core/aidlc-common/stages/inception/my-stage.md
+
+# 2. 全ハーネスツリーを再生成
+bun scripts/package.ts
+
+# 3. ドリフトがないことを確認（CI と同じガード）
+bun scripts/package.ts --check</code></pre>
+
+<p>
+<strong><code>core/</code> は AI-DLC が「何であるか」、<code>harness/</code> は各ハーネスが「どう喋るか」、<code>dist/</code> はユーザーが「何をコピーするか」。</strong>
+編集するのは最初の2つだけで、3つ目はバイトレベルで一致するよう検査されます。
+</p>
+
+<p>
+決定論的な部分——状態機械・監査ログ・並列エージェントを裁く referee——は<strong>全ハーネスでバイト同一</strong>です。
+違うのは殻だけ。だから「Claude Code で確立した挙動が Codex では違う」という事態が構造的に起きにくくなっています。
+</p>
+
+<div class="warnbox">
+  <span class="t">"harness" という語が3つの意味で使われる</span>
+  <p>
+  リポジトリを読むときの罠です。<code>harness/</code>（配布表層）、<code>docs/harness-engineering/</code>（カスタマイズ担当者向けガイド）、
+  <code>tests/harness/</code>（テストのヘルパライブラリ）は、互いに無関係です。
+  </p>
+</div>
+</section>
+
+<section id="s3">
+<h2><span class="num">3.</span>3つのプレーンとコンパイル境界</h2>
+
+<p>
+AI-DLC はネットワーク機器の設計を明示的に借りています。この比喩を掴んでおくと、後述の挙動が全部説明できます。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>プレーン</th><th>中身</th><th>ネットワークでいうと</th></tr></thead>
+<tbody>
+<tr><td><strong>Control plane</strong></td><td>何が走るべきかの<em>スキーマ</em>。ステージ定義、ルール、センサー</td><td>経路計算。1回しか走らないので、遅くて賢くてよい</td></tr>
+<tr><td><strong>Data plane</strong></td><td>実際の<em>実行</em>。ステージ実行、エージェント起動、記録ディレクトリのファイル</td><td>パケット転送。速く、繰り返し、ルックアップで</td></tr>
+<tr><td><strong>Management plane</strong></td><td>観測と設定。<code>--doctor</code>、監査ログ、<code>CLAUDE.md</code></td><td>人間のペースで触る面</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+control plane はワークフロー<strong>開始時に1回だけ</strong>、ルールとセンサーとステージ定義を1つのグラフにコンパイルします。
+以降 data plane は解決済みの答えを読むだけで、チェーンを再帰的に辿り直しません。
+</p>
+
+<p>
+ここから直接導かれる仕様が、第1部でも触れた
+<strong>「ゲートで記録した学びは実行中のワークフローには効かず、次回から効く」</strong>です。
+BGP が飛行中のパケットのために経路を再計算しないのと同じ理由で、AI-DLC はワークフローの途中で再コンパイルしません。
+見返りは再現性と、リスタート後のクリーンな復旧です。序盤に承認したゲートの前提が、後から書き換わらない。
+</p>
+
+<div class="note">
+  <span class="t">カスタマイズ時の実務的な意味</span>
+  <p>
+  ルールやステージを編集したら、<strong>効果を見るには新しいワークフローを開始する必要がある</strong>ということです。
+  ハーネスによってはスキル・エージェント・ルールをセッション開始時にロードするので、<code>dist/</code> を入れ替えた場合は
+  <strong>セッションごと再起動</strong>してください。公式トラブルシューティングにも「新しいセッションを開始せよ」と書かれています。
+  </p>
+</div>
+</section>
+
+<section id="s4">
+<h2><span class="num">4.</span>ステージファイルの解剖</h2>
+
+<p>
+ステージはワークフローグラフのノードであり、カスタマイズの原子です。
+<code>core/aidlc-common/stages/&lt;phase&gt;/&lt;slug&gt;.md</code> という1つの Markdown ファイルで、YAML frontmatter とプロース本文からなります。
+</p>
+
+<h3>読者は2人いて、決して重ならない</h3>
+
+<ul>
+  <li><strong>パーサ</strong>は frontmatter <em>だけ</em>読む。グラフのエッジ、リードエージェント、実行モードを取り出し、本文は完全に無視する</li>
+  <li><strong>エージェント</strong>は本文 <em>だけ</em>読む。手順に従い成果物を作り、frontmatter には触らない</li>
+</ul>
+
+<p>
+なぜ1ファイルに同居させるかというと、<strong>レビュアーが「何を produce するか」と「それを作る手順」を同時に見られる</strong>からです。
+YAML とプロースを別ファイルに割ると、この可読性が失われる。ステージがレビュー可能であることを設計上の性質として守っています。
+</p>
+
+<p>
+そして編集者にとっては、これが「今なにを変えたか」の判別基準になります。
+<strong>frontmatter を変えたらグラフを変えたことになり、本文を変えたら仕事の中身を変えたことになる。</strong>この2つは独立です。
+</p>
+
+<h3>実物を見る（<code>inception/application-design.md</code>）</h3>
+
+<pre><code>---
+slug: application-design
+phase: inception
+execution: CONDITIONAL
+condition: 新規コンポーネント/サービスが必要なとき実行。既存改修のみならスキップ
+lead_agent: aidlc-architect-agent
+support_agents:
+  - aidlc-aws-platform-agent
+  - aidlc-design-agent
+mode: inline
+summary_confirmation: required
+reviewer: aidlc-architecture-reviewer-agent
+reviewer_max_iterations: 2
+review_class: advisory
+produces:
+  - components
+  - component-methods
+  - services
+  - component-dependency
+  - decisions
+consumes:
+  - artifact: requirements
+    required: true
+  - artifact: stories
+    required: false
+  - artifact: architecture
+    required: false
+    conditional_on: brownfield
+requires_stage:
+  - requirements-analysis
+  - refined-mockups
+sensors:
+  - required-sections
+  - upstream-coverage
+scopes:
+  - enterprise
+  - feature
+  - mvp
+  - workshop
+---
+
+# Application Design
+
+MANDATORY: Follow stage-protocol.md for approval gates, question format, ...
+
+## Steps
+### Step 1: Load Agent Personas
+...</code></pre>
+
+<h3>判断を要するフィールド</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>フィールド</th><th>決めること</th><th>判断のポイント</th></tr></thead>
+<tbody>
+<tr><td><code>requires_stage</code></td><td>依存と順序のエッジ</td><td>本当に他ステージの出力を消費するのか、それとも単に「後に走ればよい」だけか。後者も<em>表示順エッジ</em>として明示的に書く（アルファベット順のタイブレークに任せない）</td></tr>
+<tr><td><code>consumes</code></td><td>読む成果物</td><td><code>required: true</code> は「<em>このワークフローで</em>生産元ステージが走るなら満たされていること」であって「生産元が常に走る」ではない。スコープは上流を意図的に飛ばす</td></tr>
+<tr><td><code>produces</code></td><td>書く成果物（前方エッジ）</td><td>他ステージが「この成果物を作るのは誰？」と聞いたときの答えになる</td></tr>
+<tr><td><code>lead_agent</code> / <code>support_agents</code></td><td>誰がやるか</td><td><code>core/agents/*.md</code> の実ファイルに対して検証される。ハードコードされた列挙はない</td></tr>
+<tr><td><code>mode</code></td><td>通信トポロジ</td><td>誰が参加するかは <code>support_agents</code>、<em>どう</em>参加するかが <code>mode</code></td></tr>
+<tr><td><code>for_each</code></td><td>反復するか</td><td>インスタンスごとに1回走らせる成果物名。Construction の5ステージが <code>for_each: unit-of-work</code> を宣言。集約はグラフから推論され、宣言しない</td></tr>
+<tr><td><code>scopes</code></td><td>どのスコープで走るか</td><td><strong>これを書かないとどこでも SKIP</strong>。ステージの存在と実行は別の関門</td></tr>
+</tbody>
+</table>
+</div>
+
+<h4>mode（トポロジ）の4種</h4>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th><code>mode</code></th><th>意味</th><th>採用ステージ</th></tr></thead>
+<tbody>
+<tr><td><code>inline</code></td><td>conductor 自身のコンテキストで走る。サポートは「被るペルソナ」として同居</td><td>28ステージ</td></tr>
+<tr><td><code>subagent</code></td><td>ハブ&amp;スポーク。リードを新鮮なコンテキストに委譲し、サポートは互いに盲目なスポークとして起動</td><td>2（practices-discovery, code-generation）</td></tr>
+<tr><td><code>pipeline</code></td><td>チェーン。サポートを宣言順に連結し、各リンクは上流の成果を全部見る</td><td>1（reverse-engineering の2リンク）</td></tr>
+<tr><td><code>mob</code></td><td>メッシュ。リードのドラフトに対し全サポートが並列に当たり、反論ラウンドを1回だけ</td><td>1（user-stories）</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><code>pipeline</code> と <code>mob</code> は <code>support_agents</code> が非空であることを要求します。どのトポロジでも<strong>委譲は必ず conductor が行い、エージェント同士は呼び合いません</strong>。</p>
+
+<h3>本文の3コンパートメント</h3>
+
+<p>本文は必ずこの順で3つに分かれます。</p>
+
+<ul>
+  <li><strong><code>## Steps</code></strong> — エージェントが従う命令形の散文。ペルソナのロード、先行コンテキストの読み込み、質問ファイルの作成、成果物生成、承認ゲート。<em>グラフを触らずに仕事の中身を変えたい</em>ときはここだけ編集する</li>
+  <li><strong><code>## Sensors</code></strong> — 出力に紐づく決定論的チェックの人間向け説明。実際の束縛は frontmatter の <code>sensors:</code> リスト</li>
+  <li><strong><code>## Learn</code></strong> — 学習ループの儀式。ステージ中につける <code>memory.md</code> 日誌と、ゲートで確定した項目の行き先</li>
+</ul>
+
+<div class="dangerbox">
+  <span class="t">重要な境界</span>
+  <p>
+  ステージファイルは<strong>形がイミュータブルなフレームワーク成果物</strong>です。
+  ワークフローが本文の3コンパートメント構造を書き換えることはありません。
+  実行中に許されている唯一の書き込みは、<strong>学習ループが frontmatter の <code>sensors:</code> に新しいセンサー ID を追記すること</strong>だけ。
+  それ以外の変更は、あなたがカスタマイズ担当者として意図的に行うものです。
+  </p>
+</div>
+
+<p>
+なお、ステージが<em>含むもの</em>（＝ファイル形式、この章）と、ステージが<em>実行時にすること</em>（＝承認ゲート、質問フロー、状態チェックボックス、完了メッセージ）は別契約です。
+後者は全ステージ共通の <strong>stage protocol</strong> で、ステージ本文の「Follow stage-protocol.md」はこれを指しています。
+定義は編集するもの、プロトコルは基本的に放っておくものです。
+</p>
+</section>
+
+<section id="s5">
+<h2><span class="num">5.</span>グラフのコンパイル</h2>
+
+<p>
+依存グラフはどこにも直接書かれていません。<strong>全ステージの <code>consumes</code> / <code>produces</code> 宣言から創発します。</strong>
+実行時に読まれるのは、そこからコンパイルされた2つの JSON です。
+</p>
+
+<figure>
+<div class="figframe">
+<svg viewBox="0 0 820 210" role="img" aria-label="ステージYAMLからコンパイル成果物への流れ">
+  <defs>
+    <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3.2" orient="auto">
+      <path d="M0,0 L7,3.2 L0,6.4 z" fill="var(--ink-3)"/>
+    </marker>
+  </defs>
+  <g font-family="inherit">
+    <rect x="10" y="58" width="196" height="76" rx="9" fill="var(--panel)" stroke="var(--accent)" stroke-width="1.6"/>
+    <text x="108" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent)">ステージ .md の YAML</text>
+    <text x="108" y="104" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">core/aidlc-common/stages/</text>
+    <text x="108" y="121" text-anchor="middle" font-size="11" fill="var(--ink-3)">＝ 唯一の正本（手書き）</text>
+
+    <path d="M212,96 L272,96" stroke="var(--ink-3)" stroke-width="1.4" fill="none" marker-end="url(#a2)"/>
+    <text x="242" y="86" text-anchor="middle" font-size="11" fill="var(--ink-3)">compile</text>
+
+    <rect x="278" y="20" width="242" height="70" rx="9" fill="var(--panel)" stroke="var(--line)" stroke-width="1.4"/>
+    <text x="399" y="46" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--ink)">stage-graph.json</text>
+    <text x="399" y="66" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">ノード・エッジ・トポロジカル順序</text>
+    <text x="399" y="82" text-anchor="middle" font-size="11" fill="var(--ink-3)">生成物 — 手で編集しない</text>
+
+    <rect x="278" y="102" width="242" height="70" rx="9" fill="var(--panel)" stroke="var(--line)" stroke-width="1.4"/>
+    <text x="399" y="128" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--ink)">scope-grid.json</text>
+    <text x="399" y="148" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">scopes: タグの純粋な転置</text>
+    <text x="399" y="164" text-anchor="middle" font-size="11" fill="var(--ink-3)">EXECUTE / SKIP グリッド</text>
+
+    <path d="M526,96 L586,96" stroke="var(--ink-3)" stroke-width="1.4" fill="none" marker-end="url(#a2)"/>
+
+    <rect x="592" y="58" width="218" height="76" rx="9" fill="var(--panel)" stroke="var(--accent)" stroke-width="1.6"/>
+    <text x="701" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent)">engine が実行時に読む</text>
+    <text x="701" y="104" text-anchor="middle" font-size="11.5" fill="var(--ink-2)">aidlc-orchestrate next</text>
+    <text x="701" y="121" text-anchor="middle" font-size="11" fill="var(--ink-3)">ルーティング判断はここ</text>
+
+    <text x="399" y="200" text-anchor="middle" font-size="11.5" fill="var(--ink-3)">compile --check がドリフトガード：YAML を編集して再コンパイルを忘れると CI が exit 1</text>
+  </g>
+</svg>
+</div>
+<figcaption>グラフは書くものではなく、ステージ宣言から計算されるもの。JSON はビルド成果物であってソースではない。</figcaption>
+</figure>
+
+<h3>コンパイル時に自動で検証されること</h3>
+
+<ul>
+  <li><strong>グラフ配置</strong>：エッジ解決、トポロジカル順序、生産者／消費者ルックアップ、循環検出</li>
+  <li><strong>frontmatter のフィールド検証</strong>：<code>lead_agent</code> / <code>support_agents</code> は <code>loadAgents()</code> で実ファイルに照合される。タイポは「実行時に404する不正なグラフ」ではなく<strong>コンパイル失敗</strong>になる</li>
+  <li><strong>命名規則</strong>：ファイル名の stem と frontmatter の <code>slug</code> の不一致、slug の重複は<strong>ハードエラー</strong>。センサーの ID 不一致も同様</li>
+  <li><strong>フェーズルールの接続</strong>：ステージはディレクトリでフェーズを宣言しているので、対応する <code>phases/&lt;phase&gt;.md</code> が自動で接続される</li>
+  <li><strong>ドリフトガード</strong>：<code>compile --check</code> はクリーンなら 0、YAML を編集して JSON を再生成し忘れていれば 1</li>
+</ul>
+
+<h3>自分で確認しないといけないこと</h3>
+
+<ul>
+  <li><strong>スコープ参加</strong>：コンパイラはグラフに置くだけで、<em>どのスコープで走るか</em>は決めない。<code>scopes:</code> を書くまで、グラフに存在するがどこでも走らない</li>
+  <li><strong>本文とエッジの整合</strong>：パーサはエッジしか見ない。「intent statement を読め」と本文に書いたなら、その生産元が <code>requires_stage</code> に入っている必要がある。手で同期する</li>
+  <li><strong>上流不在時の挙動</strong>：<code>required: true</code> の consume は、生産元を飛ばすスコープでは無効化される。それは仕様であってバグではないが、<em>本文がその不在を優雅に扱うか</em>は書いた人の責任</li>
+  <li><strong>ドキュメント</strong>：ステージ数など手書きで列挙している表があるので、同じ変更の中で更新する（リポジトリの Documentation Policy）</li>
+</ul>
+
+<h3>グラフの検査コマンド</h3>
+
+<pre><code># トポロジカル順序（追加した slug が出るか）
+bun .claude/tools/aidlc-graph.ts topo
+
+# この成果物を作る／読むのは誰か
+bun .claude/tools/aidlc-graph.ts producers &lt;artifact&gt;
+bun .claude/tools/aidlc-graph.ts consumers &lt;artifact&gt;
+
+# あるスコープの経路上にいるステージ
+bun .claude/tools/aidlc-graph.ts scope &lt;scope-name&gt;
+
+# そのスコープの依存が破綻していないか
+bun .claude/tools/aidlc-graph.ts validate-scope &lt;scope-name&gt;</code></pre>
+</section>
+
+<section id="s6">
+<h2><span class="num">6.</span>カスタマイズの入口（全体地図）</h2>
+
+<p>
+公式ドキュメントは読者を3つに分けています。この区別が、そのまま「どこまでならコードを書かずに済むか」の地図になっています。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>ガイド</th><th>あなたは…</th><th>変えるのは…</th></tr></thead>
+<tbody>
+<tr><td>User Guide</td><td>AI-DLC <em>を使って</em>ソフトを作る</td><td>何も変えない。<code>/aidlc</code> を打ち、ゲートで答え、成果物をレビューする</td></tr>
+<tr><td><strong>Harness Engineer Guide</strong></td><td>AI-DLC の<em>振る舞いをチームに合わせる</em></td><td>フレームワークが読む<strong>データ</strong>：ステージ、エージェント、スコープ、ルール、センサー、知識<span class="tag data">NO CODE</span></td></tr>
+<tr><td>Developer Reference</td><td>AI-DLC <em>自体</em>を変える</td><td>そのデータを読む<strong>コード</strong>：orchestrator、フック、CLI ツール、コンパイルパイプライン、テスト<span class="tag code">CODE</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+境界の判定は単純です。<strong>YAML frontmatter つきの Markdown か JSON 設定なら、データ側。<code>.ts</code> を開いた瞬間にコード側。</strong>
+「ステージ追加」「エージェント追加」「スコープ定義」が TypeScript 不要であることは、フレームワークの設計原則として明言されています。
+</p>
+
+<h3>入口の一覧</h3>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>やりたいこと</th><th>書く場所</th><th>効き方</th></tr></thead>
+<tbody>
+<tr><td>ステージの仕事内容を変える</td><td><code>core/aidlc-common/stages/&lt;phase&gt;/&lt;slug&gt;.md</code> の本文</td><td>そのステージのみ</td></tr>
+<tr><td>新しいステージを足す</td><td>同ディレクトリに新ファイル＋エッジ配線</td><td>グラフ全体</td></tr>
+<tr><td>エージェントを足す／変える</td><td><code>core/agents/&lt;name&gt;-agent.md</code></td><td>そのエージェントを名指ししたステージ</td></tr>
+<tr><td>スコープを定義する</td><td><code>core/scopes/aidlc-&lt;name&gt;.md</code> ＋ 各ステージの <code>scopes:</code> タグ</td><td>実行対象の集合</td></tr>
+<tr><td>常設のルールを教える</td><td><code>memory/team.md</code> / <code>project.md</code></td><td>全ステージ（次のワークフローから）</td></tr>
+<tr><td>決定論的チェックを挿す</td><td><code>core/sensors/</code> のマニフェスト ＋ ステージの <code>sensors:</code></td><td>ファイル書き込みのたび（助言的）</td></tr>
+<tr><td>ドメイン知識を足す</td><td><code>aidlc/knowledge/&lt;agent&gt;/</code>（実行時・スペースレベル）</td><td>そのエージェントが起動したとき</td></tr>
+<tr><td>再利用可能なパックにする</td><td><code>plugins/&lt;name&gt;/</code></td><td>opt-in で install に合成</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+1行だけ性質が違うのが<strong>チーム知識</strong>です。これは <code>core/</code> の一部ではなく、あなたのプロジェクト内・実行時のディレクトリで、
+<strong>フレームワークが上書きすることはありません</strong>。他はすべてフレームワークのソースとして <code>core/</code> に書きます。
+</p>
+</section>
+
+<section id="s7">
+<h2><span class="num">7.</span>レシピ：ステージ／エージェント／スコープ</h2>
+
+<div class="recipe">
+<h3>A. ステージを1つ足す</h3>
+
+<p><strong>そもそも新ステージが要るか</strong>を先に問うこと。既存ステージがやっていない成果物を produce する、あるいは既存がカバーしない形で consume する場合に限って正当化されます。「手順の文言を変えたい」「リードエージェントを差し替えたい」「センサーを付けたい」だけなら、既存ファイルをその場で編集すれば十分です。</p>
+
+<ol>
+  <li><strong>フェーズを決める</strong>。ディレクトリがフェーズであり、これは飾りではない。コンパイル時にどの <code>phases/&lt;phase&gt;.md</code> ルール層が接続されるかを決める</li>
+  <li><strong>ファイルを作る</strong>。ファイル名の stem が slug であり、slug はエッジ・ジャンプ・監査ログ・スコープ表のすべてで同一性になる。<strong>後から改名すると波及する</strong>ので慎重に</li>
+  <li><strong>エッジを配線する</strong>。<code>requires_stage</code> / <code>consumes</code> / <code>produces</code> の3つが互いに整合していれば、コンパイラが自動で位置を決める</li>
+  <li><strong>再生成する</strong>：<code>bun scripts/package.ts</code>（インストール済みツリーで反復するなら <code>bun .claude/tools/aidlc-graph.ts compile</code>）</li>
+  <li><strong>どのスコープで走るか決める</strong>。<code>scopes:</code> に書いて再コンパイル。書くまでは走らない</li>
+</ol>
+
+<p>ここが v2 の拡張性契約の核心です——<strong>ステージを足すとは、ステージファイルを1つ書くこと。</strong>それ以外に構造上必要なものはありません。コンパイルが通れば、その時点で単体実行できます。</p>
+
+<pre><code>bun .claude/tools/aidlc-orchestrate.ts next --stage &lt;your-slug&gt; --single</code></pre>
+
+<p><code>--single</code> は意図的に隔離されていて、<strong>メインワークフローの <code>Current Stage</code> を絶対に動かしません</strong>。進行中のワークフローを単体実行で脱線させることは起こり得ない設計です。</p>
+
+<h4>runner スキルは任意の砂糖</h4>
+<p>
+出荷されている各ステージには <code>skills/aidlc-&lt;slug&gt;/SKILL.md</code> という薄い runner があり、<code>/aidlc-application-design</code> のように打てます。
+これは <code>--single</code> フラグの opt-in なラッパー（6行程度のシェル）で、<strong>手書きではなくジェネレータが出力します</strong>。
+だから runner の集合とステージの集合が手作業でズレることがありません。
+</p>
+<pre><code>bun .claude/tools/aidlc-runner-gen.ts write   # 再生成
+bun .claude/tools/aidlc-runner-gen.ts check   # ドリフトガード（不一致なら exit 1）</code></pre>
+<p>runner に <code>hooks:</code> ブロックはありません。決定論的スパイン（監査・センサー・グラフ再構築・状態検証）は <code>settings.json</code> にプロジェクト全体で登録されているので、全 runner がタダで継承します。</p>
+</div>
+
+<div class="recipe">
+<h3>B. エージェントを足す</h3>
+
+<p>
+<code>core/agents/&lt;slug&gt;.md</code> にファイルを置くだけです。<strong>ハードコードされたエージェント列挙は存在しません</strong>——
+ステージの <code>lead_agent</code> / <code>support_agents</code> は <code>loadAgents()</code> で実ファイルに照合されます。
+</p>
+
+<p>
+ステージとエージェントの関係は<strong>非対称</strong>です。ステージはリードエージェントを名指しするが、エージェントは自分のステージを名指ししない。
+これは意図的で、<em>作業の割り当てを変える（ステージを編集）</em>ことと <em>働き手を増やす（エージェントファイルを置く）</em>ことを独立にできます。
+エージェントを足しても、どこかのステージが使うと決めるまでワークフローは何も変わりません。
+</p>
+
+<h4>モデルと effort の tier</h4>
+<p>
+出荷エージェントは <code>tier:</code>（<code>judgment</code> / <code>balanced</code> / <code>templated</code>）を持ち、ビルドが各ハーネスのモデル／effort キーに射影します。
+</p>
+<ul>
+  <li><code>judgment</code> — セッションのモデルと effort をそのまま継承。<strong>あなたが選んだものより下げられることはない</strong>。architect・product・design・developer・quality・devsecops・compliance・aws-platform の8体</li>
+  <li><code>templated</code> — 中型モデル＋低 effort（Kiro 以外）。delivery・pipeline-deploy・operations の3体。出力が計画・CI/CD YAML・ランブックの雛形に偏っているため</li>
+</ul>
+<p>
+1体だけ変えたいなら、インストール済みの <code>.claude/agents/aidlc-*-agent.md</code> の frontmatter を直接編集（例：<code>model: opus</code>）。
+ただし <code>dist/</code> を再コピーすると消えます。
+全体を上限で縛るなら <code>core/memory/</code> の <code>tier_cap:</code> か、パッケージャの環境変数 <code>AIDLC_TIER_CAP</code>——どちらも<strong>パック時のノブで実行時設定ではありません</strong>。
+</p>
+
+<div class="dangerbox">
+  <span class="t">やってはいけないこと</span>
+  <p>
+  <strong>出荷済み14エージェントのファイルに自社の知識を書き足さないでください。</strong>フレームワークファイルなのでアップグレードで上書きされます。
+  自社標準はスペースレベルの <code>aidlc/knowledge/&lt;agent-name&gt;/</code> に置く。<em>新しい</em>エージェントを足すのは自由で、そのファイルはユーザー所有です。
+  </p>
+</div>
+</div>
+
+<div class="recipe">
+<h3>C. スコープを定義する（<code>hotfix</code> の例）</h3>
+
+<p>
+スコープは2つに分かれて書かれます。この分割自体が要点です——<strong>スコープの<em>同一性</em>は自分のファイルに、<em>所属</em>はステージ側に転置して置く</strong>。
+</p>
+
+<p><strong>1. スコープファイル</strong> <code>core/scopes/aidlc-hotfix.md</code>：</p>
+
+<pre><code>---
+name: hotfix
+depth: Minimal
+keywords: [hotfix, urgent]
+description: 緊急の本番パッチ。回帰テストとデプロイだけ
+skeleton: off
+testStrategy: Minimal      # 省略すると depth を継承
+review_cap: advisory       # ステージのレビュー階級を下げる（上げることはできない）
+runner: true               # /aidlc-hotfix を生成させる場合
+---
+
+# hotfix scope
+
+なぜこれらのステージを走らせ、なぜ他を飛ばすのかの散文。</code></pre>
+
+<p><strong>2. 所属タグ</strong>：走らせたい各ステージの frontmatter <code>scopes:</code> に <code>hotfix</code> を足す。タグしなければ SKIP。<strong>Initialization の3ステージは必ず含める</strong>（常に走るため）。</p>
+
+<p><strong>3. 再コンパイルと確認</strong>：</p>
+
+<pre><code>bun .claude/tools/aidlc-graph.ts compile          # scopes: を grid に転置
+bun .claude/tools/aidlc-utility.ts scope-table    # SKILL.md の表を更新
+bun .claude/tools/aidlc-graph.ts compile --check  # exit 0 を確認
+/aidlc --doctor</code></pre>
+
+<p>
+<code>keywords</code> を入れた場合は、その語を含む自由文が <code>feature</code> に落ちずに新スコープを検出することを確認します。
+逆に、composer が自動生成したスコープは <code>keywords: []</code> で出荷され、一回きりの計画がキーワード検出に混ざらないようになっています。
+将来の自動検出対象にするかは<strong>ゲートで明示的に聞かれる質問</strong>であって、副作用では起きません。
+</p>
+
+<p>スコープは <code>/aidlc --scope hotfix</code> でファイルを置いた瞬間から使えます。<code>runner: true</code> は 1語コマンド（<code>/aidlc-hotfix</code>）が欲しいときだけの砂糖です。</p>
+</div>
+</section>
+
+<section id="s8">
+<h2><span class="num">8.</span>レシピ：ルール・センサー・知識</h2>
+
+<h3>ルール — 5層の strict-additive チェーン</h3>
+
+<pre><code>aidlc/spaces/&lt;active-space&gt;/memory/
+├── org.md          フレームワーク + 組織全体の既定
+├── team.md         チームが是認したプラクティス
+├── project.md      このプロジェクト固有
+└── phases/
+    ├── ideation.md  inception.md  construction.md  operation.md</code></pre>
+
+<p>
+ファイル内に <code>scope:</code> フィールドはありません。<strong>スコープはファイル名から来ます。</strong>
+解決順は <code>org → team → project → phase → stage</code>（第5層のステージ別ルールは将来枠）。
+</p>
+
+<p>
+モデルは <strong>strict-additive</strong> です。適用対象のルールはすべてエージェントのコンテキストに現れ、実行時に黙って落とされたり上書きされたりしません。
+<code>overrides:</code> ブロックも <code>enforcement:</code> キーワードも v2 にはもう存在しません。
+</p>
+
+<p>
+では矛盾はどう処理するか。<strong>書き込み時に捕まえます。</strong>
+確定した学びがディスクに落ちる前に、<code>org.md</code> の同じ見出しに対してセクション単位のチェックが走り、
+矛盾していればゲートが止まって<strong>衝突している org の文をその場で引用</strong>します。
+選択肢は「書き直す」「見送る」「org ルールのオーナーにエスカレーション」。
+矛盾を含んだルールがディスクに乗らないので、実行時のリゾルバは単純なままでいられます。
+</p>
+
+<p>
+org ポリシーが<em>後から</em>変わって既存の team/project ルールと衝突した場合は、<code>/aidlc --doctor</code> がドリフトとして報告します（助言的、ブロックしない）。
+</p>
+
+<h4>学習ループが書き込む先</h4>
+<p>
+ゲートで確定した学びの行き先は、あなたが選ぶのではなく<strong>見出しが決めます</strong>。
+Interpretations / Deviations / Tradeoffs は <code>project.md</code> にプラクティスとして着地。Open questions は昇格しません（調査項目であってルールではない）。
+既定スコープは常に project で、「team に昇格」はワンクリックの明示操作。<strong>org への昇格経路は存在しません</strong>——
+1プロジェクトの驚きが組織全体のルールになる事故を防ぐためです。
+</p>
+
+<h3>センサー — pull authoring</h3>
+
+<p>
+センサーはマニフェスト（<code>core/sensors/aidlc-&lt;id&gt;.md</code>）＋必要ならスクリプトで、
+<strong>ステージ側が <code>sensors:</code> リストで取り込む</strong>形（pull）です。センサーがステージを名指しするのではありません。
+</p>
+
+<p>
+発火は PostToolUse フック経由。エージェントがステージの出力ファイルを Write / Edit したときに、
+そのステージに紐づくセンサーのうち<strong>ファイル形状がマッチするもの</strong>が走ります
+（<code>**/*.{ts,js}</code> を宣言したコード品質センサーは TS/JS の書き込みにしか反応しない）。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>出荷センサー</th><th>発火対象</th><th>チェック内容</th></tr></thead>
+<tbody>
+<tr><td><code>claim-sources</code></td><td>Intent Capture の出力</td><td>全主張にソースタグがあるか、登録情報が権威ある入力と一致するか、保持された仮定が明示確認と厳密一致するか</td></tr>
+<tr><td><code>required-sections</code></td><td>記録ディレクトリの md 出力</td><td>必須の H2 見出しが存在するか（汎用の内容形状チェック）</td></tr>
+<tr><td><code>upstream-coverage</code></td><td>同上</td><td>成果物群が、宣言した上流成果物それぞれを slug / wikilink / ディレクトリパスで参照しているか</td></tr>
+<tr><td><code>linter</code></td><td><code>.ts</code> / <code>.js</code></td><td>設定済みリンタ（既定 ESLint）のラッパー</td></tr>
+<tr><td><code>type-check</code></td><td><code>.ts</code> / <code>.tsx</code></td><td>設定済み型チェッカ（既定 <code>tsc</code>）のラッパー</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+現行版ではセンサー結果は<strong>助言的</strong>です。失敗しても承認ゲートを止めません。監査行と、何が欠けているかを指す詳細ファイル
+（<code>&lt;record&gt;/.aidlc-sensors/&lt;stage&gt;/...</code>）が残るだけ。シグナルは出す、判断は人間、という構えです。
+</p>
+
+<p>
+学習ループがセンサーを提案してきた場合の install は<strong>アトミックな2書き込み</strong>です：
+マニフェストを scaffold し、発火元ステージの import リストに ID を追記する。
+<code>SENSOR_PROPOSED</code> / <code>RULE_LEARNED</code> の監査行が残るので、黙って install されることはありません。
+</p>
+
+<h3>知識 — 2層構造</h3>
+
+<div class="cards">
+  <div class="card">
+    <h4>Tier 1：方法論知識</h4>
+    <p>フレームワーク同梱。<code>.claude/knowledge/&lt;agent&gt;/</code>。AI-DLC のやり方そのもの。触らない。</p>
+  </div>
+  <div class="card">
+    <h4>Tier 2：チーム知識</h4>
+    <p>あなたが足す。スペースレベルの <code>aidlc/knowledge/&lt;agent&gt;/</code>。自社標準・命名規約・ドメイン語彙。<strong>フレームワークは上書きしない。</strong></p>
+  </div>
+</div>
+
+<p>
+<strong>ルールと知識の使い分け</strong>：ルールは「常にこうせよ」という<em>制約</em>で、strict-additive にコンテキストへ載る。
+知識は「この領域はこうなっている」という<em>情報</em>で、担当エージェントが起動したときにロードされる。
+「PII は必ずマスクする」はルール、「弊社の顧客マスタのスキーマはこう」は知識、という切り分けです。
+</p>
+</section>
+
+<section id="s9">
+<h2><span class="num">9.</span>プラグイン機構</h2>
+
+<p>
+「チーム固有の一式を配りたい」場合の答えがプラグインです。新しいステージ・エージェント・スコープ・ルール・センサー・知識、
+そして<strong>既存 core ステージへの追加的な contribution</strong> を、独自のディレクトリ／独自のリポジトリにまとめて配布し、
+ユーザーの install に<strong>合成</strong>します。
+</p>
+
+<p>
+重要な保証が2つあります。
+</p>
+
+<ul>
+  <li><strong>プラグインは <code>core/</code> を編集しない。</strong>全プラグインを無効にすると、install は素の core とバイト同一に戻る</li>
+  <li><strong>ファーストパーティとサードパーティは機構的に同一。</strong>同じ構造、同じ継ぎ目、同じコンポーザ、同じ保証。違うのは出自だけ</li>
+</ul>
+
+<pre><code>test-pro/                                       ← リファレンス実装
+  .aidlc-plugin/plugin.json                     マニフェスト（宣言的）
+  stages/construction/test-pro-integration.md   新規ステージ
+  contributions/construction/nfr-requirements.md 既存 core ステージへの追加
+  sensors/aidlc-coverage-threshold.md           新規センサー
+  tools/aidlc-sensor-coverage-threshold.ts      そのスクリプト
+  scopes/test-pro-validation.md                 新規スコープ
+  agents/test-pro-metrics-agent.md              新規ペルソナ
+  knowledge/test-pro-metrics-agent/methodology.md</code></pre>
+
+<p>命名の規律が効いています：</p>
+
+<ul>
+  <li>プラグインのステージは <code>plugin:</code> フィールドで自分の所属を名乗る</li>
+  <li><code>produces:</code> する成果物は <code>&lt;plugin&gt;-</code> 接頭辞が必須</li>
+  <li>合成側はプラグイン同一性を<strong>出荷されたホストマニフェストから導出</strong>する。中身が自分のパッケージ名を騙ることはできず、不一致は skip されて <code>--doctor</code> に記録される</li>
+  <li><code>number:</code> は<strong>表示ヒントに過ぎない</strong>。グラフ上の位置は slug ベースの <code>requires_stage</code> エッジで決まり、番号はエンジンが割り当てる。だからプラグインは番号レンジを予約しない</li>
+</ul>
+
+<p>
+install 側は <code>bun .claude/tools/aidlc-utility.ts select-plugins &lt;names&gt;</code> で有効化するプラグインを絞れます。
+<strong>プラグインは足す、install が選ぶ</strong>——無効化してもファイルは残り、再有効化できます。
+</p>
+
+<h4>プラグインにすべきか、ただのステージ／ルールにすべきか</h4>
+<ul>
+  <li><strong>ステージ／エージェント／ルール</strong> — 全員が受け取るフレームワークの恒久的な一部にしたいとき</li>
+  <li><strong>プラグイン</strong> — <em>任意で所有権のある</em>もの。自分のリポジトリで出荷し、opt-in のスコープ（あるいは <code>when:</code> 述語）でのみ起動し、利用者が選んで合成する。「コンプライアンスパック」「テストパック」のようなドメインパック向け</li>
+</ul>
+</section>
+
+<section id="s10">
+<h2><span class="num">10.</span>Construction：Bolt と swarm</h2>
+
+<p>
+Construction の形は、v2 で最も試行錯誤の跡が残っている部分です。公式ドキュメントが経緯を率直に書いています。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>世代</th><th>やり方</th><th>問題</th></tr></thead>
+<tbody>
+<tr><td>初期</td><td>作業単位ごとにステージ単位で承認</td><td>3ユニットで15ゲート。「子守り」と言われた</td></tr>
+<tr><td>次</td><td>全ユニットの質問・設計・コード生成を一括、最後に1回レビュー</td><td>15ユニットだと 15,000 行が1つのゲートに来る。レビュー不能</td></tr>
+<tr><td><strong>現行</strong></td><td><strong>Bolt 単位</strong>。1 Bolt ＝ 1ユニット（または依存で束ねた小グループ）に対する 3.1〜3.5 の1周</td><td>——</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>ladder prompt</h3>
+
+<p>
+最初の Bolt は <strong>walking skeleton</strong>——アーキテクチャを端から端まで証明する最小のスライス——で、必ずゲートされます。
+それが通った直後に、<strong>ワークフロー中ちょうど1回だけ</strong>この質問が出ます。
+</p>
+
+<pre><code>自律で続行する？ それとも Bolt ごとにゲートする？</code></pre>
+
+<p>
+答えは <code>aidlc-state.md</code> に <code>Construction Autonomy Mode</code> として記録され、残り全 Bolt を支配し、セッション再開時にも尊重されます。
+早い段階での確信チェックポイントと、意図的な自律性の選択を1回だけ迫る設計です。
+</p>
+
+<h3>並列バッチと halt-and-ask</h3>
+
+<p>
+2つの Bolt が同じ依存前提を共有していて互いに依存しないなら（B も C も A にだけ依存する等）、
+1つの<strong>バッチ</strong>として並行実行され、バッチ末尾の1ゲートが両方をカバーします。
+conductor は1ターンで複数の <code>Task</code> を発行し、ハーネス組み込みの並列性でコード生成を同時に走らせます。
+質問収集と設計成果物生成は Bolt ごとに直列のままです（安いし、質問の答えはどのみち人間を通して直列化されるため）。
+</p>
+
+<p>
+<strong>失敗は自律モードでも必ず止まります。</strong>これが自律モードで唯一割り込む場所です。
+単独 Bolt の失敗は即停止して retry / skip / abort を提示。
+並列バッチ中に1つだけ失敗した場合は、バッチ全体の完了を待ち、成功した Bolt の成果物をディスクに保全したうえで、
+<strong>失敗した Bolt についてだけ</strong>同じ選択を出します。
+</p>
+</section>
+
+<section id="s11">
+<h2><span class="num">11.</span>composer と in-flight recompose</h2>
+
+<p>
+既存スコープがどれも当てはまらないとき（キーワードなしのリッチな散文、長い説明の中に埋もれたキーワード）、
+<code>/aidlc</code> は黙って <code>feature</code> に落とさず、<strong>専用計画の作成を提案</strong>します。
+</p>
+
+<pre><code>/aidlc compose "デプロイパイプラインを堅牢化し、可観測性を追加する"
+/aidlc compose --report sonar.json     # スキャンレポートから構成
+/aidlc --new-scope "..."               # 既存スコープに合致しても強制的に custom</code></pre>
+
+<p>
+composer は<strong>実装エントロピーの5成分</strong>——意図の曖昧さ、コードベースの構造的不確実性、検証エントロピー、リスク、未解決の仮定——を見積もり、
+<em>成果が依存する成果物をすべて生みながら最小で足りる EXECUTE/SKIP グリッド</em>を組みます。
+</p>
+
+<p>
+提示されるのは、各成分の LOW/MED/HIGH バンドと根拠、助言的な合成スコア、そして
+<strong>全ステージについて EXECUTE と SKIP の理由を書いた表</strong>。承認・編集・却下が選べ、<strong>明示承認の前に何も書かれず、ワークフローも始まりません</strong>。
+</p>
+
+<p>承認後の挙動は2通り：</p>
+<ul>
+  <li>提案が既存スコープに MATCH していれば、そのスコープでワークフローが誕生する</li>
+  <li>CUSTOM グリッドなら、composer が<strong>実物のスコープファイル</strong>（<code>scopes/aidlc-&lt;name&gt;.md</code> ＋ grid エントリ）を書き起こし、同じターンでそこから誕生する。以後は普通のスコープと同様に <code>--scope &lt;name&gt;</code> で解決でき、<strong>グラフ再コンパイルを生き延びる</strong>（compile が合成済みエントリを再生成後のグリッドに畳み戻す）</li>
+</ul>
+
+<h3>実行中の再構成</h3>
+
+<p>
+ワークフローの途中でも <code>/aidlc compose</code> は<strong>未実行ステージの再構成</strong>を提案できます。
+完了済みステージが実際に解決したことを踏まえてエントロピーを再見積もりするので、各フリップは根拠を名指しします
+（「実現性検討で連携の疑問が片付いた → リスクは MED に再スコア」）。
+</p>
+
+<p>制約は明確です：</p>
+<ul>
+  <li>フリップできるのは<strong>カーソルより先の未実行ステージだけ</strong>。完了済みと実行中は凍結</li>
+  <li>strict 検証を通るので、残ステージが必要入力を失うことはない</li>
+  <li>決定論的な <code>recompose</code> 動詞を通り、監査ロックの下で <code>RECOMPOSED</code> イベントを残す</li>
+  <li>Construction の最初の EXECUTE ステージ（walking-skeleton ゲートのアンカー）はフリップ<strong>できない</strong></li>
+</ul>
+
+<p>
+リテラルな動詞は必須ではありません。「market research は要らないんじゃない？ この市場は分かってるし」のような普通の会話も、
+実行中は再構成要求として認識され、<strong>同じゲート・同じ検証・同じ <code>recompose</code> 動詞</strong>を通ります。
+</p>
+</section>
+
+<section id="s12">
+<h2><span class="num">12.</span>決定論的スパイン：フックと監査</h2>
+
+<p>
+<code>core/hooks/</code> に <strong>17本</strong>のフックがあり、すべて <code>aidlc-*.ts</code> で bun 実行されます。
+性質は2つに分かれます。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>種別</th><th>フック</th><th>役割</th></tr></thead>
+<tbody>
+<tr><td rowspan="6"><strong>フロー制御系</strong><br><span style="font-size:12px;color:var(--ink-3)">（止められる）</span></td>
+    <td><code>aidlc-continue-workflow</code>（Stop）</td><td>転送ループを決定論的に保証する（§1）</td></tr>
+<tr><td><code>aidlc-deliver-stage-rules</code></td><td>ステージルールの正確な配送を強制</td></tr>
+<tr><td><code>aidlc-plan-approval-guard</code></td><td>コード生成の計画承認を強制</td></tr>
+<tr><td><code>aidlc-state-transition-guard</code></td><td>状態の直接遷移を禁止</td></tr>
+<tr><td><code>aidlc-reviewer-scope</code></td><td>レビュアーの読み取り範囲を強制</td></tr>
+<tr><td><code>aidlc-review-freeze</code></td><td>レビュー受領後の書き込み凍結を強制</td></tr>
+<tr><td><strong>助言系</strong></td>
+    <td><code>write-audit-log</code>, <code>run-sensors</code>, <code>rebuild-stage-graph</code>, <code>validate-state</code>, <code>log-subagent</code>, <code>statusline</code>, <code>record-human-turn</code>, <code>session-start/end</code>, <code>sync-workflow-state</code>, <code>fold-usage</code></td>
+    <td>監査発行、センサー配送、グラフ再構築、状態検証、サブエージェント追跡、ステータスライン描画、人間ターン記録、セッションライフサイクル、トークン使用量の畳み込み</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>
+監査は <strong>82種類のイベント型</strong>で、インテントの <code>audit/</code> シャードに構造化ログとして書かれます。
+<code>STAGE_STARTED</code> / <code>GATE_APPROVED</code> / <code>GATE_REJECTED</code> / <code>RULE_LEARNED</code> / <code>SENSOR_PROPOSED</code> / <code>RECOMPOSED</code> / <code>HUMAN_TURN</code> など、
+<strong>この資料で説明してきた挙動はすべて監査行として観測可能</strong>です。研究会で挙動を追うなら、ここが一番の観測点になります。
+</p>
+
+<h3>承認の偽造防止</h3>
+
+<p>
+第1部でも触れた仕掛けを、実装の言葉で書き直しておきます。
+人間がプロンプトを打つ／選択ウィジェットに答えると <code>HUMAN_TURN</code> イベントが台帳に記録されます。
+承認（および明確化質問への回答）は、<strong>前回のゲート解決以降に <code>HUMAN_TURN</code> が1件も記録されていなければ拒否</strong>されます。
+自動運転のモデルが「承認されました」を自作自演できません。
+</p>
+<p>
+（ゲートウィジェットが人間ターンを記録しないハーネスでは、一度「approve」と打てば記録される。台帳に人間ターンがまだ存在しないハーネスでは fail open。）
+</p>
+
+<h3>テストの層</h3>
+<pre><code>bun tests/run-tests.ts             # 既定：smoke + unit + integration
+bun tests/run-tests.ts --ci        # CI と同じ
+bun tests/run-tests.ts --release   # + e2e（完全受け入れ）</code></pre>
+<p>
+全 TypeScript で、<code>t*.test.ts</code> の命名。ドキュメントと実装の同期もテストで縛られています——
+たとえばスコープ×ステージのマトリクス表は <code>tests/unit/t244-scope-matrix-doc-sync.test.ts</code> がコンパイル済みグリッドと突き合わせます。
+バージョン・CHANGELOG・README バッジの一致は <code>t68</code> が縛る。
+<strong>ドキュメントを「テストされる成果物」として扱っている</strong>のは、この手のフレームワークとしては珍しい部類です。
+</p>
+</section>
+
+<section id="s13">
+<h2><span class="num">13.</span>落とし穴集</h2>
+
+<div class="cards">
+  <div class="card">
+    <h4>1. <code>dist/</code> を直接編集</h4>
+    <p>ドリフトガードが CI を落とします。編集は必ず <code>core/</code>（または <code>harness/&lt;name&gt;/</code>）。<code>core/</code> の編集と再生成した <code>dist/</code> は同じコミットに入れる。</p>
+  </div>
+  <div class="card">
+    <h4>2. <code>scopes:</code> タグ忘れ</h4>
+    <p>ステージを足してコンパイルが通っても、<code>scopes:</code> を書かないとどこでも走りません。「存在させる」と「走らせる」は別の関門。</p>
+  </div>
+  <div class="card">
+    <h4>3. 実行中の反映を期待する</h4>
+    <p>ルールもステージ定義もワークフロー開始時に1回コンパイル。編集の効果は次回から。<code>dist/</code> を入れ替えたらセッションごと再起動。</p>
+  </div>
+  <div class="card">
+    <h4>4. 出荷エージェントに知識を書き足す</h4>
+    <p>アップグレードで消えます。<code>aidlc/knowledge/&lt;agent&gt;/</code> に置くか、新しいエージェントファイルを作る。</p>
+  </div>
+  <div class="card">
+    <h4>5. slug の後付け改名</h4>
+    <p>slug はエッジ・ジャンプ・スコープ表・監査ログ全部で同一性。改名は全方位に波及します。最初に決める。</p>
+  </div>
+  <div class="card">
+    <h4>6. 本文とエッジの乖離</h4>
+    <p>パーサはエッジしか見ません。「〜を読め」と本文に書いても <code>requires_stage</code> になければ、そこにファイルは無い。手で同期する。</p>
+  </div>
+  <div class="card">
+    <h4>7. コンパイラ未実装のキーに手を出す</h4>
+    <p><code>when:</code> / <code>on_failure:</code> / <code>blocks_on:</code> 等は予約済みだが未実装。スキーマが拒否します。欲しくなった時点でそれは<strong>コード変更</strong>。</p>
+  </div>
+  <div class="card">
+    <h4>8. <code>bun</code> が非対話 PATH にいない</h4>
+    <p>フックとツールは非対話シェルで走ります。ターミナルで <code>which bun</code> が通るのにハーネスが見つけられない場合、export を <code>~/.zshenv</code> / <code>~/.bashrc</code> に写す。</p>
+  </div>
+</div>
+
+<div class="warnbox">
+  <span class="t">9. 出荷時の設定が AWS 前提になっている</span>
+  <p>
+  <code>dist/claude/.claude/settings.json</code> は <code>CLAUDE_CODE_USE_BEDROCK=1</code> / <code>AWS_REGION=us-east-1</code> と Bedrock のモデル ID を固定しています。
+  Bedrock のモデルアクセスと AWS 認証情報がないと<strong>起動しません</strong>。
+  手元のハーネスの認証をそのまま使いたい場合は、<code>.claude/settings.local.json</code>（gitignore 対象）で env の Bedrock 関連キーを除去します。
+  <code>AWS_AIDLC_DEFAULT_SCOPE</code> は Bedrock とは無関係なので残して構いません。
+  </p>
+  <p>
+  同様に <code>.mcp.json</code> は context7（要 API キー）と AWS 系4本（要 <code>uvx</code> ＋ AWS 認証）を宣言しています。
+  認証のないサーバは<strong>単に使えないだけでワークフローは止まらない</strong>ので、必要になるまで導入しない選択もできます
+  （composer の CodeKB グラウンディングは、MCP がなければワークスペーススキャンにフォールバックする、というのが正常系です）。
+  </p>
+</div>
+</section>
+
+<section id="s14">
+<h2><span class="num">14.</span>研究会向け実験メニュー</h2>
+
+<p>
+実際に手を動かすなら、この順で触ると構造が腹に落ちやすいはずです。
+<strong>本番リポジトリではなく空のワークスペース</strong>を用意し、配布物をコピーした直後に <code>git init</code> ＋ タグを打っておくと、
+<code>git reset --hard &lt;tag&gt; &amp;&amp; git clean -fd</code> でいつでも初期状態に戻せます。
+フレームワーク自身の書き込みと生成された成果物を <code>git diff</code> で切り分けられるので、観察目的でもこの形が扱いやすいです。
+</p>
+
+<div class="tablewrap">
+<table>
+<thead><tr><th>#</th><th>やること</th><th>観測ポイント</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>bun .claude/tools/aidlc.ts --doctor</code> を Claude Code の外から直接叩く</td><td>engine が LLM なしで完結していることの確認。ヘルスチェックの項目一覧そのものが機能の索引になっている</td></tr>
+<tr><td>2</td><td><code>aidlc-orchestrate.ts next</code> の生の出力を見る</td><td>directive の JSON 実物。conductor が何を渡されているのか</td></tr>
+<tr><td>3</td><td><code>/aidlc bugfix &lt;小さな修正&gt;</code> を1周回す</td><td>7ステージ・4ゲート。<code>git diff</code> で<strong>フレームワーク自身の書き込み</strong>と成果物を区別して観察できる</td></tr>
+<tr><td>4</td><td>ゲートで意図的に訂正を入れ、学習ループで残す</td><td><code>memory/project.md</code> への着地と <code>RULE_LEARNED</code> 監査行。次のワークフローで効くことも確認</td></tr>
+<tr><td>5</td><td><code>aidlc-graph.ts scope bugfix</code> と <code>topo</code></td><td>グリッドが frontmatter の転置であることの体感</td></tr>
+<tr><td>6</td><td>既存ステージの <code>scopes:</code> に1行足して再コンパイル</td><td>最小のカスタマイズ。<code>compile --check</code> の落ち方も見ておく</td></tr>
+<tr><td>7</td><td><code>hotfix</code> スコープを自作する（§7-C）</td><td>スコープ2分割（identity / membership）の設計意図</td></tr>
+<tr><td>8</td><td><code>/aidlc compose "..."</code> でリッチな散文を投げる</td><td>エントロピー5成分の見積もりと、ステージごとの理由つき表</td></tr>
+<tr><td>9</td><td>実行中に「〜は要らないのでは」と普通に話しかける</td><td>会話が <code>recompose</code> 動詞にルーティングされる様子と <code>RECOMPOSED</code> 監査行</td></tr>
+<tr><td>10</td><td>監査シャードを通して読む</td><td>82イベント型が、実際に何をどこまで復元できるログなのかの評価</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>議論したい論点</h3>
+
+<ul>
+  <li><strong>ルーティングを決定論に置く判断は、どこまで一般化できるか。</strong>「経路計算はコード、実行品質は LLM」という分割は AI-DLC 固有か、それともエージェント設計の一般原則か</li>
+  <li><strong>コンパイル境界（実行中は再コンパイルしない）は、正しいトレードオフか。</strong>再現性を取って適応性を捨てている。長いワークフローほど代償が大きい</li>
+  <li><strong>センサーが助言的であること。</strong>ブロックしないなら、失敗はどこで回収されるのか。ゲートの人間に依存していないか</li>
+  <li><strong>32ステージという粒度。</strong>スコープで削れるとはいえ、既定のセットは AWS の想定するプロジェクト像に強く紐づいている。自分たちの現場に写すとき、何を捨てて何を足すか</li>
+  <li><strong>プラグイン機構を使う価値があるのはどの規模から。</strong><code>core/</code> をフォークして直接いじるのと、プラグインとして分離するコストの分岐点</li>
+</ul>
+
+<div class="footer">
+  <p>
+    <strong>参照元</strong>：<a href="https://github.com/awslabs/aidlc-workflows">awslabs/aidlc-workflows</a>（v2 ブランチ, v2.5.59）の
+    <code>docs/harness-engineering/</code>（カスタマイズ担当者向けガイド）、<code>docs/reference/</code>（開発者リファレンス、とくに
+    01-architecture / 02-plane-architecture / 15-stage-definition / 17-skill-system / 18-plugin-mechanism）、
+    および <code>core/</code> のソースツリー実物。
+    フック17本・センサー5本・エージェント14体・ステージ32本は、いずれもソースツリー上のファイルを直接数えて確認したもの。
+  </p>
+  <p>研究会資料 第2部 ／ 第1部「AI-DLC Workflows 2.0 とは何か」の続き</p>
+  <p>作成：東京海上日動システムズ・中島</p>
+</div>
+</section>
+
+</main>
+</body>
+</html>
