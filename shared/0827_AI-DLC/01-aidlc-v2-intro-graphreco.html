@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI-DLC Workflows 2.0 とは何か ― グラフィックレコーディング</title>
+<style>
+/* ---------- 最小限のリセット（単体HTML用。アーティファクト環境の既定リセットを補う） ---------- */
+html{ -webkit-text-size-adjust:100%; }
+*,*::before,*::after{ box-sizing:border-box; }
+body{ margin:0; padding:0; }
+ul,ol{ margin:0; padding:0; }
+table{ border-collapse:collapse; }
+
+:root{
+  --paper:#F3ECDD;
+  --card:#F7F1E3;
+  --ink:#2A2723;
+  --terracotta:#C15F3C;
+  --teal:#3E6B6E;
+  --highlight:#EED9A0;
+  --shadow:rgba(42,39,35,0.12);
+  --term-bg:#2A2723;
+  --term-fg:#EED9A0;
+  --bubble-bg:#fff9ec;
+  --ink-inv:#fff9ec;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#221c15;
+    --card:#2c2419;
+    --ink:#EDE3D0;
+    --terracotta:#E08A5C;
+    --teal:#7CC0BC;
+    --highlight:#4a3a1f;
+    --shadow:rgba(0,0,0,0.45);
+    --term-bg:#141009;
+    --term-fg:#E8D9A8;
+    --bubble-bg:#332a1d;
+    --ink-inv:#221c15;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#221c15;
+  --card:#2c2419;
+  --ink:#EDE3D0;
+  --terracotta:#E08A5C;
+  --teal:#7CC0BC;
+  --highlight:#4a3a1f;
+  --shadow:rgba(0,0,0,0.45);
+  --term-bg:#141009;
+  --term-fg:#E8D9A8;
+  --bubble-bg:#332a1d;
+  --ink-inv:#221c15;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+
+html,body{
+  margin:0; padding:0; width:100%; overflow-x:hidden;
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(transparent 0 31px, rgba(128,110,80,0.06) 31px 32px),
+    radial-gradient(rgba(128,110,80,0.05) 1px, transparent 1.2px);
+  background-size: auto, 7px 7px;
+  color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","BIZ UDPGothic","Yu Gothic UI","Meiryo",sans-serif;
+  line-height:1.6;
+}
+img,svg{ max-width:100%; height:auto; }
+.page{ max-width:min(980px,92vw); margin:0 auto; }
+
+/* ---------- 番号見出し ---------- */
+.sec-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom:14px; }
+.sec-num{
+  flex-shrink:0; font-size:clamp(1.9rem,5vw,2.8rem); font-weight:bold;
+  color:var(--terracotta); line-height:1;
+  text-shadow: 1.5px 1.5px 0 rgba(193,95,60,0.20);
+}
+.section-title{
+  display:inline-block; font-size:clamp(1.25rem,3.2vw,1.8rem); letter-spacing:0.03em;
+  position:relative; padding-bottom:6px;
+  background-image: linear-gradient(120deg, rgba(193,95,60,0.35), rgba(193,95,60,0.35));
+  background-repeat:no-repeat; background-size:100% 0.42em; background-position:0 92%;
+}
+.sec-sub{ margin:6px 0 0 0; color:var(--ink); opacity:0.68; font-size:0.9rem; }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:0.85rem; color:var(--teal); font-weight:bold; letter-spacing:0.08em; margin-bottom:10px;
+}
+
+/* ---------- セクション & カード ---------- */
+.section{ padding:26px 0; }
+.card{
+  background:var(--card); border:2px solid var(--ink); border-radius:18px;
+  box-shadow: 0 6px 14px var(--shadow); padding:22px clamp(16px,4vw,36px); position:relative;
+}
+
+/* ---------- 表 ---------- */
+.info-table{ width:100%; border-collapse:collapse; margin:16px 0 6px; font-size:0.85rem; }
+.info-table th,.info-table td{ border:1.5px solid var(--ink); padding:8px 10px; text-align:left; vertical-align:top; }
+.info-table th{ background:var(--highlight); font-weight:bold; }
+.info-table tr:nth-child(even) td{ background:rgba(62,107,110,0.07); }
+.tbl-wrap{ overflow-x:auto; }
+
+/* ---------- 解説文 ---------- */
+.explain{ margin-top:12px; font-size:0.92rem; line-height:1.7; }
+.explain strong{ color:var(--terracotta); }
+.explain + .explain{ margin-top:8px; }
+
+/* ---------- 付箋 ---------- */
+.sticky-note{
+  background:var(--highlight); border-radius:2px; padding:14px 18px; position:relative;
+  box-shadow:3px 5px 9px var(--shadow); margin-top:18px; font-weight:bold;
+}
+.sticky-note::after{
+  content:""; position:absolute; top:0; right:0; width:20px; height:20px;
+  background:linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.18) 52%);
+  border-bottom-left-radius:5px;
+}
+.sticky-note small{ display:block; font-weight:normal; margin-top:4px; font-size:0.82rem; }
+
+/* ---------- マーカー・丸囲み ---------- */
+.marker{
+  background-image: linear-gradient(120deg, rgba(193,95,60,0.32), rgba(193,95,60,0.32));
+  background-repeat:no-repeat; background-size:100% 0.55em; background-position:0 82%; font-weight:bold;
+}
+.circled{ position:relative; display:inline-block; padding:0 0.35em; }
+.circled::before{
+  content:""; position:absolute; inset:-6px -10px; border:2.5px solid var(--terracotta);
+  border-radius:48% 52% 45% 55% / 55% 45% 58% 42%; transform: rotate(-1deg); pointer-events:none;
+}
+
+/* ---------- 端末風パネル ---------- */
+.term-panel{
+  background:var(--term-bg); color:var(--term-fg); border-radius:10px; padding:14px 18px;
+  margin-top:14px; font-family:"Consolas","Cascadia Mono","SFMono-Regular",monospace;
+  font-size:0.8rem; line-height:1.65; overflow-x:auto; white-space:pre;
+  border:2px solid var(--ink); box-shadow:0 5px 10px var(--shadow);
+}
+.term-panel .tp-title{ display:block; opacity:.65; font-size:.7rem; margin-bottom:6px; letter-spacing:.06em; }
+
+/* ---------- コミック3コマ ---------- */
+.comic-row{ display:flex; gap:16px; flex-wrap:wrap; margin-top:18px; }
+.comic-panel{
+  flex:1 1 220px; border:2.5px solid var(--ink); border-radius:12px; background:var(--paper);
+  padding:12px 14px 14px; text-align:center; box-shadow:0 5px 10px var(--shadow);
+}
+.comic-num{
+  display:inline-flex; align-items:center; justify-content:center; background:var(--terracotta); color:var(--ink-inv);
+  border-radius:50%; width:24px;height:24px; font-size:.76rem; font-weight:bold; margin-bottom:4px;
+}
+.comic-cap{ font-weight:bold; margin-top:8px; font-size:.88rem; }
+.comic-desc{ font-size:.78rem; margin-top:4px; opacity:.85; }
+
+/* ---------- 5フェーズフロー ---------- */
+.phase-flow{ display:flex; align-items:stretch; gap:4px; margin-top:20px; overflow-x:auto; padding:10px 2px 4px; }
+.phase-box{
+  flex:1 1 150px; min-width:132px; border:2.5px solid var(--ink); border-radius:12px;
+  background:var(--card); padding:12px 10px; text-align:center; position:relative;
+}
+.phase-box.init{ border-style:dashed; }
+.phase-idx{ font-size:1.4rem; font-weight:bold; color:var(--terracotta); }
+.phase-name{ font-weight:bold; font-size:.82rem; margin:4px 0; }
+.phase-stage-badge{
+  display:inline-block; background:var(--highlight); border:1.5px solid var(--ink);
+  border-radius:999px; padding:2px 8px; font-size:.68rem; font-weight:bold; margin:2px 0;
+}
+.phase-desc{ font-size:.7rem; opacity:.85; }
+.phase-arrow{ display:flex; align-items:center; flex:0 0 18px; }
+.gate-mark{
+  position:absolute; top:-13px; right:-8px; background:var(--teal); color:var(--ink-inv);
+  font-size:.6rem; font-weight:bold; padding:3px 6px; border-radius:6px; border:1.5px solid var(--ink);
+  white-space:nowrap;
+}
+.feedback-wrap{ text-align:center; margin-top:6px; }
+.feedback-label{ font-size:.76rem; color:var(--teal); font-weight:bold; display:block; margin-top:2px; }
+
+/* ---------- ダイヤル ---------- */
+.dial-row{ display:flex; gap:20px; flex-wrap:wrap; margin-top:18px; justify-content:center; }
+.dial-item{ text-align:center; width:140px; }
+.dial-name{ font-weight:bold; font-size:.82rem; margin-top:4px; }
+.dial-val{ font-size:.74rem; color:var(--teal); font-weight:bold; }
+
+/* ---------- 比較バー ---------- */
+.bench-row{ margin:16px 0; }
+.bench-head{ display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+.bench-name{ font-weight:bold; font-size:.98rem; }
+.bench-vs{ font-size:.78rem; color:var(--teal); font-weight:bold; }
+.bar-track{
+  background:var(--paper); border:2px solid var(--ink); border-radius:999px; height:26px;
+  position:relative; overflow:hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.10);
+}
+.bar-fill{
+  height:100%; border-radius:999px; background:linear-gradient(90deg, var(--terracotta), #d97b52);
+  display:flex; align-items:center; padding-left:10px; color:var(--ink-inv); font-size:.72rem; font-weight:bold; white-space:nowrap;
+}
+.bar-fill.teal{ background:linear-gradient(90deg, var(--teal), #5aa6a3); }
+
+/* ---------- 積み上げバー（inline/subagent） ---------- */
+.stack-bar{ display:flex; height:32px; border:2px solid var(--ink); border-radius:8px; overflow:hidden; margin-top:12px; }
+.stack-seg{ display:flex; align-items:center; justify-content:center; font-size:.74rem; font-weight:bold; color:var(--ink-inv); }
+.stack-seg.inline{ background:var(--teal); }
+.stack-seg.sub{ background:var(--terracotta); }
+.stack-legend{ display:flex; gap:16px; margin-top:8px; font-size:.76rem; font-weight:bold; flex-wrap:wrap; }
+.stack-legend span{ display:inline-flex; align-items:center; gap:5px; }
+.legend-dot{ width:11px; height:11px; border-radius:3px; display:inline-block; border:1.5px solid var(--ink); }
+
+/* ---------- 良い面/引っかかる面 ---------- */
+.gb-row{ display:flex; gap:20px; flex-wrap:wrap; margin-top:16px; }
+.gb-col{ flex:1 1 260px; }
+.gb-title{ font-weight:bold; font-size:1rem; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.gb-col.good .gb-title{ color:var(--teal); }
+.gb-col.bad .gb-title{ color:var(--terracotta); }
+.gb-list{ list-style:none; margin:0; padding:0; }
+.gb-list li{
+  display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; font-size:.86rem;
+  border:2px solid var(--ink); border-radius:10px; padding:10px 12px; background:var(--paper);
+}
+.gb-list svg{ flex-shrink:0; margin-top:1px; }
+
+/* ---------- ステップ図 ---------- */
+.step-row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:18px; align-items:stretch; }
+.step-box{ flex:1 1 130px; border:2px solid var(--ink); border-radius:12px; padding:12px 10px; text-align:center; background:var(--card); }
+.step-num{
+  width:30px; height:30px; border-radius:50%; background:var(--terracotta); color:var(--ink-inv);
+  font-weight:bold; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-size:.85rem;
+}
+.step-title{ font-weight:bold; font-size:.82rem; }
+.step-desc{ font-size:.7rem; margin-top:3px; opacity:.85; }
+.step-arrow{ display:flex; align-items:center; flex:0 0 18px; }
+
+/* ---------- メモリ種別チップ ---------- */
+.chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.mem-chip{
+  background:var(--highlight); border:2px solid var(--ink); border-radius:10px; padding:8px 10px;
+  font-size:.78rem; font-weight:bold; flex:1 1 130px; text-align:center;
+}
+
+/* ---------- ハブ&スポーク／ループ図 ---------- */
+.diagram-wrap{ display:flex; justify-content:center; margin-top:16px; }
+
+/* ---------- ツリー図の並び ---------- */
+.tree-illust-row{ display:flex; align-items:center; gap:16px; justify-content:center; flex-wrap:wrap; margin:16px 0 4px; }
+.tree-illust-cap{ font-size:.76rem; font-weight:bold; color:var(--teal); text-align:center; }
+
+/* ---------- 逸話カード ---------- */
+.flow-wrap{ display:flex; gap:14px; align-items:stretch; flex-wrap:wrap; margin-top:16px; }
+.flow-box{ flex:1 1 220px; display:flex; flex-direction:column; border:2px solid var(--ink); border-radius:14px; padding:14px 16px; }
+.flow-box.before{ background:#eee3d2; }
+.flow-box.after{ background:var(--card); border-color:var(--teal); border-width:2.5px; }
+.flow-label{ font-weight:bold; font-size:.74rem; color:var(--teal); letter-spacing:.05em; margin-bottom:4px; }
+.flow-title{ font-weight:bold; font-size:.94rem; margin-bottom:6px; }
+.flow-desc{ font-size:.82rem; }
+.flow-arrow-wrap{ display:flex; align-items:center; justify-content:center; flex:0 0 40px; }
+@media (max-width:700px){ .flow-arrow-wrap svg{ transform:rotate(90deg); } .flow-arrow-wrap{ flex-basis:30px; } }
+
+/* ---------- まとめ ---------- */
+.summary-list{ margin:16px 0; padding-left:0; list-style:none; }
+.summary-list li{ margin-bottom:10px; padding-left:32px; position:relative; font-weight:bold; font-size:.94rem; }
+.summary-list li::before{ content:"◎"; position:absolute; left:0; color:var(--terracotta); }
+
+/* ---------- ヒーロー ---------- */
+.hero{ text-align:center; padding-top:34px; }
+.hero .section-title{ font-size:clamp(1.7rem,6vw,2.7rem); }
+.hero-sub{ font-size:clamp(0.95rem,2.4vw,1.15rem); margin-top:12px; }
+.hero-date{
+  display:inline-block; margin-top:16px; background:var(--terracotta); color:var(--ink-inv);
+  padding:7px 18px; border-radius:999px; font-weight:bold; box-shadow:0 5px 10px var(--shadow); font-size:.82rem;
+}
+
+/* ---------- 出典 ---------- */
+footer.source{ text-align:center; font-size:0.78rem; opacity:0.75; padding:18px 0 50px; }
+footer.source a{ color:var(--teal); }
+</style>
+</head>
+<body>
+
+<!-- 再利用SVGシンボル定義（外部参照なし・単一HTML内で完結） -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="check-mark" viewBox="0 0 18 16">
+    <path d="M2 8 L7 13 L16 3" stroke="#3E6B6E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="hand-arrow" viewBox="0 0 60 24">
+    <path d="M2 12 Q30 6 48 12" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M48 12 L40 7 M48 12 L40 17" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="sparkle" viewBox="0 0 24 24">
+    <path d="M12 1 L14.2 9.8 L23 12 L14.2 14.2 L12 23 L9.8 14.2 L1 12 L9.8 9.8 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="1.2" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="magnifier" viewBox="0 0 80 80">
+    <circle cx="34" cy="34" r="20" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="48" y1="48" x2="68" y2="68" stroke="#2A2723" stroke-width="4" stroke-linecap="round"/>
+    <path d="M24 30 Q30 22 40 26" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+  </symbol>
+  <symbol id="checklist-doc" viewBox="0 0 80 80">
+    <path d="M20 10 L52 10 L62 20 L62 70 Q62 72 60 72 L20 72 Q18 72 18 70 L18 12 Q18 10 20 10 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M52 10 L52 20 L62 20 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M26 32 L31 37 L38 28" fill="none" stroke="#3E6B6E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="42" y1="33" x2="56" y2="33" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+    <path d="M26 48 L31 53 L38 44" fill="none" stroke="#3E6B6E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="42" y1="49" x2="56" y2="49" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+    <rect x="25" y="60" width="8" height="8" fill="none" stroke="#2A2723" stroke-width="2"/>
+    <line x1="42" y1="64" x2="56" y2="64" stroke="#2A2723" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="laptop" viewBox="0 0 80 80">
+    <path d="M20 22 Q20 19 23 19 L57 19 Q60 19 60 22 L60 52 L20 52 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M25 28 Q40 24 55 28" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+    <path d="M25 36 Q38 33 50 36" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+    <path d="M10 60 Q10 56 14 56 L66 56 Q70 56 70 60 Q70 64 65 64 L15 64 Q10 64 10 60 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="shield" viewBox="0 0 80 80">
+    <path d="M40 10 Q56 16 64 20 Q66 46 40 70 Q14 46 16 20 Q24 16 40 10 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M28 38 L37 47 L54 28" fill="none" stroke="#2A2723" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="talking-person" viewBox="0 0 80 80">
+    <circle cx="30" cy="26" r="12" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M14 68 Q14 46 30 46 Q46 46 46 68" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M48 14 Q70 14 70 30 Q70 44 54 44 L54 52 L46 42 Q46 42 46 30 Q46 14 48 14 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="54" y1="24" x2="64" y2="24" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+    <line x1="54" y1="31" x2="60" y2="31" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+  </symbol>
+  <symbol id="folder-icon" viewBox="0 0 80 80">
+    <path d="M10 24 L10 62 Q10 66 14 66 L66 66 Q70 66 70 62 L70 30 Q70 26 66 26 L38 26 L32 18 L14 18 Q10 18 10 24 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="warn-tri" viewBox="0 0 80 80">
+    <path d="M40 12 L74 68 L6 68 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <line x1="40" y1="34" x2="40" y2="50" stroke="#C15F3C" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="40" cy="58" r="3" fill="#C15F3C"/>
+  </symbol>
+  <symbol id="loop-arrow-icon" viewBox="0 0 80 80">
+    <path d="M20 24 A28 28 0 1 1 18 56" fill="none" stroke="#2A2723" stroke-width="4" stroke-linecap="round"/>
+    <path d="M18 56 L8 50 M18 56 L26 64" fill="none" stroke="#2A2723" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="gauge-icon" viewBox="0 0 80 60">
+    <path d="M10 55 A30 30 0 0 1 70 55" fill="none" stroke="#2A2723" stroke-width="4"/>
+    <line x1="40" y1="55" x2="60" y2="25" stroke="#C15F3C" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="40" cy="55" r="5" fill="#EED9A0" stroke="#2A2723" stroke-width="2"/>
+  </symbol>
+  <symbol id="gauge-icon-mid" viewBox="0 0 80 60">
+    <path d="M10 55 A30 30 0 0 1 70 55" fill="none" stroke="#2A2723" stroke-width="4"/>
+    <line x1="40" y1="55" x2="40" y2="20" stroke="#3E6B6E" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="40" cy="55" r="5" fill="#EED9A0" stroke="#2A2723" stroke-width="2"/>
+  </symbol>
+  <symbol id="gauge-icon-low" viewBox="0 0 80 60">
+    <path d="M10 55 A30 30 0 0 1 70 55" fill="none" stroke="#2A2723" stroke-width="4"/>
+    <line x1="40" y1="55" x2="20" y2="25" stroke="#C15F3C" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="40" cy="55" r="5" fill="#EED9A0" stroke="#2A2723" stroke-width="2"/>
+  </symbol>
+  <symbol id="pencil-file-icon" viewBox="0 0 80 80">
+    <path d="M18 10 L50 10 L60 20 L60 70 Q60 72 58 72 L18 72 Q16 72 16 70 L16 12 Q16 10 18 10 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M50 10 L50 20 L60 20 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M26 46 L48 24 L56 32 L34 54 L24 56 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="bubble-q-icon" viewBox="0 0 80 80">
+    <path d="M10 16 Q10 10 16 10 L64 10 Q70 10 70 16 L70 44 Q70 50 64 50 L30 50 L18 62 L20 50 L16 50 Q10 50 10 44 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+    <text x="40" y="37" font-size="24" font-weight="bold" fill="#C15F3C" text-anchor="middle" font-family="sans-serif">?</text>
+  </symbol>
+  <symbol id="owl-doc" viewBox="0 0 100 100">
+    <ellipse cx="50" cy="58" rx="34" ry="32" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M28 30 Q34 8 44 27" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M72 30 Q66 8 56 27" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="38" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="62" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <line x1="49" y1="51" x2="51" y2="51" stroke="#2A2723" stroke-width="2.5"/>
+    <circle cx="38" cy="52" r="4.2" fill="#2A2723"/>
+    <circle cx="62" cy="52" r="4.2" fill="#2A2723"/>
+    <path d="M50 60 L45 69 L55 69 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M17 66 Q8 76 19 87" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M83 66 Q92 76 81 87" fill="none" stroke="#2A2723" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="gate-icon" viewBox="0 0 80 80">
+    <rect x="14" y="14" width="52" height="52" rx="8" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5"/>
+    <path d="M28 40 L36 48 L54 28" fill="none" stroke="#3E6B6E" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+</svg>
+
+<div class="page">
+
+<!-- ===== ヒーロー ===== -->
+<header class="section hero">
+  <div class="eyebrow"><svg width="16" height="16"><use href="#sparkle"/></svg>GRAPHIC RECORDING ｜ 開発方法論解説<svg width="16" height="16"><use href="#sparkle"/></svg></div>
+  <h1 class="section-title">AI-DLC Workflows 2.0<br>とは何か</h1>
+  <p class="hero-sub">AIエージェント開発に「工程」と「承認」を持ち込む方法論 ― awslabs/aidlc-workflows 徹底図解</p>
+  <div class="hero-date">v2.5.59（2.0 GA）／ MIT-0 ／ 作成: 東京海上日動システムズ・中島</div>
+</header>
+
+<!-- ===== 01 一言でいうと ===== -->
+<section class="section" id="s01">
+  <div class="sec-head">
+    <div class="sec-num">01</div>
+    <div>
+      <span class="section-title">一言でいうと</span>
+      <p class="sec-sub">AI-DLCという考え方 / aidlc-workflowsという実装 / 2.0という世代</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="comic-row" style="align-items:center;">
+      <div class="comic-panel" style="flex:0 0 120px;">
+        <svg width="90" height="90"><use href="#owl-doc"/></svg>
+        <div class="comic-desc">工程と承認を持ち込む方法論</div>
+      </div>
+      <div style="flex:1 1 260px;">
+        <div class="term-panel">
+<span class="tp-title">$ ターミナル</span>/aidlc 在庫管理の REST API を作りたい
+        </div>
+        <p class="explain">これだけで、<strong>要求の整理 → 実現性の検討 → 要件定義 → アーキテクチャ設計 → 作業単位への分解 → 実装 → テスト → デプロイ</strong> までを決められた順番のステージとして進行させる。各ステージの終わりには必ず<strong>人間の承認ゲート</strong>があり、承認しない限り次に進まない。生成された成果物と、そこに至った判断はすべてファイルとして残る。</p>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table class="info-table">
+        <tr><th>用語</th><th>指すもの</th></tr>
+        <tr><td><strong>AI-DLC</strong>（方法論）</td><td>AWS が定義した「AI駆動開発ライフサイクル」という考え方（ブログとメソッド定義論文がある）</td></tr>
+        <tr><td><strong>aidlc-workflows</strong>（実装）</td><td>その方法論をスキル・エージェント・フック・CLIツールとして書き下ろした OSS</td></tr>
+        <tr><td><strong>2.0 / v2</strong>（世代）</td><td>1本のソース（core/）から Claude Code / Kiro IDE / Kiro CLI / Codex CLI / opencode 向けの配布物を生成する構造になった世代</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 02 なぜこれが要るのか ===== -->
+<section class="section" id="s02">
+  <div class="sec-head">
+    <div class="sec-num">02</div>
+    <div>
+      <span class="section-title">なぜこれが要るのか</span>
+      <p class="sec-sub">アドホックなAIコーディングが本気のプロジェクトで破綻する3つの理由</p>
+    </div>
+  </div>
+  <div class="card">
+    <p class="explain">アドホックな AI コーディング（「このアプリ作って」と投げる）は小さいうちはよく動く。<span class="marker">破綻するのはプロジェクトが本気になってから</span>。3つが起きる。</p>
+    <div class="comic-row">
+      <div class="comic-panel">
+        <span class="comic-num">1</span>
+        <svg viewBox="0 0 160 120" width="140" height="100">
+          <rect x="10" y="8" width="100" height="22" rx="10" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.2"/>
+          <rect x="20" y="36" width="90" height="20" rx="10" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.2" opacity="0.6"/>
+          <rect x="30" y="62" width="75" height="18" rx="9" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.2" opacity="0.32"/>
+          <path d="M45 82 Q45 94 40 102" fill="none" stroke="#3E6B6E" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+          <circle cx="39" cy="106" r="3.5" fill="#3E6B6E" opacity="0.6"/>
+          <path d="M70 82 Q72 96 66 106" fill="none" stroke="#3E6B6E" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+          <circle cx="65" cy="110" r="3" fill="#3E6B6E" opacity="0.4"/>
+        </svg>
+        <div class="comic-cap">コンテキストが流れる</div>
+        <div class="comic-desc">プロンプトをまたぐうちに最初に合意した前提が薄れる。会話が長くなるほど初期の決定は「なかったこと」になりやすい</div>
+      </div>
+      <div class="comic-panel">
+        <span class="comic-num">2</span>
+        <svg viewBox="0 0 160 120" width="140" height="100">
+          <rect x="30" y="60" width="80" height="14" rx="2" fill="#eee3d2" stroke="#2A2723" stroke-width="2"/>
+          <rect x="34" y="48" width="80" height="14" rx="2" fill="#eee3d2" stroke="#2A2723" stroke-width="2"/>
+          <rect x="38" y="36" width="80" height="14" rx="2" fill="#F7F1E3" stroke="#2A2723" stroke-width="2"/>
+          <circle cx="60" cy="18" r="16" fill="none" stroke="#2A2723" stroke-width="2.5"/>
+          <line x1="72" y1="30" x2="88" y2="46" stroke="#2A2723" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="53" y1="18" x2="67" y2="18" stroke="#C15F3C" stroke-width="2" stroke-dasharray="3 3"/>
+        </svg>
+        <div class="comic-cap">判断の根拠が残らない</div>
+        <div class="comic-desc">なぜその設計にしたのかがチャットログに埋もれる。3週間後に読み返せる形になっていない</div>
+      </div>
+      <div class="comic-panel">
+        <span class="comic-num">3</span>
+        <svg viewBox="0 0 160 120" width="140" height="100">
+          <path d="M46 8 L96 8 L110 22 L110 106 Q110 110 106 110 L46 110 Q42 110 42 106 L42 12 Q42 8 46 8 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M96 8 L96 22 L110 22 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2" stroke-linejoin="round"/>
+          <line x1="54" y1="44" x2="94" y2="44" stroke="#2A2723" stroke-width="2" opacity="0.5"/>
+          <line x1="54" y1="56" x2="94" y2="56" stroke="#2A2723" stroke-width="2" opacity="0.5"/>
+          <line x1="54" y1="68" x2="82" y2="68" stroke="#C15F3C" stroke-width="2.5"/>
+          <path d="M14 90 Q10 76 26 72 Q34 70 40 78" fill="#3E6B6E" stroke="#2A2723" stroke-width="2.2" stroke-linejoin="round" opacity="0.85"/>
+          <circle cx="24" cy="58" r="9" fill="none" stroke="#C15F3C" stroke-width="2"/>
+          <text x="24" y="63" font-size="14" font-weight="bold" fill="#C15F3C" text-anchor="middle" font-family="sans-serif">!</text>
+        </svg>
+        <div class="comic-cap">頼んでいないことをやる</div>
+        <div class="comic-desc">気づいたら別のファイルが書き換わっている。どこで方針が変わったか後から特定できない</div>
+      </div>
+    </div>
+    <div class="sticky-note">
+      AI-DLC の答え：工程に構造を入れる。
+      <small>ステージごとに担当（エージェント）が決まり、次に進む前に必ず承認ゲートを通り、やり取りの結果はファイルと監査ログに落ちる。加えて人間の訂正を記録して次回以降に引き継ぐ（学習ループ）。</small>
+    </div>
+    <p class="explain">設計原則：<strong>同じエンジンで使い捨ての PoC も規制産業向けの本番機能も回せる</strong>。違いは「どれだけのステージを、どれだけの深さで走らせるか」だけで、別のツールに乗り換える必要がない。</p>
+  </div>
+</section>
+
+<!-- ===== 03 全体像 ===== -->
+<section class="section" id="s03">
+  <div class="sec-head">
+    <div class="sec-num">03</div>
+    <div>
+      <span class="section-title">全体像 ― 5フェーズ32ステージ</span>
+      <p class="sec-sub">フェーズの境目に検証ゲート、末尾にフィードバックループ</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="phase-flow">
+      <div class="phase-box init">
+        <span class="gate-mark">自動チェック</span>
+        <div class="phase-idx">0</div>
+        <div class="phase-name">Initialization</div>
+        <div class="phase-stage-badge">3 ステージ</div>
+        <div class="phase-desc">作業場初期化</div>
+      </div>
+      <div class="phase-arrow"><svg width="18" height="18"><use href="#hand-arrow"/></svg></div>
+      <div class="phase-box">
+        <span class="gate-mark">検証ゲート1</span>
+        <div class="phase-idx">1</div>
+        <div class="phase-name">Ideation</div>
+        <div class="phase-stage-badge">7 ステージ</div>
+        <div class="phase-desc">やることの合意</div>
+      </div>
+      <div class="phase-arrow"><svg width="18" height="18"><use href="#hand-arrow"/></svg></div>
+      <div class="phase-box">
+        <span class="gate-mark">検証ゲート2</span>
+        <div class="phase-idx">2</div>
+        <div class="phase-name">Inception</div>
+        <div class="phase-stage-badge">8 ステージ</div>
+        <div class="phase-desc">要件と設計</div>
+      </div>
+      <div class="phase-arrow"><svg width="18" height="18"><use href="#hand-arrow"/></svg></div>
+      <div class="phase-box">
+        <span class="gate-mark">検証ゲート3</span>
+        <div class="phase-idx">3</div>
+        <div class="phase-name">Construction</div>
+        <div class="phase-stage-badge">7 ステージ</div>
+        <div class="phase-desc">実装とテスト</div>
+      </div>
+      <div class="phase-arrow"><svg width="18" height="18"><use href="#hand-arrow"/></svg></div>
+      <div class="phase-box">
+        <div class="phase-idx">4</div>
+        <div class="phase-name">Operation</div>
+        <div class="phase-stage-badge">7 ステージ</div>
+        <div class="phase-desc">デプロイと運用</div>
+      </div>
+    </div>
+    <div class="feedback-wrap">
+      <svg width="34" height="34"><use href="#loop-arrow-icon"/></svg>
+      <span class="feedback-label">フィードバックループ（運用の学びを次のサイクルへ）</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="info-table">
+        <tr><th>フェーズ</th><th>目的</th><th>代表的なステージ</th></tr>
+        <tr><td>0. Initialization</td><td>作業場を用意する。ここだけ承認ゲートなしで、1回のツール呼び出しの中で瞬時に終わる</td><td>ワークスペース作成、既存コードの検出、状態初期化</td></tr>
+        <tr><td>1. Ideation</td><td>「そもそも何をやるのか」を固める</td><td>意図の言語化、市場調査、実現性・制約、スコープ定義、チーム編成、ラフモック、承認と引き継ぎ</td></tr>
+        <tr><td>2. Inception</td><td>要件を詳細化し、設計して、作業単位に割る</td><td>リバースエンジニアリング（既存コードがある場合）、開発プラクティス発見、要件分析、ユーザーストーリー、アプリケーション設計、ユニット生成、デリバリー計画</td></tr>
+        <tr><td>3. Construction</td><td>作る。レビュー可能な大きさに切って進める</td><td>機能設計、非機能要件と設計、インフラ設計、コード生成、ビルド＆テスト、CIパイプライン</td></tr>
+        <tr><td>4. Operation</td><td>出して、運用する</td><td>デプロイパイプライン、環境構築、デプロイ実行、可観測性、インシデント対応、性能検証、フィードバック</td></tr>
+      </table>
+    </div>
+    <p class="explain">注記：32ステージ全部を毎回走らせるわけではない。制御するのが<strong>スコープ</strong>（次節）。フェーズの境目では成果物同士のトレーサビリティ（要件→ストーリー→作業単位）を自動チェックする。</p>
+  </div>
+</section>
+
+<!-- ===== 04 スコープ ===== -->
+<section class="section" id="s04">
+  <div class="sec-head">
+    <div class="sec-num">04</div>
+    <div>
+      <span class="section-title">スコープ ― 儀式の量を決めるダイヤル</span>
+      <p class="sec-sub">32ステージのうちどれを走らせるか。標準で9種類同梱</p>
+    </div>
+  </div>
+  <div class="card">
+    <p class="explain">バグ修正に市場調査は要らない。規制産業の機能追加でコンプライアンス確認を飛ばすわけにもいかない。<span class="marker">スコープが「32のうちどれを走らせるか」を決める</span>。</p>
+    <div class="dial-row">
+      <div class="dial-item">
+        <svg width="80" height="60"><use href="#gauge-icon"/></svg>
+        <div class="dial-name">スコープ</div>
+        <div class="dial-val">どのステージを走らせるか</div>
+      </div>
+      <div class="dial-item">
+        <svg width="80" height="60"><use href="#gauge-icon-mid"/></svg>
+        <div class="dial-name">深さ（Depth）</div>
+        <div class="dial-val">Minimal / Standard / Comprehensive</div>
+      </div>
+      <div class="dial-item">
+        <svg width="80" height="60"><use href="#gauge-icon-low"/></svg>
+        <div class="dial-name">テスト戦略</div>
+        <div class="dial-val">Minimal / Standard / Comprehensive</div>
+      </div>
+    </div>
+    <p class="explain" style="margin-top:6px;">深さとテスト戦略は実行中の承認ゲートで変更できる。3つは独立したダイヤルとして機能する。</p>
+
+    <div style="margin-top:20px;">
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">enterprise</span><span class="bench-vs">32/32・Comprehensive</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%;">規制対象・監査証跡が要る機能</div></div>
+      </div>
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">feature</span><span class="bench-vs">32/32・Standard（既定のフォールバック）</span></div>
+        <div class="bar-track"><div class="bar-fill teal" style="width:100%;">通常の新機能</div></div>
+      </div>
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">workshop</span><span class="bench-vs">25/32・Standard</span></div>
+        <div class="bar-track"><div class="bar-fill teal" style="width:78.1%;">ワークショップ・研修</div></div>
+      </div>
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">mvp</span><span class="bench-vs">22/32・Standard</span></div>
+        <div class="bar-track"><div class="bar-fill teal" style="width:68.75%;">グリーンフィールドMVP（運用フェーズ省略）</div></div>
+      </div>
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">infra</span><span class="bench-vs">13/32・Standard</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:40.6%;">CDK/CloudFormation変更</div></div>
+      </div>
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">security-patch</span><span class="bench-vs">10/32・Minimal</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:31.25%;">CVE対応</div></div>
+      </div>
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">poc</span><span class="bench-vs">8/32・Minimal</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%;">実現性の検証、スパイク</div></div>
+      </div>
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">refactor</span><span class="bench-vs">8/32・Minimal</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:25%;">挙動を変えないリファクタ</div></div>
+      </div>
+      <div class="bench-row">
+        <div class="bench-head"><span class="bench-name">bugfix</span><span class="bench-vs">7/32・Minimal</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:21.875%;">既知のバグ修正</div></div>
+      </div>
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="info-table">
+        <tr><th>スコープ</th><th>実行ステージ</th><th>既定の深さ</th><th>使いどころ</th></tr>
+        <tr><td>enterprise</td><td>32/32</td><td>Comprehensive</td><td>規制対象・監査証跡が要る機能</td></tr>
+        <tr><td>feature</td><td>32/32</td><td>Standard</td><td>通常の新機能（既定のフォールバック）</td></tr>
+        <tr><td>workshop</td><td>25/32</td><td>Standard</td><td>ワークショップ・研修（題材は事前決定済み）</td></tr>
+        <tr><td>mvp</td><td>22/32</td><td>Standard</td><td>グリーンフィールドのMVP。運用フェーズは省略</td></tr>
+        <tr><td>infra</td><td>13/32</td><td>Standard</td><td>インフラ変更、CDK/CloudFormation</td></tr>
+        <tr><td>security-patch</td><td>10/32</td><td>Minimal</td><td>CVE対応</td></tr>
+        <tr><td>poc</td><td>8/32</td><td>Minimal</td><td>実現性の検証、スパイク</td></tr>
+        <tr><td>refactor</td><td>8/32</td><td>Minimal</td><td>挙動を変えないリファクタ</td></tr>
+        <tr><td>bugfix</td><td>7/32</td><td>Minimal</td><td>既知のバグ修正</td></tr>
+      </table>
+    </div>
+    <p class="explain">指定方法：明示指定（<code>/aidlc bugfix ログイン不具合の修正</code>）もできるが、自由文から自動判定もされる。「fix」「bug」なら bugfix、「CVE」「脆弱性」なら security-patch。判定結果は必ず実行前に確認される。</p>
+    <div class="term-panel">
+<span class="tp-title">$ 実行前の確認例（そのまま引用）</span>Starting a "bugfix" workflow for: "fix login bug" - 7 of 32 stages,
+4 approval gates, 1 stage repeats per unit of work in Construction.
+    </div>
+    <p class="explain">何ステージ走って承認ゲートが何回あるのかを、始める前に必ず数字で提示。コンパイル済みグリッドから計算された<strong>実数</strong>で推測値ではない。違うと思えば別スコープを指定できる。</p>
+    <div class="sticky-note">
+      ナイキストモデル ＝ テスト戦略 Minimal の呼び名
+      <small>要件1つにつきテスト1本（＋各コンポーネントに最低1本のハッピーパス）。信号を復元するのに必要な最小サンプリング周波数、という比喩から。</small>
+    </div>
+    <p class="explain"><strong>自動提案（composer）</strong>：当てはまるスコープがないとき、リッチな文章を投げると既存スコープに無理やり寄せず「専用の計画を組みましょうか？」と composer が提案。タスクの曖昧さ・コードベースの不確実性・検証コスト・リスクを見積もり、必要十分な最小のステージ集合を組み立て、各ステージについて実行/スキップの理由を添えた表を提示。承認するまで何も書き込まれない。</p>
+  </div>
+</section>
+
+<!-- ===== 05 14エージェント ===== -->
+<section class="section" id="s05">
+  <div class="sec-head">
+    <div class="sec-num">05</div>
+    <div>
+      <span class="section-title">誰が働くのか ― 14エージェント</span>
+      <p class="sec-sub">30個の細かい専門エージェントではなく、広い守備範囲のモブ編成</p>
+    </div>
+  </div>
+  <div class="card">
+    <p class="explain">設計原則：AI-DLC は「30個の細かい専門エージェント」を作らない。専門を細かく割るほど<strong>引き継ぎの連鎖（＝ウォーターフォール）が復活する</strong>から。代わりに広い守備範囲を持つ11のドメインエージェントが複数ステージ・複数フェーズをまたいで働く。3〜5人のモブが機能ひとつを最初から最後まで見る、という人間のチームの形を写したもの。</p>
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 320 260" width="100%" style="max-width:340px">
+        <line x1="160" y1="130" x2="160" y2="48" stroke="#2A2723" stroke-width="2.5"/>
+        <line x1="160" y1="130" x2="66" y2="196" stroke="#2A2723" stroke-width="2.5"/>
+        <line x1="160" y1="130" x2="254" y2="196" stroke="#2A2723" stroke-width="2.5"/>
+        <circle cx="160" cy="130" r="40" fill="#C15F3C" stroke="#2A2723" stroke-width="3"/>
+        <text x="160" y="127" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff9ec" font-family="sans-serif">conductor</text>
+        <text x="160" y="142" text-anchor="middle" font-size="10" fill="#fff9ec" font-family="sans-serif">指揮役</text>
+        <circle cx="160" cy="42" r="34" fill="#EED9A0" stroke="#2A2723" stroke-width="2.5"/>
+        <text x="160" y="38" text-anchor="middle" font-size="10" font-weight="bold" fill="#2A2723" font-family="sans-serif">domain agents</text>
+        <text x="160" y="51" text-anchor="middle" font-size="13" font-weight="bold" fill="#2A2723" font-family="sans-serif">×11</text>
+        <circle cx="60" cy="210" r="30" fill="#F7F1E3" stroke="#3E6B6E" stroke-width="2.5"/>
+        <text x="60" y="207" text-anchor="middle" font-size="9" font-weight="bold" fill="#2A2723" font-family="sans-serif">review</text>
+        <text x="60" y="220" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723" font-family="sans-serif">×2</text>
+        <circle cx="260" cy="210" r="30" fill="#F7F1E3" stroke="#3E6B6E" stroke-width="2.5"/>
+        <text x="260" y="207" text-anchor="middle" font-size="9" font-weight="bold" fill="#2A2723" font-family="sans-serif">composer</text>
+        <text x="260" y="220" text-anchor="middle" font-size="12" font-weight="bold" fill="#2A2723" font-family="sans-serif">×1</text>
+      </svg>
+    </div>
+    <div class="tbl-wrap">
+      <table class="info-table">
+        <tr><th>エージェント</th><th>担当領域</th></tr>
+        <tr><td>product</td><td>要求、ユーザーストーリー、スコープ、市場調査</td></tr>
+        <tr><td>design</td><td>UX/UI、ワイヤーフレーム、アクセシビリティ</td></tr>
+        <tr><td>delivery</td><td>チーム編成、キャパシティ計画、デリバリー順序</td></tr>
+        <tr><td>architect</td><td>アプリケーション設計、ドメインモデル、非機能要件、コンポーネント分解（関与ステージ最多）</td></tr>
+        <tr><td>aws-platform</td><td>AWS インフラ、CDK/CloudFormation、コスト最適化</td></tr>
+        <tr><td>compliance</td><td>規制・統制要件</td></tr>
+        <tr><td>devsecops</td><td>セキュリティ、脅威モデリング</td></tr>
+        <tr><td>developer</td><td>コード生成、既存コードのスキャン</td></tr>
+        <tr><td>quality</td><td>テスト設計、ビルド＆テスト、性能検証</td></tr>
+        <tr><td>pipeline-deploy</td><td>CI/CD、デプロイ</td></tr>
+        <tr><td>operations</td><td>可観測性、インシデント対応、SRE</td></tr>
+      </table>
+    </div>
+    <p class="explain">＋ レビュー専任2体（product-lead / architecture-reviewer）＋ composer ＝ 計14体。通信構造：エージェント同士が勝手に呼び合うことはない。すべての委譲は<strong>指揮役（conductor）</strong>が行う。1ステージに「リード」が1体いて成果物の責任を持ち、必要に応じて「サポート」が加わる。</p>
+    <div class="stack-bar">
+      <div class="stack-seg inline" style="width:87.5%;">inline 28</div>
+      <div class="stack-seg sub" style="width:12.5%;">sub 4</div>
+    </div>
+    <div class="stack-legend">
+      <span><span class="legend-dot" style="background:var(--teal);"></span>inline（指揮役が自分のコンテキスト内で各ペルソナを被って進める）＝28/32</span>
+      <span><span class="legend-dot" style="background:var(--terracotta);"></span>独立したサブエージェント起動（ハブ&スポーク／パイプライン／モブ）＝4/32</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 06 人間の関わり ===== -->
+<section class="section" id="s06">
+  <div class="sec-head">
+    <div class="sec-num">06</div>
+    <div>
+      <span class="section-title">人間はどこで関わるのか</span>
+      <p class="sec-sub">承認ゲートの本物性と、3つの対話モード</p>
+    </div>
+  </div>
+  <div class="card">
+    <p class="explain">ステージ末の承認ゲート（画面そのまま）：</p>
+    <div class="term-panel">
+<span class="tp-title">$ 承認ゲート画面</span>&#9656; How would you like to proceed?
+  (1) Approve &#8212; Continue to [次のステージ名]
+  (2) Request Changes &#8212; 修正内容を伝える
+    </div>
+    <p class="explain">Initialization の3ステージを除く全ステージにこのゲートがある。「次のステージ名」は推測ではなくエンジンが計算した実際の遷移先。</p>
+
+    <div class="comic-row" style="align-items:stretch;">
+      <div class="comic-panel" style="flex:1 1 150px;">
+        <svg width="60" height="60"><use href="#gate-icon"/></svg>
+        <div class="comic-cap">ステージ完了</div>
+      </div>
+      <div class="step-arrow" style="flex:0 0 24px;"><svg width="24" height="24"><use href="#hand-arrow"/></svg></div>
+      <div class="comic-panel" style="flex:1 1 150px;">
+        <svg width="60" height="60"><use href="#check-mark"/></svg>
+        <div class="comic-cap">Approve</div>
+        <div class="comic-desc">次のステージへ</div>
+      </div>
+      <div class="step-arrow" style="flex:0 0 24px;"><svg width="24" height="24"><use href="#loop-arrow-icon"/></svg></div>
+      <div class="comic-panel" style="flex:1 1 170px;">
+        <svg width="60" height="60"><use href="#warn-tri"/></svg>
+        <div class="comic-cap">Request Changes</div>
+        <div class="comic-desc">3周目に入ると「Accept as-is」が出現（2周目で予告）</div>
+      </div>
+    </div>
+
+    <p class="explain" style="margin-top:16px;"><strong>ゲートの本物性</strong>：このゲートは本物の人間の操作を要求する。プロンプトを打つ／選択ウィジェットに答えると監査台帳に「人間のターン」が記録され、前回のゲート解決以降にそれが1件もなければ承認は拒否される。<span class="marker">モデルが自動運転のまま「承認されました」と自作自演することを構造的に防ぐ</span>。</p>
+    <p class="explain"><strong>3ストライク・エスケープハッチ</strong>：同じステージで修正依頼が3周目に入ると「このまま受け入れる（Accept as-is）」が現れる。2周目の時点で「次から出ます」と予告される。エージェントと平行線になったときに無限ループしないための逃げ道。</p>
+
+    <p class="explain" style="margin-top:14px;">ステージ中の3つの対話モード。途中でモードを切り替えても進捗は失われない。3つとも<strong>質問ファイル</strong>という同じ着地点に収束するよう設計されているため。</p>
+    <div class="comic-row" style="align-items:center;">
+      <div class="comic-panel" style="flex:1 1 150px;">
+        <svg width="56" height="56"><use href="#bubble-q-icon"/></svg>
+        <div class="comic-cap">Guide Me</div>
+        <div class="comic-desc">構造化された質問に答える。抜け漏れが出にくい</div>
+      </div>
+      <div class="comic-panel" style="flex:1 1 150px;">
+        <svg width="56" height="56"><use href="#pencil-file-icon"/></svg>
+        <div class="comic-cap">Edit File</div>
+        <div class="comic-desc">空欄つきの質問ファイルに自分のペースで書き込む</div>
+      </div>
+      <div class="comic-panel" style="flex:1 1 150px;">
+        <svg width="56" height="56"><use href="#talking-person"/></svg>
+        <div class="comic-cap">Chat</div>
+        <div class="comic-desc">自由に議論し、決定事項を質問ファイルに抽出</div>
+      </div>
+      <div class="step-arrow" style="flex:0 0 24px;"><svg width="24" height="24"><use href="#hand-arrow"/></svg></div>
+      <div class="comic-panel" style="flex:1 1 130px;">
+        <svg width="56" height="56"><use href="#checklist-doc"/></svg>
+        <div class="comic-cap">質問ファイル</div>
+        <div class="comic-desc">3モード共通の着地点</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 07 成果物の置き場 ===== -->
+<section class="section" id="s07">
+  <div class="sec-head">
+    <div class="sec-num">07</div>
+    <div>
+      <span class="section-title">成果物はどこに残るのか</span>
+      <p class="sec-sub">エンジン本体（.claude/）と成果物（aidlc/）を分離</p>
+    </div>
+  </div>
+  <div class="card">
+    <p class="explain">実行するとプロジェクト直下に <code>aidlc/</code> ができ、AI-DLC が作るものはすべてここに入る。エンジン本体（<code>.claude/</code> 等）とは分離されていて、人間が読む側は <code>aidlc/</code> だけ見ればいい。</p>
+    <div class="tree-illust-row">
+      <div style="text-align:center;">
+        <svg width="70" height="70"><use href="#folder-icon"/></svg>
+        <div class="tree-illust-cap">スペース = 1チームの世界</div>
+      </div>
+      <svg width="34" height="34"><use href="#hand-arrow"/></svg>
+      <div style="text-align:center;">
+        <svg width="56" height="56"><use href="#folder-icon"/></svg>
+        <div class="tree-illust-cap">└ インテント = 仕事1件</div>
+      </div>
+      <svg width="34" height="34"><use href="#hand-arrow"/></svg>
+      <div style="text-align:center;">
+        <svg width="46" height="46"><use href="#checklist-doc"/></svg>
+        <div class="tree-illust-cap">└ 状態・監査証跡・成果物</div>
+      </div>
+    </div>
+    <div class="term-panel">
+<span class="tp-title">$ ディレクトリ構造</span>my-project/
+├── .claude/                    エンジン（ツール・フック・スキル・エージェント）※普段は開かない
+├── aidlc/
+│   └── spaces/
+│       └── default/            ← 「スペース」＝ 1チームの世界
+│           ├── memory/         方法（org.md / team.md / project.md / phases/）
+│           ├── knowledge/      ドメイン知識（自分たちで足す）
+│           ├── codekb/         コードベースの知識
+│           └── intents/        ← 「インテント」＝ 1つの仕事
+│               ├── 260620-inventory-api/     完了した仕事
+│               └── 260624-export-bug/        進行中の仕事
+│                   ├── aidlc-state.md          今どのステージにいるか
+│                   ├── audit/                  決定の証跡
+│                   └── inception/requirements-analysis/requirements.md
+└── repo-a/  repo-b/            コードのリポジトリは兄弟として置く
+    </div>
+    <p class="explain">覚えるべき概念は2つだけ。<strong>インテント</strong> ＝ 仕事1件。ライフサイクルの1回分の実行。機能開発の途中で緊急バグが来ても別インテントとして並走でき、元の進捗は一切触られない。<strong>スペース</strong> ＝ 1チームの世界（方法・知識・仕事の記録一式）。ひとりまたは1チームなら default のまま、存在を意識する必要はない。</p>
+    <p class="explain">git との関わり：<code>aidlc/</code> は git にコミットする前提。方法も監査証跡も成果物もチームで共有される。例外は「いま自分がどこにいるか」を示すカーソル2つ（<code>active-space</code> / <code>active-intent</code>）で、これはユーザーごとにローカル（gitignore 対象）。同僚と別々のインテントに座れるようにするため。</p>
+  </div>
+</section>
+
+<!-- ===== 08 学習ループ ===== -->
+<section class="section" id="s08">
+  <div class="sec-head">
+    <div class="sec-num">08</div>
+    <div>
+      <span class="section-title">訂正が資産になる ― 学習ループ</span>
+      <p class="sec-sub">日誌 memory.md が承認ゲートで候補提示され、project.md に蓄積</p>
+    </div>
+  </div>
+  <div class="card">
+    <p class="explain">ステージの実行中、フレームワークは裏で日誌（<code>memory.md</code>）をつけている。記録される4種類：</p>
+    <div class="chip-row">
+      <div class="mem-chip">Interpretations<br><span style="font-weight:normal;font-size:.7rem;">指示が曖昧だったので、こう解釈した</span></div>
+      <div class="mem-chip">Deviations<br><span style="font-weight:normal;font-size:.7rem;">意図的に手順から外れた理由</span></div>
+      <div class="mem-chip">Tradeoffs<br><span style="font-weight:normal;font-size:.7rem;">検討した代替案と不採用の理由</span></div>
+      <div class="mem-chip">Open questions<br><span style="font-weight:normal;font-size:.7rem;">次回までに確認したいこと</span></div>
+    </div>
+    <div class="comic-row" style="align-items:center; margin-top:18px;">
+      <div class="comic-panel" style="flex:1 1 120px;"><svg width="50" height="50"><use href="#laptop"/></svg><div class="comic-cap">実行</div></div>
+      <div class="step-arrow"><svg width="20" height="20"><use href="#hand-arrow"/></svg></div>
+      <div class="comic-panel" style="flex:1 1 120px;"><svg width="50" height="50"><use href="#pencil-file-icon"/></svg><div class="comic-cap">memory.md<br>4種を記録</div></div>
+      <div class="step-arrow"><svg width="20" height="20"><use href="#hand-arrow"/></svg></div>
+      <div class="comic-panel" style="flex:1 1 130px;"><svg width="50" height="50"><use href="#gate-icon"/></svg><div class="comic-cap">承認ゲートで<br>候補として提示</div></div>
+      <div class="step-arrow"><svg width="20" height="20"><use href="#hand-arrow"/></svg></div>
+      <div class="comic-panel" style="flex:1 1 120px;"><svg width="50" height="50"><use href="#checklist-doc"/></svg><div class="comic-cap">project.md<br>に蓄積</div></div>
+      <div class="step-arrow"><svg width="20" height="20"><use href="#loop-arrow-icon"/></svg></div>
+      <div class="comic-panel" style="flex:1 1 130px;"><svg width="50" height="50"><use href="#owl-doc"/></svg><div class="comic-cap">次回の<br>ワークフローへ</div></div>
+    </div>
+    <p class="explain">承認ゲートの直前に、この日誌の各行が<strong>そのままの文言で</strong>候補として提示される（要約も「面白そうなもの」の選別もしない）。加えて「次回のために何か追加することは？」と必ず聞かれる。残したい項目にチェックを入れると <code>memory/project.md</code> にプラクティスとして書き込まれる。</p>
+
+    <div class="flow-wrap" style="margin-top:18px;">
+      <div class="flow-box before">
+        <div class="flow-label">STEP 1〜2 ― 実例（銀行案件）</div>
+        <div class="flow-title">「リトライで transaction が二重にならないように」</div>
+        <div class="flow-desc">エージェントはこれを<strong>データベーストランザクション</strong>と解釈し、ACID の要件として起票した</div>
+      </div>
+      <div class="flow-arrow-wrap"><svg width="52" height="24"><use href="#hand-arrow"/></svg></div>
+      <div class="flow-box after">
+        <div class="flow-label">STEP 3〜4 ― 訂正と定着</div>
+        <div class="flow-title">「いや、<strong>決済</strong>のことだ」</div>
+        <div class="flow-desc">担当者が訂正 → ゲートで候補に上がりチェック → <code>project.md</code> に残る → 次回のワークフローから最初のステージで「このプロジェクトの transaction は決済のこと」として動く</div>
+      </div>
+    </div>
+    <p class="explain">一度払ったコストが以降ずっと効き続ける設計。</p>
+    <div class="sticky-note">
+      重要な挙動：ここで記録したルールは実行中のワークフローには反映されない。次回から。
+      <small>ルールやステージ定義は「ワークフロー開始時に1回だけ」コンパイルされ、実行中は解決済みの結果だけを読む設計（ルーターの経路計算とパケット転送を分けるのと同じ発想）。途中でルールが変わらないので、序盤に承認したゲートの前提が後から書き換わらない。</small>
+    </div>
+    <p class="explain"><strong>センサー</strong>：ルールが「エージェントが読む散文」なのに対し、センサーはエージェントがファイルを書いた瞬間に自動で走る決定論的なチェック。標準で5本（必須見出しの有無、上流成果物への参照カバレッジ、主張のソースタグ、リンター、型チェック）。現在の版では助言的で、失敗しても承認ゲートを止めない。監査ログに記録され、何が足りないかを指す詳細ファイルが残る。</p>
+  </div>
+</section>
+
+<!-- ===== 09 正直なところ ===== -->
+<section class="section" id="s09">
+  <div class="sec-head">
+    <div class="sec-num">09</div>
+    <div>
+      <span class="section-title">正直なところ、どうなのか</span>
+      <p class="sec-sub">良い面3点、引っかかる面3点</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="gb-row">
+      <div class="gb-col good">
+        <div class="gb-title"><svg width="22" height="22"><use href="#shield"/></svg>良い面</div>
+        <ul class="gb-list">
+          <li><svg width="18" height="16"><use href="#check-mark"/></svg><span><strong>決定が残る</strong> ― 82種類の監査イベントと成果物ファイルで、「なぜこうなったか」がチャットログの外に残る。監査が要る現場では効く</span></li>
+          <li><svg width="18" height="16"><use href="#check-mark"/></svg><span><strong>儀式の量を選べる</strong> ― 7ステージから32ステージまで同じエンジンで連続的に変えられる。重い方法論にありがちな「全部か無か」ではない</span></li>
+          <li><svg width="18" height="16"><use href="#check-mark"/></svg><span><strong>カスタマイズがデータ側</strong> ― ステージもエージェントもスコープも Markdown + YAML。TypeScript を書かずに方法論を組み替えられる</span></li>
+        </ul>
+      </div>
+      <div class="gb-col bad">
+        <div class="gb-title"><svg width="22" height="22"><use href="#warn-tri"/></svg>引っかかる面</div>
+        <ul class="gb-list">
+          <li><svg width="20" height="20"><use href="#warn-tri"/></svg><span><strong>ゲートは多い</strong> ― feature なら承認29回。Construction は「Bolt」単位でまとめる設計になったが、それでも人間の時間は要る</span></li>
+          <li><svg width="20" height="20"><use href="#warn-tri"/></svg><span><strong>トークンを食う</strong> ― 32ステージ×成果物生成。フルスコープを回すコストは相応。ステータスラインにトークン数と概算コストが出るのはそのため</span></li>
+          <li><svg width="20" height="20"><use href="#warn-tri"/></svg><span><strong>モデル依存が強い</strong> ― 公式に「Claude Opus 4.8 推奨」。弱いモデルでは指揮役がレビューや学習ループを飛ばしたり、ゲートを急いだりすると明記されている</span></li>
+        </ul>
+      </div>
+    </div>
+    <p class="explain">環境要件：配布物の既定設定は AWS Bedrock 前提（リージョンとモデルIDが固定で入っている）。Bedrock のモデルアクセスと AWS 認証情報がないと起動しない。手元の Claude Code の認証で動かしたい場合は設定から Bedrock 関連の環境変数を外す必要がある。</p>
+    <p class="explain">使用上の注意：公式 README 自身が但し書きしている通り、これは「レビューせずに信じる」ためのものではない。承認ゲートが全ステージにあるのは、まさに人間が読むことを前提にしているから。</p>
+  </div>
+</section>
+
+<!-- ===== 10 手元で触ってみる ===== -->
+<section class="section" id="s10">
+  <div class="sec-head">
+    <div class="sec-num">10</div>
+    <div>
+      <span class="section-title">手元で触ってみる</span>
+      <p class="sec-sub">必要なのは bun と対応ハーネス（Claude Code など）だけ</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="step-row">
+      <div class="step-box"><div class="step-num">1</div><div class="step-title">bun をインストール</div><div class="step-desc">フックとCLIツールの唯一の共通要件</div></div>
+      <div class="step-arrow"><svg width="18" height="18"><use href="#hand-arrow"/></svg></div>
+      <div class="step-box"><div class="step-num">2</div><div class="step-title">clone & v2 checkout</div><div class="step-desc">awslabs/aidlc-workflows</div></div>
+      <div class="step-arrow"><svg width="18" height="18"><use href="#hand-arrow"/></svg></div>
+      <div class="step-box"><div class="step-num">3</div><div class="step-title">配布物をコピー</div><div class="step-desc">.claude/ と aidlc/ を兄弟として配置</div></div>
+      <div class="step-arrow"><svg width="18" height="18"><use href="#hand-arrow"/></svg></div>
+      <div class="step-box"><div class="step-num">4</div><div class="step-title">起動 & doctor</div><div class="step-desc">/aidlc --doctor でまず健全性確認</div></div>
+    </div>
+    <div class="term-panel">
+<span class="tp-title"># Windows PowerShell</span>irm bun.sh/install.ps1 | iex
+<span class="tp-title"># macOS / Linux</span>curl -fsSL https://bun.sh/install | bash
+    </div>
+    <div class="term-panel">
+<span class="tp-title">$ セットアップ</span>git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows && git checkout v2
+
+cp -r dist/claude/.claude/ your-project/.claude/
+cp -r dist/claude/aidlc/   your-project/aidlc/
+
+cd your-project && claude
+    </div>
+    <p class="explain"><code>aidlc/</code> は <code>.claude/</code> の中ではなく<strong>兄弟として置く</strong>のがポイント。忘れると <code>--doctor</code> の「workspace shell ready」チェックが落ちる。</p>
+    <div class="tbl-wrap">
+      <table class="info-table">
+        <tr><th>コマンド</th><th>やること</th></tr>
+        <tr><td><code>/aidlc --doctor</code></td><td>セットアップの健全性チェック（まずこれ）</td></tr>
+        <tr><td><code>/aidlc --help</code></td><td>全オプション一覧</td></tr>
+        <tr><td><code>/aidlc --status</code></td><td>進行中ワークフローの状態</td></tr>
+        <tr><td><code>/aidlc &lt;やりたいこと&gt;</code></td><td>ワークフロー開始（スコープは文面から自動判定）</td></tr>
+        <tr><td><code>/aidlc compose "..."</code></td><td>タスクに合わせた専用のステージ計画を提案させる</td></tr>
+        <tr><td><code>/aidlc intent</code></td><td>スペース内のインテント一覧／切り替え</td></tr>
+      </table>
+    </div>
+    <p class="explain">2つのハマりどころ。<strong>起動場所</strong> ― <code>.claude/</code> を置いたプロジェクトのルートでハーネスを起動する。別の場所で起動しても <code>/aidlc</code> は出てこない。<strong>Bedrock 設定</strong> ― 配布物の <code>.claude/</code> 内の設定ファイルは AWS Bedrock 前提（リージョンとモデル ID が固定）。Bedrock のモデルアクセスと AWS 認証情報がない場合は起動しない。手元のハーネスの認証をそのまま使いたいなら、gitignore 対象のローカル設定ファイルで env の Bedrock 関連キーを上書き・除去する。</p>
+    <div class="sticky-note">
+      試用の推奨：本番のリポジトリではなく<strong>空のディレクトリ</strong>で始める
+      <small>AI-DLC は自分自身の状態ファイルや監査ログも書き込む。コピー直後に <code>git init</code> してタグを打っておくと <code>git reset --hard &lt;tag&gt; &amp;&amp; git clean -fd</code> でいつでも初期状態に戻せる。ついでにフレームワーク自身の書き込みと生成された成果物を <code>git diff</code> で区別して観察できる。</small>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 11 まとめ ===== -->
+<section class="section" id="s11">
+  <div class="sec-head">
+    <div class="sec-num">11</div>
+    <div>
+      <span class="section-title">まとめ</span>
+      <p class="sec-sub">5行で振り返る</p>
+    </div>
+  </div>
+  <div class="card">
+    <div class="comic-row" style="align-items:center;">
+      <div style="flex:0 0 90px; text-align:center;">
+        <svg width="70" height="70"><use href="#checklist-doc"/></svg>
+      </div>
+      <ul class="summary-list" style="flex:1 1 300px; margin-top:0;">
+        <li><strong>AI-DLC は方法論、aidlc-workflows はその実装。</strong> 1本のソースから複数の CLI ハーネス向けに配布物を生成する</li>
+        <li><strong>5フェーズ32ステージ、14エージェント、全ステージに人間の承認ゲート。</strong> 決定はファイルと監査ログに残る</li>
+        <li><strong>スコープが儀式の量を決める。</strong> bugfix は7ステージ、enterprise は32ステージ。開始前に必ず数字で提示される</li>
+        <li><strong>人間の訂正がルールとして蓄積する。</strong> ただし反映は次のワークフローから（実行中は前提が動かない）</li>
+        <li><strong>カスタマイズはコードではなくデータ。</strong> ステージもスコープもエージェントも Markdown + YAML で組み替えられる</li>
+      </ul>
+    </div>
+    <div class="sticky-note">
+      「じゃあ実際どうやって自分たちの方法論に組み替えるのか」が第2部のテーマ。
+    </div>
+  </div>
+</section>
+
+<footer class="source">
+  出典：awslabs/aidlc-workflows（v2 ブランチ, v2.5.59）の README.md / docs/guide/　／
+  AWS AI-DLC ブログ記事 <a href="https://aws.amazon.com/blogs/devops/ai-driven-development-life-cycle/" target="_blank" rel="noopener">aws.amazon.com/blogs/devops/ai-driven-development-life-cycle</a><br>
+  32ステージ・14エージェント・9スコープ・82監査イベント・センサー5本は同リポジトリのドキュメントおよびソースツリーで確認
+</footer>
+
+</div>
+</body>
+</html>
