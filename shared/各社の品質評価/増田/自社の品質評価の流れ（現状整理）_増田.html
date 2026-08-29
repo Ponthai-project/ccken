@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>自社の品質評価の流れ（現状整理）</title>
+
+<style>
+:root{
+  --red:#c8102e;
+  --red-dark:#7d0b20;
+  --red-soft:#f9e8ec;
+  --rose:#fff7f8;
+  --ink:#2d2527;
+  --muted:#75676b;
+  --line:#ead7db;
+  --paper:#ffffff;
+  --bg:#f7f1f2;
+  --shadow:0 10px 28px rgba(91,11,22,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  color:var(--ink);
+  background:
+    linear-gradient(180deg,#f4ecee 0,#f8f4f5 220px,#faf8f8 100%);
+  font-family:"Yu Gothic UI","Yu Gothic",Meiryo,"Noto Sans JP",sans-serif;
+  line-height:1.78;
+}
+.page{
+  max-width:1180px;
+  margin:0 auto;
+  padding:28px 24px 64px;
+}
+.masthead{
+  background:var(--paper);
+  border-top:10px solid var(--red);
+  border-bottom:1px solid var(--line);
+  padding:34px 38px 28px;
+  margin-bottom:24px;
+  box-shadow:var(--shadow);
+}
+.masthead .kicker{
+  color:var(--red);
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+.masthead h1{
+  margin:8px 0 6px;
+  color:var(--red-dark);
+  font-size:clamp(2rem,4vw,3rem);
+  line-height:1.25;
+}
+.masthead p{
+  margin:0;
+  max-width:900px;
+  color:var(--muted);
+  font-size:1.02rem;
+}
+.layout{
+  display:grid;
+  grid-template-columns:210px minmax(0,1fr);
+  gap:24px;
+  align-items:start;
+}
+.toc{
+  position:sticky;
+  top:18px;
+  background:transparent;
+  border:0;
+  padding:8px 0;
+}
+.toc-title{
+  color:var(--red-dark);
+  font-size:.86rem;
+  font-weight:800;
+  margin-bottom:10px;
+  letter-spacing:.06em;
+}
+.toc a{
+  position:relative;
+  display:block;
+  color:#614d52;
+  text-decoration:none;
+  padding:8px 8px 8px 18px;
+  border-left:2px solid #e7c9d0;
+  font-size:.9rem;
+}
+.toc a:hover{
+  color:var(--red);
+  border-left-color:var(--red);
+  background:transparent;
+}
+main{min-width:0}
+.section{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:30px 34px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow);
+}
+.section h2{
+  margin:0 0 18px;
+  color:var(--red-dark);
+  font-size:1.45rem;
+  padding-bottom:10px;
+  border-bottom:2px solid var(--red-soft);
+}
+.section h2::before{
+  content:"";
+  display:inline-block;
+  width:8px;
+  height:24px;
+  margin-right:10px;
+  vertical-align:-4px;
+  background:var(--red);
+  border-radius:2px;
+}
+.section h3{
+  color:var(--red-dark);
+  margin:28px 0 10px;
+  font-size:1.16rem;
+}
+.statement{
+  background:var(--rose);
+  border:1px solid #f0c9d2;
+  border-left:6px solid var(--red);
+  padding:18px 20px;
+  border-radius:8px;
+  color:#4b3037;
+  font-weight:650;
+}
+.process{
+  margin:24px 0 8px;
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:12px;
+}
+.process .node{
+  position:relative;
+  min-height:88px;
+  padding:15px 12px;
+  border:1px solid #efccd4;
+  background:#fffafa;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  color:var(--red-dark);
+  font-weight:750;
+  border-radius:8px;
+}
+.process .node:not(:last-child)::after{
+  content:"→";
+  position:absolute;
+  right:-11px;
+  top:50%;
+  transform:translateY(-50%);
+  color:var(--red);
+  font-size:1.15rem;
+  font-weight:900;
+  z-index:2;
+}
+.badge-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin-top:16px;
+}
+.badge-card{
+  padding:15px 14px;
+  border-top:4px solid var(--red);
+  background:#fff;
+  border-left:1px solid var(--line);
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.badge-card small{
+  display:block;
+  color:var(--muted);
+  font-weight:700;
+  margin-bottom:4px;
+}
+.badge-card strong{
+  color:var(--red-dark);
+}
+.phase{
+  margin:24px 0 0;
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.phase + .phase{
+  border-top:1px dashed #dfc2c8;
+  padding-top:24px;
+}
+.phase > h3{
+  margin:0 0 14px;
+  color:var(--red);
+  font-size:1.25rem;
+  border:0;
+  padding:0;
+}
+.subhead{
+  margin:16px 0 6px;
+  color:#5b4046;
+  font-weight:800;
+}
+ul{
+  margin:8px 0 16px 1.15rem;
+  padding-left:1rem;
+}
+li{margin:4px 0}
+.note{
+  margin-top:18px;
+  padding:14px 16px;
+  background:#fbf7f8;
+  border:1px solid #ead7db;
+  color:#5f4d52;
+  border-radius:6px;
+}
+.alert{
+  margin-top:18px;
+  padding:14px 16px;
+  background:#fff8ed;
+  border-left:5px solid #c98319;
+  color:#6b4610;
+}
+.table-wrap{
+  overflow:auto;
+  margin-top:16px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:760px;
+  font-size:.94rem;
+}
+th{
+  background:var(--red-dark);
+  color:#fff;
+  padding:13px 14px;
+  text-align:left;
+  font-weight:750;
+}
+td{
+  padding:13px 14px;
+  border-top:1px solid var(--line);
+  vertical-align:top;
+}
+tbody tr:nth-child(even) td{background:#fff9fa}
+.tag-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:14px;
+}
+.tag{
+  padding:5px 10px;
+  border-radius:4px;
+  background:var(--red-soft);
+  color:var(--red-dark);
+  font-weight:750;
+  font-size:.82rem;
+}
+.footer{
+  text-align:right;
+  color:var(--muted);
+  font-size:.82rem;
+  padding-top:8px;
+}
+@media(max-width:920px){
+  .layout{grid-template-columns:1fr}
+  .toc{
+    position:static;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:4px 12px;
+    background:#fff;
+    padding:14px 16px;
+    border:1px solid var(--line);
+  }
+  .toc-title{grid-column:1/-1}
+  .toc a{border-left:0;padding:6px 0}
+  .process{grid-template-columns:1fr}
+  .process .node:not(:last-child)::after{
+    content:"↓";
+    right:auto;
+    left:50%;
+    top:auto;
+    bottom:-15px;
+    transform:translateX(-50%);
+  }
+  .badge-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:620px){
+  .page{padding:0 0 40px}
+  .masthead,.section{border-radius:0}
+  .masthead{padding:28px 20px}
+  .layout{gap:14px}
+  .toc{margin:0 14px}
+  .section{padding:24px 20px}
+  .badge-grid{grid-template-columns:1fr}
+}
+@media print{
+  body{background:#fff}
+  .page{max-width:none;padding:0}
+  .masthead{box-shadow:none;border-left:0;border-right:0}
+  .layout{display:block}
+  .toc{display:none}
+  .section{box-shadow:none;border:0;border-bottom:1px solid #ddd;border-radius:0;padding:8mm 0;margin:0}
+  .phase{break-inside:avoid}
+}
+</style>
+
+</head>
+<body><div class="page"><div class="masthead">
+<div>
+<h1>自社の品質評価の流れ（現状整理）</h1>
+<p>ウォーターフォール型開発プロジェクトを例として、各工程のExitクライテリアによる品質確認から、リリース判定会における最終判断までを整理する。</p>
+</div>
+</div>	
+
+<main>
+<section class="section" id="layout">
+<h2>目次</h2>
+<nav class="toc">
+<a href="#position">1. 資料の位置づけ</a>
+<a href="#conclusion">2. 結論</a>
+<a href="#flow">3. 品質評価の全体像</a>
+<a href="#characteristics">4. 評価の特徴</a>
+<a href="#criteria">5. Exitクライテリア</a>
+<a href="#release">6. リリース判定資料</a>
+<a href="#quant">7. 定量・定性評価</a>
+<a href="#summary">8. まとめ</a>
+</nav>
+</section>
+
+
+
+
+
+<section class="section" id="position">
+<h2>資料の位置づけ</h2>
+<p>本資料は、自社が現在どのような考え方・確認方法で品質を評価しているかを整理するものである。</p>
+<p>現状整理の対象として、実際のウォーターフォール型開発プロジェクトで利用しているExitクライテリアおよびリリース判定資料を取り上げる。</p>
+</section>
+<section class="section" id="conclusion">
+<h2>結論</h2>
+<div class="statement">
+    自社では、各開発工程でExitクライテリアを用いて工程完了と品質確認を行い、そのすべてを満たしていることを前提として、リリース判定資料により変更内容、テスト結果、利用部門による確認、移行計画および障害時対応を総合的に確認し、リリース可否を判断している。
+  </div>
+<p>品質を単一の数値のみで判定するのではなく、工程ごとの活動・成果物・レビュー・テスト・移行準備・残存リスクを組み合わせて、人が総合判断する方式となっている。</p>
+</section>
+<section class="section" id="flow">
+<h2>品質評価の全体像</h2>
+<p><strong>Exitクライテリア</strong>とは、各開発工程で実施すべき作業、成果物および品質確認項目を定義したチェックリストであり、次工程へ進むための判定基準として利用している。</p>
+<div class="process">
+<div class="node">各開発工程</div>
+<div class="node">Exitクライテリアによる工程完了確認</div>
+<div class="node">全工程のクライテリアを充足</div>
+<div class="node">リリース判定資料による最終確認</div>
+<div class="node">リリース判定会・リリース</div>
+</div>
+<div class="alert"><strong>未達項目がある場合：</strong>未達理由、影響、残存リスクおよび対応方針を説明したうえで、リリース可否を判断する。</div>
+</section>
+<section class="section" id="characteristics">
+<h2>自社の品質評価の特徴</h2>
+<div class="badge-grid">
+<div class="badge-card"><small>工程品質</small><strong>Exitクライテリア</strong></div>
+<div class="badge-card"><small>成果物品質</small><strong>レビュー・整合性</strong></div>
+<div class="badge-card"><small>テスト品質</small><strong>密度・不良傾向</strong></div>
+<div class="badge-card"><small>移行品質</small><strong>本番確認・切戻し</strong></div>
+<div class="badge-card"><small>リスク評価</small><strong>残課題・合意</strong></div>
+</div>
+<p>各工程で品質を作り込み、工程完了時にその状態を確認する。最後に、今回の変更規模に対するテスト量・不良状況、変更対象と影響範囲、利用部門による受入確認、本番確認方法および障害時対応を総合的に評価する。</p>
+</section>
+<section class="section" id="criteria">
+<h2>Exitクライテリア</h2>
+<p>各工程で実施すべき作業、成果物、レビューおよび品質確認が完了していることを確認し、次工程へ移行できる状態であることを保証する。</p>
+<section class="phase">
+<h3>基礎検討</h3>
+<div class="subhead">確認観点</div>
+<ul>
+<li>システム化の目的・背景</li><li>対象範囲</li><li>業務・システムの現状分析</li>
+<li>実現方式</li><li>概算規模</li><li>推進体制</li><li>品質目標</li><li>リスク</li><li>関係者との合意</li>
+</ul>
+<div class="subhead">確認目的</div>
+<p>システム化の目的と対象範囲を明確にし、実現性、概算規模、主要リスクおよび推進体制を整理することで、具体的なプロジェクト計画へ進める状態であることを確認する。</p>
+<div class="subhead">主な成果物</div>
+<ul><li>基礎検討資料</li><li>システム化構想</li><li>スコープ資料</li><li>現状分析資料</li><li>概算見積</li><li>体制図</li><li>リスク一覧</li></ul>
+</section>
+<section class="phase">
+<h3>プロジェクト計画</h3>
+<div class="subhead">確認観点</div>
+<ul>
+<li>プロジェクト目標</li><li>体制・役割分担</li><li>スケジュール</li><li>工数・コスト</li>
+<li>品質管理</li><li>リスク・課題・変更管理</li><li>テスト方針</li><li>移行方針</li>
+<li>運用方針</li><li>外部調達・ベンダー管理</li><li>会議体・報告方法</li>
+</ul>
+<div class="subhead">確認目的</div>
+<p>開発、テスト、移行および運用開始までの進め方と管理方法を具体化し、関係者が共通の計画に基づいてプロジェクトを推進できる状態であることを確認する。</p>
+<div class="subhead">主な成果物</div>
+<ul><li>プロジェクト計画書</li><li>WBS・スケジュール</li><li>体制図</li><li>品質管理計画</li><li>テスト全体方針</li><li>移行方針</li><li>運用方針</li><li>調達計画</li></ul>
+</section>
+<section class="phase">
+<h3>基本設計</h3>
+<div class="subhead">確認観点</div>
+<ul>
+<li>業務要件</li><li>機能要件</li><li>非機能要件</li><li>システム構成</li><li>アーキテクチャ</li>
+<li>画面・帳票</li><li>データ</li><li>外部インタフェース</li><li>権限・セキュリティ</li>
+<li>性能・可用性・災害対策</li><li>運用・移行</li><li>テスト方針</li><li>設計レビュー</li>
+</ul>
+<div class="subhead">確認目的</div>
+<p>要件を実現するための業務・システム設計を具体化し、機能面と非機能面の双方で妥当性・整合性・実現性を確認することで、製造工程へ進める状態であることを確認する。</p>
+<div class="subhead">主な成果物</div>
+<ul><li>基本設計書</li><li>業務フロー</li><li>画面・帳票設計書</li><li>データ設計書</li><li>インタフェース設計書</li><li>システム構成図</li><li>非機能設計書</li><li>運用設計書</li><li>移行設計書</li><li>レビュー記録</li></ul>
+</section>
+<section class="phase">
+<h3>プログラミング</h3>
+<div class="subhead">確認観点</div>
+<ul><li>詳細設計・プログラム仕様</li><li>コーディング</li><li>ソースレビュー</li><li>単体テスト</li><li>静的解析</li><li>構成・ライブラリ管理</li><li>障害・課題対応</li><li>成果物管理</li></ul>
+<div class="subhead">確認目的</div>
+<p>設計内容に沿ってプログラムが正しく実装され、単体レベルで必要な検証とレビューが完了していることを確認することで、結合テストへ進める品質が確保されていることを確認する。</p>
+<div class="subhead">主な成果物</div>
+<ul><li>詳細設計書・プログラム仕様書</li><li>ソースコード</li><li>単体テスト仕様書・結果</li><li>コードレビュー記録</li><li>静的解析結果</li><li>ライブラリ管理記録</li><li>障害・課題管理票</li></ul>
+</section>
+<section class="phase">
+<h3>ITa</h3>
+<div class="subhead">確認観点</div>
+<ul><li>テスト計画・ケース</li><li>テスト環境・データ</li><li>内部結合・機能間連携</li><li>正常系・異常系</li><li>障害管理</li><li>テスト進捗</li><li>テスト密度・不良状況</li><li>成果物・ライブラリ管理</li><li>次工程準備</li></ul>
+<div class="subhead">確認目的</div>
+<p>プログラム間・機能間の結合が設計どおりに動作することを確認し、検出した不具合の対応状況とテスト実績を評価することで、より広範な結合確認へ進める状態であることを確認する。</p>
+<div class="subhead">主な成果物</div>
+<ul><li>ITaテスト計画書</li><li>テスト仕様書・ケース</li><li>テスト結果</li><li>障害管理票</li><li>テスト進捗資料</li><li>品質評価資料</li><li>ライブラリ管理記録</li></ul>
+</section>
+<section class="phase">
+<h3>ITb</h3>
+<div class="subhead">確認観点</div>
+<ul><li>システム間・外部接続</li><li>業務シナリオ</li><li>性能・負荷</li><li>可用性・障害対応</li><li>セキュリティ</li><li>運用・監視</li><li>データ・インタフェース</li><li>テスト結果・不良収束</li><li>ユーザー部門タスク</li><li>AML等の規制・統制対応</li></ul>
+<div class="subhead">確認目的</div>
+<p>システム全体および外部システムとの連携が要件どおりに機能し、性能、障害時動作、セキュリティおよび運用面を含めて、本番利用を見据えた品質が確保されていることを確認する。</p>
+<div class="subhead">主な成果物</div>
+<ul><li>ITbテスト計画書</li><li>業務シナリオ・テスト仕様書</li><li>テスト結果</li><li>性能試験結果</li><li>障害・復旧試験結果</li><li>セキュリティ確認結果</li><li>障害管理票</li><li>品質評価資料</li><li>ユーザー部門確認資料</li></ul>
+</section>
+<section class="phase">
+<h3>ST</h3>
+<div class="subhead">確認観点</div>
+<ul><li>本番相当環境・データ</li><li>業務シナリオ</li><li>総合・リグレッションテスト</li><li>運用・監視</li><li>ユーザー部門確認</li><li>移行・カットオーバー準備</li><li>本番確認計画</li><li>残課題・障害収束</li><li>リリース判定準備</li></ul>
+<div class="subhead">確認目的</div>
+<p>本番運用に近い条件で業務全体を確認し、改修機能、既存機能、運用および移行の各観点で重大な問題がないことを確認することで、リリース可否を判断できる品質情報が揃っていることを確認する。</p>
+<div class="subhead">主な成果物</div>
+<ul><li>ST計画書</li><li>STシナリオ・テスト仕様書</li><li>ST結果</li><li>リグレッションテスト結果</li><li>障害管理票</li><li>品質評価資料</li><li>UAT結果</li><li>移行・カットオーバー計画</li><li>本番確認計画</li></ul>
+</section>
+<section class="phase">
+<h3>カットオーバー</h3>
+<div class="subhead">確認観点</div>
+<ul><li>移行手順・タイムチャート</li><li>体制・連絡網</li><li>データ・ライブラリ移行</li><li>事前リハーサル</li><li>本番確認</li><li>初回稼働確認</li><li>障害時対応・切戻し</li><li>運用引継ぎ</li><li>ユーザー部門準備</li><li>セキュリティ・統制対応</li><li>最終残課題</li></ul>
+<div class="subhead">確認目的</div>
+<p>本番移行に必要な作業、体制、確認方法および障害時対応が具体化され、移行後の運用開始を含めて安全かつ計画的にリリースできる状態であることを確認する。</p>
+<div class="subhead">主な成果物</div>
+<ul><li>移行計画書</li><li>カットオーバー計画・タイムチャート</li><li>移行手順書</li><li>本番確認項目・手順</li><li>切戻し手順</li><li>体制・連絡網</li><li>運用手順書・引継ぎ資料</li><li>リハーサル結果</li><li>リリース判定資料</li></ul>
+</section>
+<div class="note"><strong>補足：</strong>「主な成果物」は、提供されたクライテリアの確認内容をもとに代表的な資料を整理したものであり、プロジェクトの特性・規模により名称や要否は異なる。</div>
+</section>
+<section class="section" id="release">
+<h2>リリース判定資料</h2>
+<p>各工程のExitクライテリアを満たしていることを前提として、今回のリリース内容に対する品質確認が十分に行われていること、および安全に本番移行できることを総合的に説明し、リリース可否を判断する。</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th style="width:28%">確認観点</th><th>目的</th></tr>
+</thead>
+<tbody>
+<tr><td>対応概要・工数・金額</td><td>今回の対応内容とシステム設計内容の概要、工数および金額を提示し、リリース判定の対象となる変更内容と開発規模を関係者が把握できるようにする。以降の品質評価を行うための前提情報として位置付ける。</td></tr>
+<tr><td>テスト密度・バグ発生状況と評価</td><td>修正・新規モジュール数やSTEP数、UT・ITa・ITbのテスト件数および不良件数からテスト密度・不良密度を算出し、過去実績も踏まえて、開発量に対して妥当な量のテストが実施されているか、潜在的な不具合が埋もれていないかを評価する。</td></tr>
+<tr><td>修正機能確認テスト概要</td><td>対応概要で示した修正・新規機能に対するテスト内容を提示し、変更内容に照らして必要な確認が漏れなく実施されていることを確認する。</td></tr>
+<tr><td>無影響確認テスト概要</td><td>修正機能に直接該当しない既存機能に対する影響確認の内容を提示し、変更に伴う副作用がなく、対応概要に照らして必要な無影響確認が漏れなく実施されていることを確認する。</td></tr>
+<tr><td>UAT実施有無</td><td>UATの実施有無を提示する。実施した場合は、本番環境に近い環境・データで利用部門による確認が行われていることを示す。実施していない場合は、その理由と利用部門との合意状況を示し、利用部門を含めて品質確認が適切に行われていることを確認する。</td></tr>
+<tr><td>本番確認項目・方法</td><td>今回の対応内容について、本番環境で何をどのように操作・確認するかを提示する。リリース作業中のお客さま提供開始前に行う確認や、初回稼働時に行う確認を明確にし、対応内容が本番環境へ正しく反映され、移行完了と判断できる確認計画になっていることを確認する。</td></tr>
+<tr><td>リリースに伴う障害発生時の対応方法</td><td>本番確認がNGとなった場合などに想定される移行障害と、その際に作業を継続するのか、ライブラリを戻すのかなどの判断・対応方法を提示する。問題発生時の対応が事前に計画され、安全かつ統制された移行となっていることを確認する。</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="section" id="quant">
+<h2>定量評価と定性評価</h2>
+<p>品質評価では、テスト密度・不良密度などの数値を確認するだけでなく、数値となった背景や不具合の内容・傾向まで含めて評価する。</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>評価区分</th><th>主な確認内容</th><th>目的</th></tr></thead>
+<tbody>
+<tr><td>定量評価</td><td>テストケース数、テスト密度、不良件数、不良密度、テスト消化状況、障害収束状況</td><td>開発規模に対して必要な検証量が確保され、品質が収束しているかを客観的な数値で確認する。</td></tr>
+<tr><td>定性評価</td><td>障害の内容・原因・混入工程、特定機能への偏り、重大度、類似箇所への横展開、残課題の影響</td><td>数値の高低だけでは判断できない品質上の弱点や潜在リスクを把握し、追加確認や是正措置の要否を判断する。</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="section" id="summary">
+<h2>まとめ</h2>
+<div class="statement">
+    自社の品質評価は、「各工程で必要な活動・成果物・品質確認を完了させること」と、「リリース対象の品質・移行安全性・残存リスクを最終確認すること」の二段構えである。
+  </div>
+<p>つまり、自社では品質を単なるテスト結果や不良件数ではなく、工程品質、成果物品質、テスト品質、移行品質およびリスク評価を組み合わせた総合評価として捉えている。</p>
+</section>
+</main>
+</div><div class="footer">自社の品質評価の流れ（現状整理）</div></div></body>
+</html>

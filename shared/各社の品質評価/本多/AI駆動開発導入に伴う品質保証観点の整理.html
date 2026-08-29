@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI駆動開発導入に伴う品質保証観点の整理</title>
+<style>
+  :root{
+    --red:#c9152b;
+    --deep-red:#8f0f20;
+    --light-red:#f8e8eb;
+    --beige:#f4efe5;
+    --beige-2:#ebe1d1;
+    --white:#ffffff;
+    --ink:#2f2926;
+    --muted:#6c625b;
+    --line:#d9cdbd;
+    --green:#1f6b4f;
+    --amber:#a45d00;
+    --blue:#245d82;
+    --shadow:0 10px 28px rgba(72,45,32,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--beige);color:var(--ink);font-family:"Yu Gothic","Meiryo",system-ui,sans-serif;line-height:1.7}
+  .page{max-width:1240px;margin:0 auto;padding:32px 28px 64px}
+  .hero{background:linear-gradient(135deg,var(--deep-red),var(--red));color:#fff;border-radius:18px;overflow:hidden;box-shadow:var(--shadow);position:relative}
+  .hero:after{content:"";position:absolute;width:340px;height:340px;border:46px solid rgba(255,255,255,.10);border-radius:50%;right:-110px;top:-180px}
+  .hero-inner{padding:46px 52px;position:relative;z-index:1}
+  .eyebrow{font-size:13px;letter-spacing:.16em;font-weight:700;opacity:.86}
+  h1{font-size:34px;line-height:1.35;margin:8px 0 16px}
+  .hero p{max-width:920px;margin:0;font-size:16px}
+  .meta{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap}
+  .pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:6px 12px;font-size:12px}
+  .section{margin-top:28px;background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:16px;padding:30px 32px;box-shadow:var(--shadow)}
+  h2{font-size:24px;margin:0 0 19px;padding-left:14px;border-left:6px solid var(--red);line-height:1.35}
+  h3{font-size:18px;margin:25px 0 12px;color:var(--deep-red)}
+  h4{font-size:15px;margin:18px 0 8px}
+  .lead{font-size:17px;font-weight:700}
+  .note{background:#fff8e8;border-left:5px solid #d49b2c;padding:14px 16px;border-radius:8px;margin:14px 0}
+  .fact{background:var(--light-red);border:1px solid #efc6ce;padding:15px 17px;border-radius:10px;margin:15px 0}
+  .proposal{background:#eef5f1;border:1px solid #bdd8ca;padding:15px 17px;border-radius:10px;margin:15px 0}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin:12px 0 20px;font-size:13px}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:11px;height:11px;border-radius:3px;display:inline-block}
+  .dot.fact-dot{background:var(--red)} .dot.proposal-dot{background:var(--green)}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .card{border:1px solid var(--line);border-radius:13px;padding:19px;background:#fff}
+  .card h3{margin-top:0}
+  .card .num{font-size:28px;color:var(--red);font-weight:800;line-height:1}
+  .card ul{padding-left:20px;margin:8px 0 0}
+  table{width:100%;border-collapse:separate;border-spacing:0;margin:16px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;font-size:14px}
+  th{background:var(--deep-red);color:#fff;text-align:left;padding:12px 13px;vertical-align:top}
+  td{padding:12px 13px;border-top:1px solid var(--line);vertical-align:top}
+  tr:nth-child(even) td{background:#fbf8f3}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;margin-right:5px;white-space:nowrap}
+  .tag.keep{background:#e6f2ec;color:var(--green)}
+  .tag.extend{background:#fff0d8;color:var(--amber)}
+  .tag.new{background:#e6edf4;color:var(--blue)}
+  .tag.high{background:#fbe3e7;color:var(--deep-red)}
+  .flow{display:flex;align-items:stretch;gap:8px;overflow-x:auto;padding:8px 2px 14px}
+  .flow-item{min-width:165px;background:#fff;border:1px solid var(--line);border-top:5px solid var(--red);border-radius:11px;padding:13px;text-align:center;font-weight:700}
+  .flow-item small{display:block;color:var(--muted);font-weight:400;margin-top:6px;line-height:1.45}
+  .arrow{display:flex;align-items:center;color:var(--red);font-size:24px;font-weight:800}
+  .matrix{display:grid;grid-template-columns:170px repeat(3,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:14px}
+  .matrix > div{padding:12px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff;font-size:13px}
+  .matrix .head{background:var(--deep-red);color:#fff;font-weight:700}
+  .matrix .rowhead{background:#f7eee8;font-weight:700;color:var(--deep-red)}
+  .matrix .high{background:#fbe4e7}.matrix .mid{background:#fff1d9}.matrix .low{background:#eaf4ef}
+  .roadmap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+  .roadmap .step{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;position:relative}
+  .roadmap .step:before{content:attr(data-step);position:absolute;right:13px;top:10px;font-size:28px;font-weight:800;color:#ead4d8}
+  .roadmap h4{color:var(--deep-red);margin-top:0;padding-right:30px}
+  .check{list-style:none;padding:0;margin:8px 0}
+  .check li{position:relative;padding-left:25px;margin:7px 0}
+  .check li:before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:800}
+  .source{font-size:12px;color:var(--muted);word-break:break-word}
+  .source-link{color:var(--blue);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+  .reviewed{background:#eaf4ef;color:var(--green);border:1px solid #bdd8ca}
+  .summary-box{background:linear-gradient(135deg,#fff,#f7ecee);border:2px solid var(--red);border-radius:14px;padding:21px}
+  .summary-box strong{color:var(--deep-red)}
+  footer{margin-top:25px;color:var(--muted);font-size:12px;text-align:center}
+  @media(max-width:900px){.grid,.grid-3,.roadmap{grid-template-columns:1fr}.matrix{grid-template-columns:130px repeat(3,210px);overflow-x:auto}.hero-inner{padding:34px 28px}.section{padding:24px 20px}.page{padding:18px 12px 40px}h1{font-size:27px}}
+  @media print{body{background:#fff}.page{max-width:none;padding:0}.hero,.section{box-shadow:none;break-inside:avoid}.section{margin-top:15px}.roadmap,.grid,.grid-3{break-inside:avoid}}
+
+  .toc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
+  .toc a{display:block;background:#fff;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--blue);font-weight:700;text-decoration:none}
+  .toc a:hover{border-color:var(--red);color:var(--deep-red)}
+  .phase-map{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px}
+  .phase{background:#fff;border:1px solid var(--line);border-top:5px solid var(--blue);border-radius:11px;padding:13px}
+  .phase strong{display:block;color:var(--deep-red);margin-bottom:6px}
+  .phase ul{padding-left:18px;margin:6px 0}
+  .compact td,.compact th{padding:9px 10px}
+  @media(max-width:900px){.toc{grid-template-columns:1fr}.phase-map{grid-template-columns:repeat(5,240px)}}
+
+  code{font-family:inherit;background:#f3eee8;padding:2px 5px;border-radius:4px}
+  .proposal:before{content:"提案 ";font-weight:800;color:var(--green)}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="hero">
+<div class="hero-inner">
+<div class="eyebrow">QUALITY ASSURANCE × AI-DRIVEN DEVELOPMENT</div>
+<h1>AI駆動開発導入に伴う<br/>品質保証観点の整理</h1>
+<p>現行のカットオーバークライテリアとテスト品質評価を起点に、AI駆動開発で生じる不安、維持すべき原則、追加・変更すべき管理項目を体系化する。</p>
+<div class="meta">
+<span class="pill">現行根拠：社内標準・ガイド</span>
+<span class="pill">AI関連部分：導入検討上の提案</span>
+<span class="pill">配色：赤・白／背景：ベージュ</span>
+<span class="pill reviewed">再鑑済 v4：根拠・提案・適用条件を再整理</span></div>
+</div>
+</header>
+<section class="section">
+<h2>エグゼクティブサマリー</h2><div class="note"><strong>前提：</strong>本資料は社内標準そのものではなく、現行標準に基づく整理とAI導入時の提案を分けて示す検討資料である。AIサービスの利用可否、入力可能情報、保存期間、承認権限は、採用サービス・案件特性・最新の関連規程に基づき個別に確定する。</div>
+<div class="legend"><span><i class="dot fact-dot"></i>社内資料に明示された現行事項</span><span><i class="dot proposal-dot"></i>AI駆動開発向けの提案事項</span></div>
+<div class="summary-box">
+<p class="lead">結論：現行の品質保証の骨格は維持できる。AI固有統制を単純に追加するのではなく、品質目標、プロジェクト／フェーズ計画、成果物管理、リスク・問題・変更管理、セキュリティ、稼働後評価へ組み込む必要がある。</p>
+<ul>
+<li>現行は、テスト結果だけでなく、品質・性能・運用・移行・フォールバック・保守準備等の達成状況と証跡を根拠に、関係部署が本番移行可否を判断する。<a class="source-link" href="#source-cutover">カットオーバークライテリア記載要領</a>／<a class="source-link" href="#source-test-quality">テスト品質評価報告ガイド</a></li>
+<li>AI駆動開発でも「基準を事前定義し、予定と実績を比較し、未達・例外・残存リスクを説明して承認する」という原則は有効である。</li>
+<li>一方、AI固有観点の起点として確認したカットオーバークライテリア記載要領およびテスト品質評価報告ガイドには、AI生成物、プロンプト、モデル・バージョン、生成条件、AI出力の検証責任等の項目は明示されていない。このため、AI固有観点は、社内のAI利用・情報管理・セキュリティ規程との整合を別途確認したうえで追加管理する必要がある。</li>
+<li>変更の中心は、既存基準の廃止ではなく、①AI利用範囲の識別、②生成物の追跡性、③人による検証、④必要十分な再現・調査可能性、⑤入力・出力の情報管理、⑥AI利用に関する変更影響管理を既存プロセスへ組み込むことである。</li>
+<li>AI導入後の品質管理は、既存項目への単純な上乗せにしない。人手作業量、作成者中心の評価、全件一律目視等は縮小・置換し、AI専用管理も成熟後は既存の変更管理・構成管理・品質評価へ統合する。</li><li>追加参照した企画・開発ルール、プロジェクト管理要領、成果物編を踏まえ、品質目標からAI利用条件を導き、計画・評価・成果物・保守・保存廃棄・稼働後評価まで一貫して管理する。</li></ul>
+</div>
+</section>
+<section class="section">
+<h2>1. 現状、企業は何を根拠に品質保証できたと判断しているか</h2>
+<p>現行の品質保証は、単一の指標ではなく、複数領域の評価項目・基準値・実績値・確認資料・残課題を組み合わせた総合判断である。カットオーバークライテリアでは、評価項目、基準値、条件、単位、予定日・実績日、主担当、評価ランク、確認資料、備考を記録する。<a class="source-link" href="#source-cutover">参照：カットオーバークライテリア記載要領</a></p>
+<div aria-label="現行品質保証の判断フロー" class="flow">
+<div class="flow-item">基準を事前設定<small>評価項目・基準値・条件・担当</small></div><div class="arrow">›</div>
+<div class="flow-item">実績を収集<small>テスト結果・障害・移行・運用準備</small></div><div class="arrow">›</div>
+<div class="flow-item">差分を分析<small>予定対実績・異常傾向・残存リスク</small></div><div class="arrow">›</div>
+<div class="flow-item">証跡を関連付け<small>確認資料・合意記録・評価コメント</small></div><div class="arrow">›</div>
+<div class="flow-item">関係者が判断<small>次フェーズ移行／カットオーバー可否</small></div>
+</div>
+<div class="grid-3">
+<div class="card"><div class="num">01</div><h3>システム品質</h3><ul><li>テスト消化</li><li>障害対応残</li><li>変更要求</li><li>ユーザー・総合評価</li></ul></div><div class="card"><div class="num">02</div><h3>性能・容量</h3><ul><li>バッチ処理時間</li><li>オンライン応答時間</li><li>運用許容時間帯</li><li>CPU・メモリ・ディスク等</li></ul></div><div class="card"><div class="num">03</div><h3>運用準備</h3><ul><li>本番環境構築</li><li>構成管理</li><li>通常時・障害時手順</li><li>マニュアル・研修・体制</li></ul></div><div class="card"><div class="num">04</div><h3>移行・切替</h3><ul><li>移行リハーサル</li><li>移行手順・時間・資源</li><li>コンティンジェンシー・フォールバック</li><li>サービスイン直後体制</li></ul></div><div class="card"><div class="num">05</div><h3>保守準備</h3><ul><li>保守テスト環境</li><li>文書・ライブラリー管理</li><li>変更管理手順</li><li>保守体制</li></ul></div><div class="card"><div class="num">06</div><h3>規制対応</h3><ul><li>経済安全保障（基幹インフラ制度）</li><li>対象案件・改修の該当性確認</li><li>必要な当局事前承認の完了確認</li></ul></div><div class="card"><div class="num">07</div><h3>その他</h3><ul><li>標準項目で不足する案件固有項目</li><li>業務リハーサル等の追加項目</li><li>追加理由・基準・証跡の明確化</li></ul></div></div>
+<p class="source">上記7領域は、カットオーバークライテリア記載要領 Ver.2.9.0 の大分類（1～7）を要約したもの。 <a class="source-link" href="#source-cutover">参照箇所へ</a></p>
+<h3>テスト品質の判定根拠</h3>
+<table>
+<thead><tr><th>評価軸</th><th>現行で確認する内容</th><th>主な根拠</th></tr></thead>
+<tbody>
+<tr><td>テスト設計</td><td>網羅性、対象規模に見合うテスト量、非実施領域の監視・評価</td><td>カバレッジ、ケース数・密度、非実施理由</td></tr>
+<tr><td>テスト実施</td><td>予定テストの完了。未実施時は理由・リスク・影響・対策を明確化</td><td>完了率、予定実績差、残ケース一覧</td></tr>
+<tr><td>障害検出</td><td>障害数とテスト量のバランス、過多・過少等の異常分析</td><td>障害密度、機能別・原因別・工程別分析</td></tr>
+<tr><td>障害修正</td><td>原則全件修正。未修正時はリスク・対策・関係者合意</td><td>修正完了率、未修正理由、合意証跡</td></tr>
+<tr><td>修正品質</td><td>デグレードの発生傾向と残存リスク</td><td>デグレード分析、対策後評価</td></tr>
+<tr><td>残存リスク</td><td>障害の検出状況、収束、再発、水平展開</td><td>傾向分析、水平展開結果、類似問題有無</td></tr>
+</tbody>
+</table>
+<p class="source">同ガイドは案件ごとに適用度を判断できるガイドであり、以下は遵守事項と断定せず、評価上の推奨事項として扱う。テスト品質評価報告ガイドでは、判定結果を裏付けるデータ、基準未達を条件付き合格とする場合の合理的根拠、予定値と実績値、各基準の分析・評価を求めている。<a class="source-link" href="#source-test-quality">参照：テスト品質評価報告ガイド</a></p>
+</section>
+<section class="section">
+<h2>2. AI駆動開発導入時に、現状の品質観点から生じる不安</h2>
+<div class="note"><strong>位置づけ：</strong>以下は、現行資料に明示された評価構造へAI駆動開発を当てはめた際の「導入検討上の懸念・仮説」である。現行社内資料がAI固有リスクとして規定している、という意味ではない。</div>
+<div class="matrix">
+<div class="head">現行観点</div><div class="head">AI導入時の主な不安</div><div class="head">現行基準だけでの不足</div><div class="head">想定影響</div>
+<div class="rowhead">追跡性・網羅性</div><div class="high">要件から生成コード・テストへの経路が曖昧になる</div><div>プロンプト、参照情報、生成条件が成果物との対応表に含まれない</div><div>要件漏れや意図しない実装を説明しにくい</div>
+<div class="rowhead">レビュー</div><div class="high">自然に見える誤りを見逃す可能性</div><div>AI生成物に応じたレビュー観点・検証責任がない</div><div>誤実装、境界条件漏れ、過信</div>
+<div class="rowhead">再現性</div><div class="high">同じ依頼でも結果が変わり得る</div><div>モデル、版、設定、プロンプト等の記録項目がない</div><div>不具合再現・原因調査・監査説明が難化</div>
+<div class="rowhead">障害分析</div><div class="mid">AI由来か人手由来か、混入経路が判別しにくい</div><div>原因分類にAI利用工程・生成方法がない</div><div>有効な再発防止策を選びにくい</div>
+<div class="rowhead">変更管理</div><div class="mid">モデル・プロンプト変更が成果物へ波及する</div><div>AI構成変更を通常の変更要求と同じ粒度で記録できない</div><div>再評価範囲の不足、デグレード</div>
+<div class="rowhead">情報管理</div><div class="high">入力情報や生成物の取扱いが不明確</div><div>AIへの入力可否・保存・共有・削除の評価欄がない</div><div>機密情報、個人情報、契約上の問題</div>
+<div class="rowhead">スキル・責任</div><div class="mid">誰がAI出力の正しさを保証するか曖昧</div><div>AI利用者、検証者、承認者の役割が定義されていない</div><div>レビュー形骸化、責任境界の不明確化</div>
+<div class="rowhead">サプライチェーン</div><div class="mid">生成コードが不適切な依存関係を持ち込む懸念</div><div>AI提案依存関係の確認項目がない</div><div>脆弱性・保守性・ライセンス確認負荷</div>
+</div>
+</section>
+<section class="section">
+<h2>3. 現状の品質観点を変更する必要があるか</h2>
+<p class="lead">全面的な置換は不要。ただし単純な上乗せでもない。既存の品質ゲートを維持しつつ、AI利用を識別・追跡・検証する観点を拡張し、作業量中心の指標や重複帳票は置換・縮小・統合することが妥当である。</p>
+<table>
+<thead><tr><th>扱い</th><th>品質観点</th><th>考え方</th></tr></thead>
+<tbody>
+<tr><td><span class="tag keep">維持</span></td><td>要件充足、テスト網羅性、予定対実績、障害修正、残存リスク、移行・運用・保守準備</td><td>成果物の作成手段がAIに変わっても、リリース可否判断に必要な基本原則は変わらない。</td></tr>
+<tr><td><span class="tag extend">拡張</span></td><td>追跡性、レビュー、変更管理、原因分析、確認資料</td><td>AI利用工程、生成条件、人による検証結果を既存帳票・証跡へ追加する。</td></tr>
+<tr><td><span class="tag new">新設</span></td><td>AI利用台帳、モデル・重要指示・生成条件の管理、入力情報管理、再現性、AI生成物の識別</td><td>現行資料に明示されていないAI固有項目として追加する。</td></tr>
+</tbody>
+</table>
+<div class="fact"><strong>現行で維持すべき核：</strong>評価項目と基準を事前に設定し、予定値・実績値・確認資料を記録し、未達や残課題にはリスク・対策・合意を付け、関係部署が判断する仕組み。<a class="source-link" href="#source-cutover">カットオーバークライテリア記載要領</a>／<a class="source-link" href="#source-test-quality">テスト品質評価報告ガイド</a></div>
+<div class="proposal"><strong>AI導入で追加する核：</strong>「何をAIに任せたか」「採用成果物に影響した条件は何か」「人が何を検証したか」「変更時にどこまで再評価したか」を、リスクと関連規程に応じた必要十分な範囲で証跡化する。</div>
+</section>
+<section class="section" id="quality-reduction">
+<h2>3.1 AI導入により縮小・置換・統合できる品質観点</h2>
+<div class="note"><strong>結論：</strong>AI駆動開発で不要になるのは品質保証そのものではなく、「人が時間をかけて作業した事実」を品質の根拠とする考え方である。既存観点をすべて残したままAI固有項目を上乗せすると、管理の重複や形式化を招くため、維持・置換・縮小・統合の4区分で再設計する。</div>
+<h3>3.1.1 見直しの全体像</h3>
+<table>
+<thead><tr><th>区分</th><th>対象となる品質観点</th><th>AI導入後の扱い</th><th>判断理由</th></tr></thead>
+<tbody>
+<tr><td><span class="tag keep">維持</span></td><td>要件充足、リスクに応じたテスト網羅性、障害修正、残存リスク、性能・容量、移行、切戻し、運用、保守、関係者承認</td><td>重要度を下げず継続する</td><td>成果物の作成方法が変わっても、本番移行・業務運営に必要な達成条件は変わらない。</td></tr>
+<tr><td><span class="tag extend">置換</span></td><td>作業時間、ページ数、プログラム本数、単純なテストケース数等の作業量中心の指標</td><td>要件カバレッジ、リスク充足度、重要機能・境界条件・例外処理の網羅性、検証結果へ置き換える</td><td>AIは短時間で大量生成できるため、量や投入時間だけでは品質を説明できない。</td></tr>
+<tr><td><span class="tag extend">縮小</span></td><td>全成果物の一律な人手目視、作成者別を主軸とした評価、AI生成／人手作成の二者択一</td><td>高リスク領域を重点確認し、自動検証と組み合わせる。作成主体は補助属性とする</td><td>一律確認は形式化しやすく、複数の人・AI・自動化が関与する成果物を作成者だけでは評価しにくい。</td></tr>
+<tr><td><span class="tag new">統合</span></td><td>AI利用台帳、AI変更影響評価、AI由来障害分類</td><td>導入初期は独立管理し、運用定着後は構成管理、変更管理、レビュー、テスト管理、品質評価へ統合する</td><td>初期は傾向把握に必要だが、恒久的な二重管理は管理負荷と不整合を生む。</td></tr>
+</tbody>
+</table>
+<h3>3.1.2 相対的に重要度を下げる、または置き換える観点</h3>
+<div class="grid">
+<div class="card"><h3>① 人手作業量を品質の根拠とする指標</h3><p>設計書のページ数、プログラム本数、テストケース数、レビュー人時、作業消化量は、進捗・生産性の参考情報にとどめる。品質判断は、要件・リスクへのカバレッジ、重要条件の網羅性、検証結果、未確認範囲、残存リスクを中心に行う。</p><p class="source">テストケース数等を完全に廃止するのではなく、単純件数だけで合否を判断しない。テスト対象規模に見合う量や障害件数とのバランスは引き続き評価対象とする。 <a class="source-link" href="#source-test-quality">参照：テスト品質評価報告ガイド</a></p></div>
+<div class="card"><h3>② 全成果物の一律な人手目視</h3><p>人による最終的な検証責任は維持する。全件一律目視を縮小できるのは、リスク分類、対象選定基準、自動検証の有効性、異常時の全量確認条件、未確認範囲、承認者を事前に定義し、その妥当性を説明できる場合に限る。金額計算、権限、データ更新、外部接続、移行処理等の高リスク領域は重点確認する。</p><p class="source">抜取確認を採用する場合は、対象選定基準、除外範囲、未確認リスク、承認者を明確にする。</p></div>
+<div class="card"><h3>③ 作成者中心の品質評価</h3><p>担当者別・会社別の集計は補助分析として残せるが、主要な判断軸からは下げる。AI利用工程、利用目的、生成物種別、参照情報、人による修正、検証方法、検出工程、混入原因、承認責任を中心に分析する。</p><p class="source">現行ガイドには担当者別等の層別例があるため、廃止ではなく、AI利用形態等を加えた多面的分析へ変更する。 <a class="source-link" href="#source-test-quality">参照：テスト品質評価報告ガイド</a></p></div>
+<div class="card"><h3>④ AI生成／人手作成の二者択一</h3><p>導入初期はAI利用有無による障害、指摘、手戻りの傾向把握に利用する。定着後は作成主体だけを合否基準にせず、利用工程、リスク、検証結果、承認責任、証跡充足を重視する。</p></div>
+<div class="card"><h3>⑤ プロンプト全文の無条件・恒久保存</h3><p>全対話の保存自体を品質基準にしない。採用成果物に影響した重要指示、制約、参照情報、モデル等の識別情報、採否判断、人による修正・検証、不具合再現や監査に必要な履歴を保存対象とする。</p><p class="source">具体的な保存範囲・期間は、参照した品質関連資料だけでは決定できない。情報管理、セキュリティ、記録管理等の社内規程と別途整合させる。</p></div>
+<div class="card"><h3>⑥ AI専用帳票の恒久的な二重管理</h3><p>AI利用台帳やAI変更票は導入初期の統制・傾向把握に使用する。既存管理でAI利用範囲、生成条件、検証者、承認状態、変更影響を追跡できる状態になれば、独立帳票を廃止し既存プロセスへ統合する。</p></div>
+</div>
+<h3>3.1.3 統合の進め方</h3>
+<div class="flow">
+<div class="flow-item">導入初期<br/>識別する<small>AI利用有無、用途、生成条件、検証結果を独立管理</small></div><div class="arrow">›</div>
+<div class="flow-item">評価期<br/>比較する<small>障害、レビュー指摘、手戻り、再テスト等を層別分析</small></div><div class="arrow">›</div>
+<div class="flow-item">定着期<br/>統合する<small>構成・変更・レビュー・テスト・品質評価へ組み込む</small></div><div class="arrow">›</div>
+<div class="flow-item">運用期<br/>簡素化する<small>重複帳票を廃止し、リスクに応じて証跡を最適化</small></div>
+</div>
+<h3>3.1.4 重要度を下げてはいけない観点</h3>
+<ul class="check">
+<li><strong>要件妥当性：</strong>AIへの指示以前に、業務要求そのものが正しいかを確認する。</li>
+<li><strong>ユーザー部署の評価：</strong>AI利用の有無にかかわらず、業務上使用可能な品質かを確認する。 <a class="source-link" href="#source-cutover">参照：カットオーバークライテリア記載要領</a></li>
+<li><strong>障害・残存リスク：</strong>未修正時の影響、代替策、対応方針、関係者合意を明確にする。 <a class="source-link" href="#source-cutover">参照：カットオーバークライテリア記載要領</a></li>
+<li><strong>性能・容量、移行、運用、保守：</strong>成果物の作成方法とは独立した本番稼働条件として維持する。 <a class="source-link" href="#source-cutover">参照：カットオーバークライテリア記載要領</a></li>
+</ul>
+<div class="proposal"><strong>改定方針：</strong>要件充足、テスト、障害、性能、移行、運用、保守等の成果品質は維持する。一方、人手プロセスを前提とする作業量、作成者中心の評価、全件一律目視等は縮小し、リスク、検証結果、追跡性、説明可能性を中心とする管理へ置き換える。AI固有項目は導入初期に独立管理し、定着後は既存の構成管理、変更管理、レビュー、テスト管理および品質評価へ統合する。</div>
+</section><section class="section">
+<h2>4. 必要と考えられる変更</h2>
+<h3>4.1 品質基準・帳票への追加項目</h3><div class="note"><strong>優先度の扱い：</strong>下表の優先度は社内標準で定められたものではなく、本資料上の暫定案である。正式化時は、対象業務・情報区分・AIの自律度・変更影響・顧客影響を踏まえて決定する。</div>
+<table>
+<thead><tr><th>追加・変更項目</th><th>記録する内容</th><th>既存品質観点との接続</th><th>優先度</th></tr></thead>
+<tbody>
+<tr><td>AI利用台帳</td><td>対象工程、用途、対象成果物、利用者、検証者、承認者</td><td>主担当、確認資料、変更管理</td><td><span class="tag high">高</span></td></tr>
+<tr><td>採用成果物に関する生成条件の記録</td><td>利用サービス、識別可能なモデル情報、主要設定、採用成果物に影響した重要指示・制約、参照情報（保存範囲は関連規程に従う）</td><td>再現性、障害原因分析、確認資料</td><td><span class="tag high">高</span></td></tr>
+<tr><td>生成物の識別・追跡</td><td>AI生成・AI補助・人手作成の区分、要件・設計・コード・テストの対応</td><td>要件追跡性、テスト網羅性</td><td><span class="tag high">高</span></td></tr>
+<tr><td>人による検証記録</td><td>レビュー観点、実施者、指摘、修正、再確認、承認</td><td>レビュー、品質総合評価</td><td><span class="tag high">高</span></td></tr>
+<tr><td>AI入力情報の管理</td><td>入力可否、情報区分、マスキング、保存・共有・削除条件</td><td>運用準備、規制・リスク対応</td><td><span class="tag high">高</span></td></tr>
+<tr><td>AI変更影響評価</td><td>モデル、主要設定、重要指示・制約、参照情報の変更時における影響範囲と再テスト</td><td>変更管理、デグレード評価</td><td><span class="tag high">高</span></td></tr>
+<tr><td>AI由来障害の分類</td><td>生成誤り、要件解釈誤り、参照情報不備、検証漏れ等</td><td>原因分析、水平展開、再発防止</td><td><span class="tag extend">中</span></td></tr>
+<tr><td>依存関係等の確認</td><td>AI提案ライブラリ、構成、出典、ライセンス・脆弱性等の確認結果</td><td>構成管理、保守準備</td><td><span class="tag extend">中</span></td></tr>
+</tbody>
+</table>
+<h3>4.2 AI駆動開発向け品質ゲート案</h3>
+<div class="flow">
+<div class="flow-item">Gate 0<br/>利用可否<small>用途・データ・ツールの利用条件を確認</small></div><div class="arrow">›</div>
+<div class="flow-item">Gate 1<br/>生成条件<small>採用成果物に必要なモデル情報・重要指示・参照情報を記録</small></div><div class="arrow">›</div>
+<div class="flow-item">Gate 2<br/>人手検証<small>要件整合、設計、コード、テストをレビュー</small></div><div class="arrow">›</div>
+<div class="flow-item">Gate 3<br/>品質評価<small>既存のテスト品質基準で評価</small></div><div class="arrow">›</div>
+<div class="flow-item">Gate 4<br/>リリース判定<small>既存カットオーバークライテリア＋AI項目</small></div>
+</div>
+<h3>4.3 役割分担の追加案</h3>
+<table>
+<thead><tr><th>役割</th><th>追加する責任</th><th>主な証跡</th></tr></thead>
+<tbody>
+<tr><td>AI利用者／作成担当</td><td>利用目的・入力・生成条件・生成物区分を記録する</td><td>AI利用台帳、生成履歴</td></tr>
+<tr><td>レビュー担当</td><td>AI出力を前提にせず、要件・設計・コード・テストの妥当性を検証する</td><td>レビュー記録、指摘対応</td></tr>
+<tr><td>テスト・品質評価担当</td><td>AI利用範囲を層別化して品質指標・障害傾向を分析する</td><td>品質評価報告、傾向分析</td></tr>
+<tr><td>PM・PL／品質管理責任者</td><td>AI固有の残存リスク、例外、再評価範囲を判断する</td><td>リスク受容・合意記録</td></tr>
+<tr><td>情報管理・セキュリティ等の確認者</td><td>入力情報、利用サービス、保存・共有条件の適合性を確認する</td><td>利用可否確認、チェック結果</td></tr>
+<tr><td>運用・保守担当</td><td>生成条件・依存関係を含め、保守時に再現・変更できる状態を確認する</td><td>保守引継ぎ、構成・変更管理記録</td></tr>
+</tbody>
+</table>
+<p class="source">この役割分担はAI導入向けの提案であり、参照資料がAI向けの固定組織名・分掌として規定するものではない。</p>
+</section>
+<section class="section">
+<h2>5. 導入の進め方（提案）</h2>
+<div class="roadmap">
+<div class="step" data-step="1"><h4>適用範囲を限定</h4><p>低リスクな成果物・工程から開始し、AI利用台帳と人手検証を必須化する。</p></div>
+<div class="step" data-step="2"><h4>既存帳票を拡張</h4><p>品質計画、レビュー、テスト品質評価、変更管理、カットオーバークライテリアにAI項目を追加する。</p></div>
+<div class="step" data-step="3"><h4>データで比較</h4><p>AI利用有無でレビュー指摘、障害、手戻り、再テスト等を層別化し、異常傾向を確認する。</p></div>
+<div class="step" data-step="4"><h4>基準を正式化</h4><p>試行結果を踏まえ、適用条件、最低証跡、承認者、例外処理、再評価条件を標準化する。</p></div>
+</div>
+<div class="note"><strong>重要：</strong>AI利用による品質向上・低下を事前に断定せず、現行ガイドと同様に、予定値・実績値・差分・原因・対策を測定して判断する。</div>
+</section>
+<section class="section" id="standard-integration">
+<h2>6. 既存標準へAI品質統制を組み込む方法</h2>
+<div class="note"><strong>位置づけ：</strong>本章は、企画・開発ルール、プロジェクト管理要領、成果物編に明示された既存管理へ、AI駆動開発向けの提案事項を接続する。AI専用の管理体系を並立させるのではなく、既存の計画・評価・成果物・リスク・変更・文書管理に組み込む。</div>
+<div class="toc">
+<a href="#quality-goal">6.1 品質目標とAI利用方針</a>
+<a href="#plan-phase">6.2 プロジェクト／フェーズ計画</a>
+<a href="#process-effectiveness">6.3 品質保証プロセスの実効性</a>
+<a href="#management-link">6.4 リスク・問題・変更・進捗管理</a>
+<a href="#security-link">6.5 セキュリティ・情報管理</a>
+<a href="#deliverable-life">6.6 成果物ライフサイクル</a>
+<a href="#post-operation">6.7 稼働後評価・利用終了</a>
+</div>
+<h3 id="quality-goal">6.1 品質目標とAI利用方針を接続する</h3>
+<p>プロジェクト計画時に、システム特性・プロジェクト特性から重点品質目標を設定し、その達成に必要な開発標準、教育、環境、レビュー、テストを品質保証方針として定める。AI利用可否や検証強度は、ツール単位で一律に決めるのではなく、重点品質目標と対象成果物のリスクから導く。 <a class="source-link" href="#source-project-management">参照：プロジェクト管理要領</a></p>
+<div class="flow">
+<div class="flow-item">特性を把握<small>システム特性・案件特性・利用データ</small></div><div class="arrow">›</div>
+<div class="flow-item">品質目標を設定<small>機密性・完全性・可用性・使用性等の重点</small></div><div class="arrow">›</div>
+<div class="flow-item">AI適用を決定<small>利用工程・成果物・禁止範囲・責任</small></div><div class="arrow">›</div>
+<div class="flow-item">検証強度を設定<small>レビュー形態・自動検証・全量／抽出</small></div><div class="arrow">›</div>
+<div class="flow-item">品質基準へ反映<small>フェーズ評価・リリース判定の証跡</small></div>
+</div>
+<table class="compact"><thead><tr><th>重点品質目標</th><th>AI利用時に重点化する確認</th><th>主な証跡</th></tr></thead><tbody>
+<tr><td>機密性</td><td>入力可否、利用サービス、参照範囲、保存・共有条件</td><td>利用可否確認、情報区分確認、アクセス記録</td></tr>
+<tr><td>完全性</td><td>計算、更新、状態遷移、例外処理、データ整合性</td><td>重点レビュー、テスト結果、差分・再確認記録</td></tr>
+<tr><td>可用性</td><td>性能、容量、障害復旧、切替、運用継続</td><td>性能評価、運用・移行リハーサル結果</td></tr>
+<tr><td>使用性</td><td>業務妥当性、画面・操作、利用者評価</td><td>ユーザー評価、受入結果、指摘対応</td></tr>
+</tbody></table>
+<p class="source">上表のAI利用時確認は導入検討上の提案であり、品質目標の設定原則をAI利用へ展開したもの。</p>
+<h3 id="plan-phase">6.2 プロジェクト計画・フェーズ計画・品質ゲートへ反映する</h3>
+<div class="phase-map">
+<div class="phase"><strong>プロジェクト計画</strong><ul><li>AI利用目的・範囲・禁止範囲</li><li>体制・責任・承認</li><li>品質保証方針</li><li>リスク・変更・報告方法</li></ul></div>
+<div class="phase"><strong>フェーズ計画</strong><ul><li>対象成果物</li><li>利用サービス・生成条件</li><li>レビュー形態</li><li>品質基準・評価方法</li></ul></div>
+<div class="phase"><strong>WBS／実行管理</strong><ul><li>生成・検証・再生成</li><li>レビュー・再レビュー</li><li>問題・変更対応</li><li>予定／実績工数</li></ul></div>
+<div class="phase"><strong>フェーズ評価</strong><ul><li>成果物品質</li><li>レビュー実効性</li><li>未確認範囲</li><li>残存リスク</li></ul></div>
+<div class="phase"><strong>リリース判定</strong><ul><li>既存基準の充足</li><li>AI関連例外</li><li>変更影響・再テスト</li><li>承認証跡</li></ul></div>
+</div>
+<p>プロジェクト管理要領では、プロジェクト計画をフェーズ計画で詳細化し、フェーズごとに計画・評価を行う。また、レビュー計画はフェーズ内の主要成果物の品質基準、範囲、目的、日程、形態、評価方法等を定める構造である。AI関連項目もこの構造へ反映する。 <a class="source-link" href="#source-project-management">参照：プロジェクト管理要領</a></p>
+<div class="fact"><strong>重要な区別：</strong>作業時間・生成量は品質の代替指標にはしないが、AI導入、検証、再生成、レビュー、手戻り等の予定／実績は、進捗・コスト管理上の情報として管理する。</div>
+<h3 id="process-effectiveness">6.3 成果物だけでなく品質保証プロセスの実効性を評価する</h3>
+<table><thead><tr><th>評価層</th><th>確認する内容</th><th>不十分な評価の例</th></tr></thead><tbody>
+<tr><td>成果物品質</td><td>要件充足、誤り・欠落、性能、セキュリティ、テスト結果、残存リスク</td><td>AI生成物に形式上のレビュー済印があるだけ</td></tr>
+<tr><td>レビュー品質</td><td>重点観点の妥当性、指摘の有効性、再レビュー、類似箇所への水平展開</td><td>予定レビューを全件実施した事実だけ</td></tr>
+<tr><td>プロセス品質</td><td>AI利用ルール準拠、自動チェックの実行、例外処理、教育・標準・ツールへの改善反映</td><td>チェックリストの完了率だけ</td></tr>
+</tbody></table>
+<p>プロジェクト管理要領は、レビューを全部実施したかだけでなく、実施したレビューの品質が十分だったかを評価し、原因分析を開発標準、教育、ツール等へ反映する考え方を示している。企画・開発ルールの品質評価・モニタリングも、成果物に加え、体制・スキルやチェックの形骸化・抜け漏れ等を確認対象としている。 <a class="source-link" href="#source-project-management">参照：プロジェクト管理要領</a>／<a class="source-link" href="#source-dev-rule">参照：企画・開発ルール</a></p>
+<div class="proposal"><strong>全件目視を縮小する条件：</strong>全量確認する高リスク範囲、抽出基準、自動検証で代替する範囲、未確認範囲、異常時の全量展開条件、結果の承認者を事前に定める。レビュー自体を単純に削減する趣旨ではない。</div>
+<h3 id="management-link">6.4 AI固有事項をリスク・問題・変更・進捗管理へ接続する</h3>
+<div class="flow">
+<div class="flow-item">リスク登録<small>発生可能性・影響・責任者</small></div><div class="arrow">›</div>
+<div class="flow-item">対応計画<small>回避・受容・軽減・転嫁／予防・顕在化時対応</small></div><div class="arrow">›</div>
+<div class="flow-item">継続監視<small>フェーズ・マイルストーンで見直し</small></div><div class="arrow">›</div>
+<div class="flow-item">顕在化<small>問題・障害として影響、期限、責任者を管理</small></div><div class="arrow">›</div>
+<div class="flow-item">変更管理<small>承認、再生成、再レビュー、再テスト、完了確認</small></div>
+</div>
+<table class="compact"><thead><tr><th>既存管理</th><th>AI関連で追記する情報</th></tr></thead><tbody>
+<tr><td>リスク管理</td><td>利用工程、想定事象、確率・影響、予防策、顕在化時対応、監視指標</td></tr>
+<tr><td>問題・障害管理</td><td>AI利用形態、混入・検出工程、影響範囲、対応期限、類似箇所、再発防止</td></tr>
+<tr><td>変更管理</td><td>変更理由、モデル・設定・指示・参照情報、影響成果物、工数・日程・コスト、再生成・再テスト範囲、承認者、完了確認</td></tr>
+<tr><td>コミュニケーション</td><td>利用状況、リスク、変更、利用停止・不具合時の報告先、会議体、様式、保管場所</td></tr>
+</tbody></table>
+<p>プロジェクト管理要領は、リスクの特定・分析・対応・監視、顕在化後の問題／変更管理への移行、変更要求の影響評価と承認、コミュニケーション計画を定めている。AI利用台帳だけで完結させず、これらの既存管理へ接続する。 <a class="source-link" href="#source-project-management">参照：プロジェクト管理要領</a></p>
+<h3 id="security-link">6.5 セキュリティ・情報管理・PoC統制へ接続する</h3>
+<div class="grid">
+<div class="card"><h3>システムリスクレビュー</h3><ul><li>AI利用が既存レビューへ与える影響</li><li>企画・要件定義・カットオーバー時の確認</li><li>利用サービス・構成変更時の再評価要否</li><li>関連ルール変更時の影響評価</li></ul></div>
+<div class="card"><h3>PoC</h3><ul><li>当社システムとの接続有無</li><li>本番データ、個人・顧客情報の使用有無</li><li>事前の利用可否・レビュー要否判定</li><li>終了時の入力・生成物・ログの扱い</li></ul></div>
+<div class="card"><h3>ID・アクセス・実行権限</h3><ul><li>利用者認証と最小権限</li><li>参照できるファイル・リポジトリ範囲</li><li>生成と反映・実行の権限分離</li><li>本番環境・本番データへの制限</li><li>利用終了時の権限見直しと証跡</li></ul></div>
+<div class="card"><h3>情報ライフサイクル</h3><ul><li>入力可否と情報区分</li><li>保存・共有・二次利用条件</li><li>監査・再現に必要な最小証跡</li><li>保存期間満了後の廃棄</li></ul></div>
+</div>
+<p>企画・開発ルールは、システムリスクレビュー、PoCで当社システムへ接続する場合または本番データ・個人・顧客情報を使用する場合の要否判定、ID管理、文書保存・廃棄等を扱っている。具体的なAIサービスの該当性は、その構成・接続・取扱情報に基づいて別途確認する。 <a class="source-link" href="#source-dev-rule">参照：企画・開発ルール</a></p>
+<h3 id="deliverable-life">6.6 成果物の作成要否・正本・追跡・保守・保存廃棄を管理する</h3>
+<table><thead><tr><th>管理観点</th><th>必要な整理</th><th>AI導入時の注意</th></tr></thead><tbody>
+<tr><td>作成要否</td><td>標準成果物、実際に作成する成果物、統合・省略理由、代替証跡、承認者、作成フェーズ</td><td>自動生成できることと、標準成果物を省略できることは別</td></tr>
+<tr><td>正本管理</td><td>承認済み正本、更新責任、版、変更履歴、保管場所</td><td>再生成物で無断置換しない</td></tr>
+<tr><td>追跡性</td><td>業務要求→要件→設計→コード→テスト→結果→障害→修正→再テスト→リリース判定</td><td>プロンプト・生成履歴は追跡を補助する情報であり、要件から結果までの紐付けの代替ではない</td></tr>
+<tr><td>保守対象</td><td>保守時に更新する文書・コード・テスト資産、更新方法、引継ぎ</td><td>再生成可能であることと保守可能であることは同義ではない</td></tr>
+<tr><td>保存・廃棄</td><td>ワーク文書、保存文書、保守対象文書、テスト記録、構成・変更記録への区分</td><td>AI関連記録も既存の文書区分と保存・廃棄ルールへ対応付ける</td></tr>
+</tbody></table>
+<p>成果物編には、プロジェクト計画書、フェーズ計画書、テスト計画文書、移行計画文書、カットオーバークライテリア、システム構成図、保守対象ドキュメント一覧、コーディング規約等の要領・ガイドが掲載されている。AI関連情報をどの成果物へ記載するかを定義し、重複を避ける。 <a class="source-link" href="#source-deliverables">参照：成果物編</a></p>
+<h3 id="post-operation">6.7 稼働後評価とAIサービス利用終了を管理する</h3>
+<div class="grid">
+<div class="card"><h3>稼働後評価</h3><ul><li>AI利用部分に起因する本番障害</li><li>レビュー指摘・手戻り・再テスト傾向</li><li>保守時の再現・修正可能性</li><li>品質・生産性効果と追加管理の実効性</li><li>継続・見直し・拡大・停止判断</li></ul></div>
+<div class="card"><h3>利用終了・切替</h3><ul><li>サービス・モデル・契約終了</li><li>アカウント、資格情報、連携の解除</li><li>入力・生成物・ログの保存／廃棄</li><li>代替ツールへの移行可能性</li><li>過去成果物の保守に必要な情報</li><li>構成・保守文書の更新</li></ul></div>
+</div>
+<p>企画・開発ルールは、カットオーバー後のシステム評価・投資効果評価と、問題がある場合の対応・再評価を扱う。また、撤退時に作業項目、対象リソース、保存・廃棄を管理する考え方を示している。AI導入効果とAIサービス終了も、このライフサイクル管理へ接続する。 <a class="source-link" href="#source-dev-rule">参照：企画・開発ルール</a></p>
+</section><section class="section">
+<h2>7. 最終提言</h2>
+<div class="grid">
+<div class="card"><h3>維持するもの</h3><ul class="check"><li>事前に品質基準を設定</li><li>予定・実績を比較</li><li>データによる判定根拠</li><li>未達・残課題のリスク評価</li><li>関係者の確認・承認</li><li>移行・運用・保守を含む総合判断</li></ul></div>
+<div class="card"><h3>追加するもの</h3><ul class="check"><li>AI利用台帳</li><li>生成条件・モデル情報</li><li>AI生成物の識別と追跡</li><li>人による検証記録</li><li>AI入力情報管理</li><li>AI変更影響・再テスト基準</li><li>AI由来障害の原因分類</li></ul></div>
+<div class="card"><h3>縮小・統合するもの</h3><ul class="check"><li>作業量を品質の代替指標とする運用</li><li>全件一律の人手目視確認</li><li>作成者中心の品質評価</li><li>AI生成／人手作成だけによる合否判断</li><li>全プロンプトの無条件・恒久保存</li><li>定着後のAI専用帳票の二重管理</li></ul></div><div class="card"><h3>既存標準へ組み込むもの</h3><ul class="check"><li>品質目標とAI利用条件の接続</li><li>プロジェクト／フェーズ計画への反映</li><li>レビュー・品質保証プロセスの実効性評価</li><li>リスク・問題・変更・進捗・報告管理</li><li>成果物の正本・追跡・保守・保存廃棄</li><li>システムリスクレビュー・PoC・権限管理</li><li>稼働後評価・AIサービス利用終了管理</li></ul></div></div>
+<p class="lead">したがって、AI駆動開発の品質保証は、AI固有項目の追加だけでは完結しない。品質目標から利用条件と検証強度を定め、既存のプロジェクト管理、成果物管理、セキュリティ管理、稼働後評価へ組み込み、重複管理を段階的に解消する。</p>
+</section>
+<section class="section">
+<h2>参照資料と記載上の区分</h2><div class="fact"><strong>再鑑時の確認状況：</strong>テスト品質評価報告ガイドは本文を照合できた。企画・開発ルールはVer.3.93.0の本文を照合できた。一方、カットオーバークライテリア記載要領、プロジェクト管理要領、成果物編は検索上で所在・版情報または掲載項目を確認したが、一部は「Expired」表示で本文全量を再取得できなかった。したがって、当該3資料に依拠する詳細記述は、正式利用前に現行正本との最終突合が必要である。</div><div class="note"><strong>リンク修正：</strong>本文中の参照は、この参照資料欄へ移動する通常のHTMLリンクに統一した。ファイル本体のURLは元資料に記載がなかったため、推測URLは設定していない。</div>
+<ul>
+<li id="source-cutover"><code>A30_080_カットオーバークライテリア記載要領.docx</code> Ver.2.9.0：現行のカットオーバー評価項目、帳票項目、評価ランク、残課題・証跡の扱いの根拠。</li>
+<li id="source-test-quality"><code>B30_T_60_G_010_テスト品質評価報告ガイド.docx</code> Ver.1.0.0：テスト終了・次フェーズ移行判断、合否判定基準、判定根拠、障害分析・水平展開の根拠。</li>
+<li id="source-dev-rule"><code>A10_000_標準化 企画・開発ルール.doc</code> Ver.3.93.0：案件手続、品質評価・モニタリング、セキュリティ、PoC、ドキュメント保存・廃棄、稼働後評価、撤退管理の根拠。</li><li id="source-project-management"><code>A22_010_プロジェクト管理要領.docx</code> Ver.2.5.0：品質目標、品質保証方針、レビュー計画、品質評価、進捗・コスト・問題・変更・リスク・コミュニケーション管理の根拠。</li><li id="source-deliverables"><code>成果物編.aspx</code>：プロジェクト計画、フェーズ計画、要件定義、テスト、移行、カットオーバー、構成図、保守対象文書、コーディング規約等の要領・ガイドの参照先。</li></ul>
+<p class="source">本資料の「現行」記述は上記資料に基づく。AI利用条件、AI固有リスク、追加管理項目、品質ゲート、役割分担、既存標準への具体的な組込み方法は、現行管理とのギャップを埋めるための提案であり、現時点の社内規程として確認された事項ではない。具体的なAIサービスの利用可否、システムリスクレビュー該当性、保存期間、承認権限は、個別案件と関連規程に基づき確認する。</p>
+</section>
+<footer>AI駆動開発導入に伴う品質保証観点の整理｜再鑑修正版 v4 2026-07-27</footer>
+</div>
+</body>
+</html>

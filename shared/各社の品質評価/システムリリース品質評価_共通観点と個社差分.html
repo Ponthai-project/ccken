@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>システムリリース品質評価 ─ 7社の共通観点と個社差分</title>
+<style>
+:root{
+  --paper:#F3ECDD;
+  --card:#F7F1E3;
+  --ink:#2A2723;
+  --terracotta:#C15F3C;
+  --teal:#3E6B6E;
+  --highlight:#EED9A0;
+  --shadow:rgba(42,39,35,0.12);
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{
+  margin:0; padding:0; width:100%; overflow-x:hidden;
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(transparent 0 31px, rgba(42,39,35,0.035) 31px 32px),
+    radial-gradient(rgba(42,39,35,0.03) 1px, transparent 1.2px);
+  background-size: auto, 7px 7px;
+  color:var(--ink);
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif;
+  line-height:1.6;
+}
+img,svg{ max-width:100%; height:auto; }
+.page{ max-width:min(1040px,94vw); margin:0 auto; }
+
+/* ---- 番号見出し ---- */
+.sec-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom:14px; }
+.sec-num{
+  flex-shrink:0; font-size:clamp(1.9rem,5vw,2.8rem); font-weight:bold;
+  color:var(--terracotta); line-height:1;
+  text-shadow: 1.5px 1.5px 0 rgba(193,95,60,0.20);
+}
+.section-title{
+  display:inline-block; font-size:clamp(1.2rem,3vw,1.7rem); letter-spacing:0.03em;
+  position:relative; padding-bottom:6px;
+  background-image: linear-gradient(120deg, rgba(193,95,60,0.35), rgba(193,95,60,0.35));
+  background-repeat:no-repeat; background-size:100% 0.42em; background-position:0 92%;
+}
+.sec-sub{ margin:6px 0 0 0; color:#6b6660; font-size:0.88rem; }
+
+/* ---- セクション/カード ---- */
+.section{ padding:26px 0; }
+.card{
+  background:var(--card); border:2px solid var(--ink);
+  border-radius: 18px 14px 20px 15px / 15px 20px 14px 18px;
+  box-shadow:0 6px 14px var(--shadow); padding:26px clamp(18px,4vw,38px); position:relative;
+}
+.section:nth-of-type(even) .card{ border-radius: 15px 19px 14px 21px / 19px 14px 21px 15px; }
+
+/* ---- 図解ブロック ---- */
+.fig-block{ display:block; float:none; width:100%; margin:16px auto 18px; min-height:200px; overflow:visible; }
+.fig-part{ flex-shrink:0; }
+.fig-label{ font-size:max(12px,0.75rem); filter:none; }
+.deco-icon{ width:clamp(28px,3.6vw,44px); height:auto; flex-shrink:0; }
+
+/* ---- 補足表 ---- */
+.info-table{ width:100%; border-collapse:collapse; margin:16px 0 6px; font-size:0.85rem; }
+.info-table th,.info-table td{ border:1.5px solid var(--ink); padding:9px 11px; text-align:left; vertical-align:top; }
+.info-table th{ background:var(--highlight); font-weight:bold; }
+.info-table tr:nth-child(even) td{ background:rgba(62,107,110,0.07); }
+.info-table td.num{ text-align:center; font-weight:bold; color:var(--terracotta); width:2.4em; }
+.info-table ul{ margin:0; padding-left:1.1em; }
+.info-table ul li{ margin-bottom:6px; }
+.info-table ul li:last-child{ margin-bottom:0; }
+
+.explain{ margin-top:14px; font-size:0.92rem; line-height:1.7; }
+.explain strong{ color:var(--terracotta); }
+
+/* ---- 付箋 ---- */
+.sticky-note{ background:var(--highlight); border-radius:2px; padding:16px 20px; position:relative; box-shadow:3px 5px 9px var(--shadow); margin-top:20px; font-weight:bold; }
+.sticky-note::after{ content:""; position:absolute; top:0; right:0; width:22px; height:22px; background:linear-gradient(135deg, transparent 50%, rgba(42,39,35,0.18) 52%); border-bottom-left-radius:5px; }
+
+/* ---- 引用ブロック ---- */
+.quote-block{
+  margin-top:20px; background:#fff9ec; border:2.5px solid var(--terracotta);
+  border-left-width:8px; border-radius:8px; padding:16px 22px; font-size:0.92rem; line-height:1.75;
+}
+.quote-block strong{ color:var(--terracotta); }
+
+/* ---- バッジ3種（02表・04図で共通） ---- */
+.badge{ display:inline-block; font-size:0.72rem; font-weight:bold; padding:3px 10px; border-radius:999px; border:1.5px solid var(--ink); white-space:nowrap; }
+.badge-auto{ background:var(--teal); color:#fff9ec; }
+.badge-semi{ background:var(--highlight); color:var(--ink); }
+.badge-human{ background:var(--terracotta); color:#fff9ec; }
+
+/* ---- 出典 ---- */
+.eyebrow{ display:inline-flex; align-items:center; gap:8px; font-size:0.82rem; color:var(--teal); font-weight:bold; letter-spacing:0.04em; margin-bottom:10px; }
+footer.source{ text-align:center; font-size:0.78rem; opacity:0.78; padding:16px 0 46px; line-height:1.6; }
+
+/* ---- ヒーロー ---- */
+.hero{ text-align:center; padding-top:34px; }
+.hero .section-title{ font-size:clamp(1.5rem,4.6vw,2.3rem); }
+.hero-sub{ font-size:clamp(0.9rem,2vw,1.05rem); margin-top:12px; line-height:1.75; max-width:820px; margin-left:auto; margin-right:auto; text-align:left; }
+
+/* =======================================================
+   01 位置づけマップ（T6・方式β）
+   ======================================================= */
+.axis-map{ position:relative; width:100%; height:300px; margin-top:6px; }
+.axis-h{ position:absolute; left:8%; right:8%; top:50%; border-top:2px dashed var(--ink); }
+.axis-v{ position:absolute; top:10%; bottom:10%; left:50%; border-left:2px dashed var(--ink); }
+.axis-end{ position:absolute; font-size:0.72rem; font-weight:bold; color:var(--teal); width:150px; line-height:1.4; }
+.axis-end.left{ left:0; top:50%; transform:translateY(-50%); text-align:right; }
+.axis-end.right{ right:0; top:50%; transform:translateY(-50%); text-align:left; }
+.axis-end.top{ top:0; left:50%; transform:translateX(-50%); text-align:center; width:220px; }
+.axis-end.bottom{ bottom:0; left:50%; transform:translateX(-50%); text-align:center; width:220px; }
+.map-node{ position:absolute; display:flex; flex-direction:column; align-items:center; gap:2px; transform:translate(-50%,-50%); width:78px; }
+.map-node .node-icon{ width:38px; height:38px; }
+.map-node .node-name{ font-size:0.74rem; font-weight:bold; background:var(--card); border:1.6px solid var(--ink); border-radius:8px 6px 9px 7px / 7px 9px 6px 8px; padding:1px 7px; white-space:nowrap; }
+.map-node:nth-child(even) .node-name{ border-radius:7px 9px 6px 10px / 9px 6px 10px 7px; }
+
+/* =======================================================
+   02 階層ピラミッド（T3）
+   ======================================================= */
+.layer-stack{ margin-top:8px; border:2.5px solid var(--ink); border-radius:14px; padding:14px; background:rgba(243,236,221,0.5); }
+.layer-band{ display:flex; align-items:center; gap:12px; border:2px solid var(--ink); border-radius:12px 9px 14px 10px / 10px 14px 9px 12px; padding:8px 14px; margin:0 auto 8px; background:var(--card); }
+.layer-band:last-child{ margin-bottom:0; }
+.layer-band:nth-child(even){ border-radius:10px 13px 9px 15px / 13px 9px 15px 10px; }
+.layer-band .layer-icon{ width:32px; height:32px; flex-shrink:0; }
+.layer-band .layer-name{ flex-shrink:0; font-weight:bold; font-size:0.86rem; width:108px; }
+.layer-band .layer-chips{ display:flex; gap:6px; flex-wrap:wrap; }
+.layer-chip{ display:inline-flex; align-items:center; gap:4px; font-size:0.78rem; font-weight:bold; background:#fff9ec; border:1.5px solid var(--ink); border-radius:999px; padding:2px 8px 2px 6px; }
+.layer-chip .dot{ width:9px; height:9px; border-radius:50%; border:1px solid var(--ink); flex-shrink:0; }
+.dot-auto{ background:var(--teal); }
+.dot-semi{ background:var(--highlight); }
+.dot-human{ background:var(--terracotta); }
+.layer-band.l1{ width:46%; }
+.layer-band.l2{ width:62%; }
+.layer-band.l3{ width:80%; }
+.layer-band.l4{ width:100%; }
+
+/* =======================================================
+   03 対比（T1）
+   ======================================================= */
+.contrast-3col{ display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center; margin-top:6px; }
+@media (max-width:760px){ .contrast-3col{ grid-template-columns:1fr; } }
+.core-box{ border:2.5px solid var(--teal); border-radius:12px 9px 14px 10px / 10px 14px 9px 12px; background:var(--card); padding:20px; text-align:center; }
+.core-box .core-icon{ width:56px; height:56px; }
+.core-box .core-title{ font-weight:bold; font-size:1.1rem; color:var(--teal); margin-top:6px; }
+.core-box .core-sub{ font-size:0.82rem; margin-top:4px; }
+.connector{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+.connector .connector-label{ font-size:0.72rem; font-weight:bold; color:var(--terracotta); text-align:center; width:80px; }
+.plug-box{ border:2.5px dashed var(--terracotta); border-radius:13px 10px 15px 11px / 11px 15px 10px 13px; background:#fff9ec; padding:16px; }
+.plug-box .plug-title{ font-weight:bold; font-size:0.95rem; color:var(--terracotta); text-align:center; margin-bottom:10px; }
+.plug-tags{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+.plug-tag{ position:relative; background:var(--highlight); border:1.8px solid var(--ink); border-radius:8px 6px 9px 7px / 7px 9px 6px 8px; padding:6px 10px 6px 10px; font-size:0.8rem; font-weight:bold; }
+.plug-tag:nth-child(even){ border-radius:7px 9px 6px 10px / 9px 6px 10px 7px; }
+.plug-tag::before{ content:""; position:absolute; top:-5px; left:50%; transform:translateX(-50%); width:8px; height:8px; border-radius:50%; background:var(--terracotta); border:1.5px solid var(--ink); }
+
+/* =======================================================
+   04 因果（T5）
+   ======================================================= */
+.causal-flow{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; margin-top:6px; }
+.causal-col{ flex:1 1 220px; max-width:280px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+.causal-cluster{ border:2px solid var(--ink); border-radius:12px; padding:10px 12px; width:100%; background:var(--card); text-align:center; }
+.causal-cluster .cluster-label{ font-size:0.78rem; font-weight:bold; margin-bottom:6px; }
+.causal-cluster .chips{ display:flex; flex-wrap:wrap; gap:5px; justify-content:center; }
+.causal-chip{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-size:0.72rem; font-weight:bold; border:1.5px solid var(--ink); color:var(--ink); }
+.causal-arrow{ width:22px; height:56px; }
+.causal-result{ border:2px dashed var(--ink); border-radius:12px 9px 14px 10px / 10px 14px 9px 12px; padding:10px 12px; width:100%; background:#fff9ec; font-size:0.78rem; text-align:center; font-weight:bold; }
+.causal-col:nth-child(even) .causal-result{ border-radius:10px 13px 9px 15px / 13px 9px 15px 10px; }
+
+/* ---- 3点の示唆リスト ---- */
+.insight-list{ display:flex; flex-direction:column; gap:14px; margin-top:20px; }
+.insight-card{ display:flex; gap:14px; align-items:flex-start; border:2px dashed var(--ink); border-radius:12px 9px 14px 10px / 10px 14px 9px 12px; padding:14px 18px; background:var(--paper); }
+.insight-card:nth-child(even){ border-radius:10px 13px 9px 15px / 13px 9px 15px 10px; }
+.insight-num{ flex-shrink:0; font-weight:bold; font-size:1.15rem; color:var(--terracotta); background:var(--highlight); border:2px solid var(--ink); border-radius:50%; width:38px; height:38px; display:flex; align-items:center; justify-content:center; }
+.insight-body{ flex:1 1 auto; font-size:0.9rem; line-height:1.75; }
+.insight-body strong{ color:var(--terracotta); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<filter id="hand-wobble-s" x="-30%" y="-30%" width="160%" height="160%">
+  <feTurbulence type="fractalNoise" baseFrequency="0.055 0.07" numOctaves="2" seed="7" result="noise"/>
+  <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.0" xChannelSelector="R" yChannelSelector="G"/>
+</filter>
+</defs>
+
+<symbol id="hand-arrow" viewBox="0 0 80 32">
+  <g filter="url(#hand-wobble-s)">
+    <path d="M3 16 Q40 8 64 16" fill="none" stroke="#2A2723" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M64 16 L53 9 M64 16 L53 23" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+</symbol>
+
+<symbol id="hand-arrow-down" viewBox="0 0 32 80">
+  <g filter="url(#hand-wobble-s)">
+    <path d="M16 3 Q10 40 16 74" fill="none" stroke="#2A2723" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M16 74 L9 63 M16 74 L23 63" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+</symbol>
+
+<symbol id="magnifier" viewBox="0 0 80 80">
+  <g filter="url(#hand-wobble-s)">
+    <circle cx="34" cy="34" r="20" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0"/>
+    <line x1="48" y1="48" x2="68" y2="68" stroke="#2A2723" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M24 30 Q30 22 40 26" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</symbol>
+
+<symbol id="gear" viewBox="0 0 80 80">
+  <g filter="url(#hand-wobble-s)">
+    <circle cx="40" cy="40" r="16" fill="#EED9A0" stroke="#2A2723" stroke-width="3.0"/>
+    <circle cx="40" cy="40" r="6" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+    <g stroke="#2A2723" stroke-width="3.2" stroke-linecap="round">
+      <line x1="40" y1="10" x2="40" y2="20"/>
+      <line x1="40" y1="60" x2="40" y2="70"/>
+      <line x1="10" y1="40" x2="20" y2="40"/>
+      <line x1="60" y1="40" x2="70" y2="40"/>
+      <line x1="18" y1="18" x2="25" y2="25"/>
+      <line x1="55" y1="55" x2="62" y2="62"/>
+      <line x1="62" y1="18" x2="55" y2="25"/>
+      <line x1="25" y1="55" x2="18" y2="62"/>
+    </g>
+  </g>
+</symbol>
+
+<symbol id="flask" viewBox="0 0 80 80">
+  <g filter="url(#hand-wobble-s)">
+    <path d="M33 12 L33 32 Q33 34 32 36 L16 62 Q13 68 20 68 L60 68 Q67 68 64 62 L48 36 Q47 34 47 32 L47 12"
+          fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+    <line x1="28" y1="12" x2="52" y2="12" stroke="#2A2723" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M22 52 Q40 44 58 52 L64 62 Q67 68 60 68 L20 68 Q13 68 16 62 Z" fill="#3E6B6E" opacity="0.85"/>
+    <circle cx="36" cy="46" r="2.4" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8"/>
+    <circle cx="44" cy="58" r="2" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8"/>
+  </g>
+</symbol>
+
+<symbol id="laptop" viewBox="0 0 80 80">
+  <g filter="url(#hand-wobble-s)">
+    <path d="M20 22 Q20 19 23 19 L57 19 Q60 19 60 22 L60 52 L20 52 Z"
+          fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+    <path d="M25 28 Q40 24 55 28" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+    <path d="M25 36 Q38 33 50 36" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+    <path d="M10 60 Q10 56 14 56 L66 56 Q70 56 70 60 Q70 64 65 64 L15 64 Q10 64 10 60 Z"
+          fill="#EED9A0" stroke="#2A2723" stroke-width="2.6" stroke-linejoin="round"/>
+  </g>
+</symbol>
+
+<symbol id="shield" viewBox="0 0 80 80">
+  <g filter="url(#hand-wobble-s)">
+    <path d="M40 10 Q56 16 64 20 Q66 46 40 70 Q14 46 16 20 Q24 16 40 10 Z"
+          fill="#EED9A0" stroke="#2A2723" stroke-width="3.2" stroke-linejoin="round"/>
+    <path d="M28 38 L37 47 L54 28" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</symbol>
+
+<symbol id="checklist-doc" viewBox="0 0 80 80">
+  <g filter="url(#hand-wobble-s)">
+    <path d="M20 10 L52 10 L62 20 L62 70 Q62 72 60 72 L20 72 Q18 72 18 70 L18 12 Q18 10 20 10 Z"
+          fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+    <path d="M52 10 L52 20 L62 20 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M26 32 L31 37 L38 28" fill="none" stroke="#3E6B6E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="42" y1="33" x2="56" y2="33" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M26 48 L31 53 L38 44" fill="none" stroke="#3E6B6E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="42" y1="49" x2="56" y2="49" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round"/>
+    <rect x="25" y="60" width="8" height="8" fill="none" stroke="#2A2723" stroke-width="1.8"/>
+    <line x1="42" y1="64" x2="56" y2="64" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+</symbol>
+
+<symbol id="talking-person" viewBox="0 0 80 80">
+  <g filter="url(#hand-wobble-s)">
+    <circle cx="30" cy="26" r="12" fill="#EED9A0" stroke="#2A2723" stroke-width="2.6"/>
+    <path d="M14 68 Q14 46 30 46 Q46 46 46 68" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+    <path d="M48 14 Q70 14 70 30 Q70 44 54 44 L54 52 L46 42 Q46 42 46 30 Q46 14 48 14 Z"
+          fill="#F7F1E3" stroke="#2A2723" stroke-width="2.6" stroke-linejoin="round"/>
+    <line x1="54" y1="24" x2="64" y2="24" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+    <line x1="54" y1="31" x2="60" y2="31" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</symbol>
+</svg>
+
+<div class="page">
+
+<header class="hero">
+  <span class="eyebrow">品質評価 横断整理レポート</span>
+  <div><span class="section-title">システムリリース品質評価 ─ 7社の共通観点と個社差分</span></div>
+  <p class="hero-sub">各社が持ち寄った品質評価資料の横断整理。AI駆動開発ハーネスの設計前提として、「全社に標準装備すべき観点」と「個社ごとに足すべきケース」に分けて言い切る。</p>
+</header>
+
+<!-- ============ 01 ============ -->
+<section class="section" id="s01">
+  <div class="card">
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <div>
+        <span class="section-title">何が持ち寄られたか</span>
+        <p class="sec-sub">7社の資料は粒度がそろっていない。制度の型を書いた社、実プロジェクトの実測値を出した社、AI駆動への論点まで踏み込んだ社が混在する。</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="位置づけ">
+      <div class="axis-map">
+        <div class="axis-h"></div>
+        <div class="axis-v"></div>
+        <div class="axis-end top">リリース判定・本番移行</div>
+        <div class="axis-end bottom">工程内の品質作り込み</div>
+        <div class="axis-end left">制度・チェックリスト<br>中心</div>
+        <div class="axis-end right">実測値・指標<br>中心</div>
+
+        <div class="map-node" style="left:9%; top:13%;">
+          <svg class="fig-part node-icon"><use href="#laptop"/></svg>
+          <span class="node-name">増田</span>
+        </div>
+        <div class="map-node" style="left:26%; top:13%;">
+          <svg class="fig-part node-icon"><use href="#gear"/></svg>
+          <span class="node-name">本多</span>
+        </div>
+        <div class="map-node" style="left:17%; top:33%;">
+          <svg class="fig-part node-icon"><use href="#checklist-doc"/></svg>
+          <span class="node-name">福島</span>
+        </div>
+        <div class="map-node" style="left:50%; top:15%;">
+          <svg class="fig-part node-icon"><use href="#shield"/></svg>
+          <span class="node-name">中島</span>
+        </div>
+        <div class="map-node" style="left:50%; top:85%;">
+          <svg class="fig-part node-icon"><use href="#talking-person"/></svg>
+          <span class="node-name">本田</span>
+        </div>
+        <div class="map-node" style="left:80%; top:66%;">
+          <svg class="fig-part node-icon"><use href="#magnifier"/></svg>
+          <span class="node-name">海老名</span>
+        </div>
+        <div class="map-node" style="left:90%; top:87%;">
+          <svg class="fig-part node-icon"><use href="#flask"/></svg>
+          <span class="node-name">土山</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="explain">土山はプロジェクトAの実測（レビュー工数、検出誤り数、テスト項目数、C0カバレッジ100%）を工程ごとに示し、指標値の上限超過・下限未満それぞれに理由を付けている。海老名はレビュー活動そのものを5つの指標で定量化する。本田は総合試験の開始前に置くリリース判定会議の三観点（前工程の完了確認・定量評価・定性評価）を示す。中島は工程ゲートに加えて、障害発生時の事業影響（業務継続性・レピュテーション・経済的損失）を製品品質と別建てで評価する。増田は工程ごとのExitクライテリアとリリース判定資料の二段構え、本多はカットオーバークライテリア7領域とテスト品質評価報告ガイドの合否基準を帳票レベルで示す。福島は「全社共通の合格ラインは持っていない」と明言し、品質OKの判断が会議体・チェックリスト・承認の通過で担保されていることを示した。</p>
+  </div>
+</section>
+
+<!-- ============ 02 ============ -->
+<section class="section" id="s02">
+  <div class="card">
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <div>
+        <span class="section-title">①共通観点 ─ 7社に共通するリリース判定の骨格は、この8つに尽きる</span>
+        <p class="sec-sub">資料の粒度は違っても、リリース可否の判断構造は一致していた。以下の8観点は複数社で明示され、これがハーネスの標準装備となる。</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="階層">
+      <div class="layer-stack">
+        <div class="layer-band l1">
+          <svg class="fig-part layer-icon"><use href="#checklist-doc"/></svg>
+          <span class="layer-name">第1層 決める</span>
+          <span class="layer-chips">
+            <span class="layer-chip"><span class="dot dot-auto"></span>①合格ラインを事前に決める</span>
+            <span class="layer-chip"><span class="dot dot-auto"></span>②工程ごとに関門を置く</span>
+          </span>
+        </div>
+        <div class="layer-band l2">
+          <svg class="fig-part layer-icon"><use href="#magnifier"/></svg>
+          <span class="layer-name">第2層 測る</span>
+          <span class="layer-chips">
+            <span class="layer-chip"><span class="dot dot-auto"></span>③密度で量を測る</span>
+          </span>
+        </div>
+        <div class="layer-band l3">
+          <svg class="fig-part layer-icon"><use href="#talking-person"/></svg>
+          <span class="layer-name">第3層 説明する</span>
+          <span class="layer-chips">
+            <span class="layer-chip"><span class="dot dot-semi"></span>④逸脱は理由で判定</span>
+            <span class="layer-chip"><span class="dot dot-semi"></span>⑤原因・混入工程で見る</span>
+            <span class="layer-chip"><span class="dot dot-human"></span>⑥残課題は合意で通す</span>
+          </span>
+        </div>
+        <div class="layer-band l4">
+          <svg class="fig-part layer-icon"><use href="#shield"/></svg>
+          <span class="layer-name">第4層 通す</span>
+          <span class="layer-chips">
+            <span class="layer-chip"><span class="dot dot-human"></span>⑦会議体＋証跡で承認</span>
+            <span class="layer-chip"><span class="dot dot-human"></span>⑧本番移行も品質対象</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <table class="info-table">
+      <thead>
+        <tr><th>#</th><th>観点（言い切り）</th><th>補足（原資料の根拠）</th><th>バッジ</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td>合格ラインは全社一律で持たず、案件ごとに事前に決める</td>
+          <td>福島「全社共通の合格ラインは持っていません」。中島は変更内容・難易度・過去実績から品質目標を設定。海老名は工程ごとに品質目標と評価基準を設定。本多は基準値・条件・単位を事前定義。</td>
+          <td><span class="badge badge-auto">自動</span></td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td>工程ごとに関門を置き、品質評価が終わるまで工程を完了扱いにしない</td>
+          <td>中島「工程の進捗完了と品質評価完了を分離せず、次工程へ進む前に品質を確認する」。増田はExitクライテリア、福島は工程ごとの開始前／実施中／終了時チェックリスト。本田は前工程の完了確認を総合試験の前提条件とする。</td>
+          <td><span class="badge badge-auto">自動</span></td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td>量は規模あたりの密度で測る（テスト密度・バグ密度・レビュー指摘密度）</td>
+          <td>中島（テスト密度／障害密度／障害率）、増田（テスト密度・不良密度）、海老名（テストケース密度・バグ密度・レビュー指摘密度）、本多（障害件数密度）、土山（件/p、kL/h）。</td>
+          <td><span class="badge badge-auto">自動</span></td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td>数値だけで合否は決めない。基準からの逸脱は「理由を説明できるか」で判定する</td>
+          <td>中島「一律の数値だけでは判定しない」。海老名は指標超過時でも収束・重大性・対応完了を見て総合判断。土山は上限超過・下限未満の双方に理由を付す。本多は基準未達を条件付き合格とする場合に合理的根拠を求める。</td>
+          <td><span class="badge badge-semi">半自動</span></td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td>障害は件数でなく、原因・混入工程・偏り・収束・横展開で見る</td>
+          <td>本田（指摘の集中・弱点分析）、海老名（障害原因・混入工程・類似障害の横展開・収束状況）、増田（混入工程・特定機能への偏り・横展開）、本多（水平展開、デグレード傾向）、中島（前工程からのすり抜け・類似バグ・横並び確認）、土山（誤り混入工程・誤り分類）。</td>
+          <td><span class="badge badge-semi">半自動</span></td>
+        </tr>
+        <tr>
+          <td class="num">6</td>
+          <td>残課題ゼロはリリース条件ではない。影響・対策・期限・責任者・合意が揃えば通す</td>
+          <td>本多「未解決事項がゼロであることだけが、品質保証の条件ではない」。福島「満たせていない項目と残ったリスクを明示して合意する」。増田は未達理由・影響・残存リスク・対応方針を説明したうえで判断。海老名は残存リスクを次工程の計画へ反映。</td>
+          <td><span class="badge badge-human">人</span></td>
+        </tr>
+        <tr>
+          <td class="num">7</td>
+          <td>最終判断は会議体で人が下し、判断は必ず確認資料（証跡）に紐付ける</td>
+          <td>本田・増田・福島はリリース判定会／本番稼働判定会議、本多はカットオーバー判定と案件承認者、海老名は「フェーズ移行・リリースを人が判定」。本多は各評価項目に確認資料をひも付けることを帳票要件とする。</td>
+          <td><span class="badge badge-human">人</span></td>
+        </tr>
+        <tr>
+          <td class="num">8</td>
+          <td>本番移行そのものを品質の対象にする（リハーサル・切戻し・初回稼働確認・体制）</td>
+          <td>本多（移行リハーサル、フォールバック判定ポイント、サービスイン直後体制）、増田（本番確認項目・方法、障害発生時にライブラリを戻すか継続するかの判断）、中島（本番環境リハーサル、段階的サービスイン、バッチ空回し）、海老名（カットオーバークライテリア）。</td>
+          <td><span class="badge badge-human">人</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="sticky-note">共通観点は「基準を事前に決め、密度で測り、逸脱と残課題を説明し、証跡付きで人が承認する」。この4動作がリリース判定の骨格であり、7社の差は骨格ではなく肉付けにある。</div>
+  </div>
+</section>
+
+<!-- ============ 03 ============ -->
+<section class="section" id="s03">
+  <div class="card">
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <div>
+        <span class="section-title">②個社差分 ─ ハーネスに足すべきケース一覧</span>
+        <p class="sec-sub">以下は「その社だけが持ち込んでいる観点」。共通観点に対する加算分であり、ハーネスでは個社プラグインとして着脱可能にすべきもの。</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="対比">
+      <div class="contrast-3col">
+        <div class="core-box">
+          <svg class="fig-part core-icon"><use href="#shield"/></svg>
+          <div class="core-title">共通コア</div>
+          <div class="core-sub">全社標準装備・8観点（02節）</div>
+        </div>
+        <div class="connector">
+          <svg class="fig-part" width="80" height="32"><use href="#hand-arrow"/></svg>
+          <span class="connector-label">個社が独自に上乗せ</span>
+        </div>
+        <div class="plug-box">
+          <div class="plug-title">個社プラグイン（7社）</div>
+          <div class="plug-tags">
+            <span class="plug-tag">中島</span>
+            <span class="plug-tag">土山</span>
+            <span class="plug-tag">増田</span>
+            <span class="plug-tag">本多</span>
+            <span class="plug-tag">本田</span>
+            <span class="plug-tag">海老名</span>
+            <span class="plug-tag">福島</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <table class="info-table">
+      <thead><tr><th style="width:5em;">社</th><th>ハーネスに足すべきケース</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>中島</strong></td>
+          <td><ul>
+            <li><strong>リスクベースのサービスイン判断</strong>：製品品質とは別建てで、障害時の事業影響（業務継続性／レピュテーション／経済的損失）を評価し、リスクの高い案件に事前報告等のガバナンスを適用する</li>
+            <li><strong>移行データ×変更機能のST</strong>：件数一致だけでなく、移行データを用いて変更機能が正しく動くことを確認する</li>
+            <li><strong>段階的サービスイン</strong>：本番環境リハーサル、先行・段階的サービスイン、バッチの空回し期間</li>
+            <li><strong>性能は実機で、内部状態まで</strong>：CPU・メモリ・実行計画・インデックスを見る。机上検証で済ませない</li>
+            <li><strong>バグ収束曲線の元データ検証</strong>：入力日や二重計上まで遡って確認する</li>
+            <li><strong>実績の組織的蓄積</strong>：工数・開発規模・テストケース数・工程別バグ数を記録し、次案件の見積り・計画へ還元する</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td><strong>土山</strong></td>
+          <td><ul>
+            <li><strong>残存誤り予測</strong>：ゴンペルツ曲線・ロジスティック曲線で最終テストおよび出荷後の残存誤りを予測し、傾向を分析する</li>
+            <li><strong>ゾーン分析の二軸</strong>：設計フェーズでは頁当たりと規模換算当たりの両方で分析結果を記載する</li>
+            <li><strong>下限未満も異常として扱う</strong>：検出誤り数が指標値の下限を下回った場合も理由を分析する（既存コード流用・分岐の少なさ等）</li>
+            <li><strong>C0カバレッジ100%</strong>を単体テストの達成条件として置く</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td><strong>増田</strong></td>
+          <td><ul>
+            <li><strong>無影響確認テストを独立項目にする</strong>：修正機能に該当しない既存機能への副作用確認を、修正機能確認テストとは別枠で提示する</li>
+            <li><strong>UAT実施有無の明示</strong>：未実施の場合は理由と利用部門との合意状況を示す</li>
+            <li><strong>本番確認項目・方法の事前提示</strong>：お客さま提供開始前の確認と初回稼働時の確認を分けて定義する</li>
+            <li><strong>移行障害時の判断基準の事前提示</strong>：本番確認NG時に作業を継続するのか、ライブラリを戻すのかを事前に決めておく</li>
+            <li><strong>対応概要・工数・金額</strong>をリリース判定の前提情報として並べる</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td><strong>本多</strong></td>
+          <td><ul>
+            <li><strong>評価ランクの4段階運用</strong>：×対策必要／○実施中／●予定どおり完了・ただし残課題あり（キャッチアップ計画策定済）／◎完了および目標達成</li>
+            <li><strong>最終評価では完了済み項目も再評価する</strong></li>
+            <li><strong>標準項目を評価しない場合は理由を備考に残す</strong></li>
+            <li><strong>障害対応残は原則0件</strong>。許容する場合は事象・影響範囲・事前検出可否・代替策の有無とユーザとの合意状況を明記する</li>
+            <li><strong>保守準備をリリース基準に含める</strong>：保守用テスト環境、ライブラリー管理手順、保守対象ドキュメント、変更管理手順、保守体制</li>
+            <li><strong>規制対応</strong>：当局事前審査が必要な場合の承認済み確認</li>
+            <li><strong>2線（独立した立場）による判定検証</strong>：品質評価プロセスの客観性そのものを検証する</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td><strong>本田</strong></td>
+          <td><ul>
+            <li><strong>「レビュー指摘件数」と「誤り件数」を分けて数える</strong>：誤り＝試験や検証の再実施が必要な重大な不備（試験項目の不足、試験観点の漏れ、想定結果の誤り、検証結果の判断ミス、証跡不足）</li>
+            <li><strong>指摘の集中を見る</strong>：特定の担当者／特定の工程／同種の誤りに偏っていないか</li>
+            <li><strong>弱点分析から次工程の予防策へ変換する</strong>：リスク項目の洗い出し、重点レビュー対象の設定、試験観点の追加、監視対象項目の明確化</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td><strong>海老名</strong></td>
+          <td><ul>
+            <li><strong>レビュー活動そのものを5指標で定量化</strong>：レビュー作業充当率／レビュー実施密度／レビュー指摘密度／レビュー速度／欠陥指摘のヒット率</li>
+            <li><strong>レビューの段階を定義する</strong>：セルフチェック→チーム内→主管部署→システム間→プロジェクト→顧客</li>
+            <li><strong>レビューの有効性を評価する</strong>：指摘がレビュー初期に集中しているか、意図したレビュー観点で問題を検出できているか、レビュー自体の品質は十分だったか、再レビューを実施したか</li>
+            <li><strong>定量基準を置きにくい領域の代替評価</strong>：基盤領域などはレビュー指摘件数や障害分析で評価する</li>
+          </ul></td>
+        </tr>
+        <tr>
+          <td><strong>福島</strong></td>
+          <td><ul>
+            <li><strong>プロセス準拠型の関門</strong>：上流での第三者レビュー（案件の主管部署ではない立場が計画・要件をレビューする）、一定規模以上の投資はアーキテクチャ／投資妥当性を見る会議体を通す</li>
+            <li><strong>合否基準を定性表現で置くことを許容する</strong>：「〜が実行可能な状態であること」「次工程を開始できる状態であること」</li>
+            <li><strong>AI駆動で引っかかる4論点をハーネス要件として先に解く</strong>：①AI生成物の作成者・レビューア・承認者を誰にするか ②ハーネスの実行ログをレビューの証跡として認めてもらえるか ③チェック粒度が週次・隔週の時間ベースであり、AI駆動の反復速度と合わない ④テストの網羅性「漏れなし」を誰がどう説明するか</li>
+          </ul></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 04 ============ -->
+<section class="section" id="s04">
+  <div class="card">
+    <div class="sec-head">
+      <span class="sec-num">04</span>
+      <div>
+        <span class="section-title">ハーネス設計への示唆</span>
+        <p class="sec-sub">共通観点8つのうち、機械が判定できるのは3つ、人の合意が要るのは3つ。ハーネスの設計はこの境界線の上に立つ。</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="因果">
+      <div class="causal-flow">
+        <div class="causal-col">
+          <div class="causal-cluster">
+            <div class="cluster-label">自動（観点①②③）</div>
+            <div class="chips">
+              <span class="causal-chip" style="background:var(--teal); color:#fff9ec;">①</span>
+              <span class="causal-chip" style="background:var(--teal); color:#fff9ec;">②</span>
+              <span class="causal-chip" style="background:var(--teal); color:#fff9ec;">③</span>
+            </div>
+          </div>
+          <svg class="fig-part causal-arrow"><use href="#hand-arrow-down"/></svg>
+          <div class="causal-result">基準値定義ファイル＋工程ゲート機構</div>
+        </div>
+        <div class="causal-col">
+          <div class="causal-cluster">
+            <div class="cluster-label">半自動（観点④⑤）</div>
+            <div class="chips">
+              <span class="causal-chip" style="background:var(--highlight); color:var(--ink);">④</span>
+              <span class="causal-chip" style="background:var(--highlight); color:var(--ink);">⑤</span>
+            </div>
+          </div>
+          <svg class="fig-part causal-arrow"><use href="#hand-arrow-down"/></svg>
+          <div class="causal-result">逸脱・原因・偏りの収集を自動化、妥当性の判断は人に残す</div>
+        </div>
+        <div class="causal-col">
+          <div class="causal-cluster">
+            <div class="cluster-label">人（観点⑥⑦⑧）</div>
+            <div class="chips">
+              <span class="causal-chip" style="background:var(--terracotta); color:#fff9ec;">⑥</span>
+              <span class="causal-chip" style="background:var(--terracotta); color:#fff9ec;">⑦</span>
+              <span class="causal-chip" style="background:var(--terracotta); color:#fff9ec;">⑧</span>
+            </div>
+          </div>
+          <svg class="fig-part causal-arrow"><use href="#hand-arrow-down"/></svg>
+          <div class="causal-result">基準値・実績値・評価ランク・確認資料を欠落なく提示（判定はしない）</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight-list">
+      <div class="insight-card">
+        <span class="insight-num">1</span>
+        <div class="insight-body"><strong>自動化できるのは「決める・測る」まで（観点1〜3）。</strong>基準値・工程ゲート・密度は機械可読な設定として持たせられる。ハーネスはまず、案件ごとの基準値定義ファイルと、工程ゲートを通過させない仕組みを持つべきである。</div>
+      </div>
+      <div class="insight-card">
+        <span class="insight-num">2</span>
+        <div class="insight-body"><strong>「説明する」（観点4・5）は、収集を自動化し判断を人に残す。</strong>逸脱の検知、原因・混入工程・偏りの集計、類似箇所の抽出まではハーネスが行える。だが本多が示すとおり、基準未達を条件付き合格とするには合理的根拠が要り、その妥当性の判断は人に残る。</div>
+      </div>
+      <div class="insight-card">
+        <span class="insight-num">3</span>
+        <div class="insight-body"><strong>「通す」（観点6〜8）は自動化できない。ハーネスの役割は証跡を揃えることに限られる。</strong>残課題の受容、会議体の承認、本番移行の実行は人の意思決定である。ここでのハーネスの仕事は判定ではなく、本多が求める「基準値・実績値・評価ランク・確認資料」の組を欠落なく提示することにある。</div>
+      </div>
+    </div>
+
+    <div class="quote-block">
+      <strong>福島の4論点は、そのままハーネスの受け入れ条件になる。</strong><br>
+      ハーネスの実行ログが証跡として認められ、AI生成物の作成者・レビューア・承認者が定まり、
+      時間ベースのチェック粒度が反復ベースに置き換わり、網羅性の説明を機械が出力できること。
+      この4つが解けたとき、共通観点8つのうち5つまでをハーネスが担える。
+    </div>
+  </div>
+</section>
+
+<footer class="source">
+  出典: ccken/shared/各社の品質評価/ 配下の7社資料（中島／土山／増田／本多／本田／海老名／福島）
+</footer>
+
+</div>
+</body>
+</html>
