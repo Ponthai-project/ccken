@@ -1,0 +1,1462 @@
+<title>Graph Engineering 早わかり</title>
+<style>
+:root{
+  --paper:#F3ECDD;
+  --card:#F7F1E3;
+  --ink:#2A2723;
+  --terracotta:#C15F3C;
+  --teal:#3E6B6E;
+  --highlight:#EED9A0;
+  --shadow:rgba(42,39,35,0.12);
+  --sub:#6b6660;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{
+  margin:0; padding:0; width:100%; overflow-x:hidden;
+  background-color:var(--paper);
+  background-image:
+    repeating-linear-gradient(transparent 0 31px, rgba(42,39,35,0.035) 31px 32px),
+    radial-gradient(rgba(42,39,35,0.03) 1px, transparent 1.2px);
+  background-size: auto, 7px 7px;
+  color:var(--ink);
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif;
+  line-height:1.6;
+}
+img,svg{ max-width:100%; height:auto; }
+.page{ max-width:min(980px,92vw); margin:0 auto; }
+h1,h2,h3,h4{ letter-spacing:0.02em; }
+
+/* ---------- 見出し ---------- */
+.section{ padding:30px 0; }
+.sec-head{ display:flex; align-items:flex-start; gap:16px; margin-bottom:12px; }
+.sec-num{
+  flex-shrink:0; font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif;
+  font-size:clamp(1.9rem,5vw,2.8rem); font-weight:bold;
+  color:var(--terracotta); line-height:1;
+  text-shadow:1.5px 1.5px 0 rgba(193,95,60,0.20);
+}
+.sec-head-body{ min-width:0; }
+.section-title{
+  display:inline-block; margin:0;
+  font-size:clamp(1.25rem,3.1vw,1.75rem); letter-spacing:0.03em;
+  padding-bottom:6px; text-wrap:balance;
+  background-image:linear-gradient(120deg, rgba(193,95,60,0.35), rgba(193,95,60,0.35));
+  background-repeat:no-repeat; background-size:100% 0.42em; background-position:0 92%;
+}
+.sec-sub{ margin:6px 0 0 0; color:var(--sub); font-size:0.9rem; }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:0.8rem; color:var(--teal); font-weight:bold;
+  letter-spacing:0.1em; margin-bottom:8px;
+}
+
+/* ---------- カード（手描き枠は ::before に分離してフィルタを掛ける） ---------- */
+.card{ position:relative; padding:26px clamp(18px,4vw,36px); }
+.card::before{
+  content:""; position:absolute; inset:0; z-index:0;
+  background:var(--card); border:2.4px solid var(--ink);
+  border-radius:18px 22px 16px 24px / 22px 16px 24px 18px;
+  box-shadow:0 6px 14px var(--shadow);
+  filter:url(#hand-wobble-l);
+}
+.card > *{ position:relative; z-index:1; }
+
+/* ---------- 図解ブロック共通 ---------- */
+.fig-block{
+  display:block; float:none; width:100%;
+  margin:16px auto 18px; min-height:200px; overflow:visible;
+}
+.fig-part{ flex-shrink:0; }
+.fig-2col{ display:grid; grid-template-columns:minmax(280px,1fr) 1fr; gap:20px; align-items:center; }
+@media (max-width:700px){ .fig-2col{ grid-template-columns:1fr; } }
+.fig-cap{
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-size:0.82rem;
+  color:var(--teal); font-weight:bold; text-align:center; margin-top:8px;
+}
+.fig-node-label{ font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-weight:bold; font-size:0.92rem; }
+.fig-note{ font-size:0.76rem; color:var(--sub); line-height:1.45; }
+
+/* T1 対比 */
+.fig-vs{ display:grid; grid-template-columns:1fr 80px 1fr; gap:10px; align-items:stretch; }
+.fig-vs-pane{
+  border:2.4px solid var(--ink); border-radius:14px 18px 13px 17px;
+  background:var(--paper); padding:14px 16px;
+  display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
+}
+.fig-vs-pane.accent{ border-color:var(--teal); border-width:3px; background:var(--card); }
+.fig-vs-mid{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
+.fig-vs-badge{
+  width:56px; height:56px; border-radius:50%; border:2.6px solid var(--terracotta);
+  background:var(--highlight); display:flex; align-items:center; justify-content:center;
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-weight:bold; font-size:1rem;
+}
+.fig-vs-list{ margin:0; padding-left:1.1em; text-align:left; font-size:0.8rem; line-height:1.5; }
+@media (max-width:700px){ .fig-vs{ grid-template-columns:1fr; } .fig-vs-mid{ flex-direction:row; } }
+
+/* T2 流れ */
+.fig-flow{ display:flex; align-items:stretch; justify-content:space-between; gap:4px; flex-wrap:nowrap; }
+.fig-flow-node{
+  flex:1 1 0; min-width:0;
+  border:2.2px solid var(--ink); border-radius:13px 16px 12px 15px;
+  background:var(--card); padding:10px 8px 12px;
+  display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
+}
+.fig-flow-step{
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-size:0.72rem; font-weight:bold;
+  color:#fff9ec; background:var(--teal); border-radius:999px; padding:1px 10px;
+}
+.fig-flow-arrow{ display:flex; align-items:center; justify-content:center; flex:0 0 34px; }
+.fig-flow-ends{ display:flex; justify-content:space-between; font-size:0.75rem; color:var(--teal); font-weight:bold; margin-top:6px; }
+@media (max-width:820px){
+  .fig-flow{ flex-wrap:wrap; justify-content:center; }
+  .fig-flow-node{ flex:1 1 150px; }
+  .fig-flow-arrow{ flex:0 0 28px; }
+}
+
+/* T3 階層 */
+.fig-tree-outer{
+  border:2.6px dashed var(--ink); border-radius:16px 20px 15px 19px;
+  padding:12px 14px 14px; background:rgba(62,107,110,0.06);
+}
+.fig-tree-root{
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-weight:bold; font-size:0.95rem;
+  text-align:center; margin-bottom:10px;
+}
+.fig-tree-kids{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+.fig-tree-kid{
+  border:2.2px solid var(--ink); border-radius:12px 15px 11px 14px;
+  background:var(--card); padding:10px 12px;
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+}
+.fig-tree-leaf{ margin:0; padding-left:1.05em; font-size:0.78rem; line-height:1.5; text-align:left; align-self:stretch; }
+
+/* T3 階層・変形（幹と枝） */
+.fig-branch{ display:grid; grid-template-columns:auto 1fr; gap:14px; align-items:center; }
+.fig-branch-trunk{
+  writing-mode:vertical-rl; text-orientation:upright; letter-spacing:0.12em;
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-weight:bold; font-size:0.92rem;
+  background:var(--teal); color:#fff9ec; border:2.4px solid var(--ink);
+  border-radius:10px 13px 9px 12px; padding:14px 8px; align-self:stretch;
+  display:flex; align-items:center; justify-content:center;
+}
+.fig-branch-list{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+@media (max-width:560px){ .fig-branch-list{ grid-template-columns:1fr; } }
+.fig-branch-item{
+  display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;
+  border:2.2px solid var(--ink); border-left:6px solid var(--teal);
+  border-radius:8px 13px 8px 12px; background:var(--card); padding:9px 12px;
+}
+.fig-branch-item h4{ margin:0 0 2px; font-size:0.88rem; font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; }
+@media (max-width:640px){ .fig-branch{ grid-template-columns:1fr; } .fig-branch-trunk{ writing-mode:horizontal-tb; padding:8px; } }
+
+/* T5 因果 */
+.fig-cause{ display:grid; grid-template-columns:1.55fr 46px 1fr; gap:10px; align-items:center; }
+.fig-cause-src{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.fig-cause-item{
+  display:flex; flex-direction:column; align-items:center; text-align:center; gap:6px;
+  border:2.2px solid var(--ink); border-radius:11px 14px 10px 13px;
+  background:var(--paper); padding:10px 8px; font-size:0.78rem; line-height:1.45;
+}
+.fig-cause-item b{ font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-size:0.85rem; }
+@media (max-width:640px){ .fig-cause-src{ grid-template-columns:1fr; } }
+.fig-cause-arrow{ display:flex; align-items:center; justify-content:center; }
+.fig-cause-dst{
+  border:3px solid var(--terracotta); border-radius:14px 18px 13px 17px;
+  background:var(--highlight); padding:14px 14px;
+  display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+}
+.fig-cause-dst strong{ font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-size:0.95rem; }
+.fig-cause-arrow .arrow-tall{ display:none; }
+@media (max-width:700px){
+  .fig-cause{ grid-template-columns:1fr; }
+  .fig-cause-arrow .arrow-wide{ display:none; }
+  .fig-cause-arrow .arrow-tall{ display:block; }
+}
+
+/* T6 位置づけ */
+.fig-map-wrap{ display:grid; grid-template-columns:1fr 200px; gap:18px; align-items:center; }
+.fig-map-legend{ display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
+.fig-legend-row{ display:flex; gap:10px; align-items:center; justify-content:center; }
+.fig-map-legend p{ margin:0; font-size:0.74rem; line-height:1.5; color:var(--sub); }
+.fig-dot{
+  width:17px; height:17px; border-radius:50%;
+  background:var(--teal); border:2.4px solid var(--ink);
+  box-shadow:0 2px 4px var(--shadow);
+}
+.fig-plot.focus .fig-dot{ background:var(--terracotta); width:21px; height:21px; border-width:2.8px; }
+@media (max-width:760px){ .fig-map-wrap{ grid-template-columns:1fr; } }
+.fig-map{ position:relative; height:244px; margin:6px 0 34px 46px; padding-right:10px; }
+.fig-map-area{
+  position:absolute; inset:0;
+  border-left:2.6px solid var(--ink); border-bottom:2.6px solid var(--ink);
+  background:
+    repeating-linear-gradient(to right, transparent 0 59px, rgba(42,39,35,0.07) 59px 60px),
+    repeating-linear-gradient(to top, transparent 0 47px, rgba(42,39,35,0.07) 47px 48px);
+}
+.fig-map-y{
+  position:absolute; left:-48px; top:0; height:100%;
+  display:flex; flex-direction:column; justify-content:space-between; align-items:center;
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-size:0.74rem; color:var(--teal); font-weight:bold;
+}
+.fig-map-y span{ writing-mode:vertical-rl; text-orientation:upright; letter-spacing:0.08em; }
+.fig-map-x{
+  position:absolute; left:0; right:0; bottom:-26px; display:flex; justify-content:space-between;
+  font-family:"Candara","UD Digi Kyokasho N","Yu Gothic",sans-serif; font-size:0.74rem; color:var(--teal); font-weight:bold;
+}
+.fig-plot{ position:absolute; display:flex; flex-direction:column; align-items:center; gap:1px; transform:translate(-50%,-50%); }
+.fig-plot span{ font-size:0.76rem; font-weight:bold; white-space:nowrap; background:rgba(243,236,221,0.82); padding:0 3px; border-radius:4px; }
+.fig-plot.focus span{ color:var(--terracotta); }
+.fig-plot.focus::before{
+  content:""; position:absolute; inset:-10px -14px -6px -14px;
+  border:2.6px solid var(--terracotta); border-radius:48% 52% 45% 55% / 55% 45% 58% 42%;
+  pointer-events:none;
+}
+
+/* T7 場面 */
+.fig-scene{ display:grid; grid-template-columns:auto 1fr auto; gap:16px; align-items:center; }
+.fig-scene-bubble{
+  position:relative; background:#fff9ec; border:2.4px solid var(--ink);
+  border-radius:16px 20px 15px 19px; padding:14px 18px; font-size:0.92rem; line-height:1.6;
+}
+.fig-scene-bubble::before{
+  content:""; position:absolute; left:-14px; top:26px;
+  border:8px solid transparent; border-right-color:var(--ink);
+}
+.fig-scene-bubble::after{
+  content:""; position:absolute; left:-11px; top:27px;
+  border:7px solid transparent; border-right-color:#fff9ec;
+}
+.fig-scene-tools{ display:flex; flex-direction:column; gap:6px; align-items:center; }
+@media (max-width:700px){ .fig-scene{ grid-template-columns:1fr; } .fig-scene-bubble::before,.fig-scene-bubble::after{ display:none; } }
+
+/* ---------- 本文・補足表・付箋 ---------- */
+.explain{ margin-top:14px; font-size:0.92rem; line-height:1.75; }
+.explain p{ margin:0 0 0.85em; }
+.explain p:last-child{ margin-bottom:0; }
+.explain strong{ color:var(--terracotta); }
+.marker{
+  background-image:linear-gradient(120deg, rgba(193,95,60,0.32), rgba(193,95,60,0.32));
+  background-repeat:no-repeat; background-size:100% 0.55em; background-position:0 82%;
+  font-weight:bold;
+}
+.info-table{ width:100%; border-collapse:collapse; margin:16px 0 6px; font-size:0.83rem; font-variant-numeric:tabular-nums; }
+.info-table th,.info-table td{ border:1.5px solid var(--ink); padding:8px 11px; text-align:left; vertical-align:top; }
+.info-table th{ background:var(--highlight); font-weight:bold; }
+.info-table thead th{ white-space:nowrap; }
+.info-table tr:nth-child(even) td{ background:rgba(62,107,110,0.07); }
+.table-scroll{ overflow-x:auto; }
+.sticky-note{
+  position:relative; padding:16px 20px; margin-top:20px; font-weight:bold; font-size:0.92rem; line-height:1.7;
+}
+.sticky-note::before{
+  content:""; position:absolute; inset:0; z-index:0;
+  background:var(--highlight); border-radius:2px 5px 3px 6px;
+  box-shadow:3px 5px 9px var(--shadow); filter:url(#hand-wobble-m);
+}
+.sticky-note > *{ position:relative; z-index:1; }
+.sticky-note h3{ margin:0 0 6px; font-size:1rem; }
+code{
+  font-family:"Consolas","SFMono-Regular","Menlo",monospace;
+  background:rgba(62,107,110,0.12); padding:1px 5px; border-radius:4px; font-size:0.86em;
+}
+pre{
+  margin:14px 0 4px; padding:14px 16px; overflow-x:auto;
+  background:#2A2723; color:#F3ECDD; border-radius:10px 13px 9px 12px;
+  font-family:"Consolas","SFMono-Regular","Menlo",monospace; font-size:0.8rem; line-height:1.65;
+}
+pre .kw{ color:#EED9A0; font-weight:bold; }
+pre .cm{ color:#9db3ab; }
+.note-box{
+  background:var(--paper); border:2px dashed var(--ink); border-radius:10px 13px 9px 12px;
+  padding:12px 16px; font-size:0.82rem; line-height:1.65; margin-top:16px;
+}
+.chip-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.chip{ background:var(--teal); color:#fff9ec; padding:5px 13px; border-radius:999px; font-size:0.78rem; font-weight:bold; }
+.summary-list{ margin:16px 0 0; padding-left:0; list-style:none; }
+.summary-list li{ margin-bottom:11px; padding-left:30px; position:relative; }
+.summary-list li::before{ content:"◎"; position:absolute; left:0; color:var(--terracotta); font-weight:bold; }
+.deco-icon{ width:clamp(32px,4vw,52px); height:auto; flex-shrink:0; }
+
+/* ---------- 適用領域グリッド ---------- */
+.domain-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(232px,1fr)); gap:14px; margin-top:18px; }
+.domain-item{
+  border:2px solid var(--ink); border-radius:12px 15px 11px 14px;
+  background:var(--card); padding:13px 15px;
+}
+.domain-item h3{ margin:0 0 4px; font-size:0.95rem; color:var(--teal); }
+.domain-item p{ margin:0; font-size:0.82rem; line-height:1.6; }
+
+/* ---------- ヒーロー ---------- */
+.hero{ text-align:center; padding:44px 0 10px; }
+.hero-title{
+  margin:0; font-size:clamp(2rem,6.4vw,3.4rem); letter-spacing:0.02em; line-height:1.2;
+}
+.hero-title .marker{ background-size:100% 0.4em; }
+.hero-jp{ font-size:clamp(1rem,2.7vw,1.3rem); margin:14px auto 0; max-width:34em; line-height:1.8; }
+.hero-owls{ display:flex; align-items:center; justify-content:center; gap:14px; margin-top:8px; flex-wrap:wrap; }
+.hero-tag{
+  display:inline-block; margin-top:18px; background:var(--terracotta); color:#fff9ec;
+  padding:8px 20px; border-radius:999px; font-weight:bold; font-size:0.85rem;
+  box-shadow:0 5px 10px var(--shadow);
+}
+.hero-lead{
+  max-width:44em; margin:22px auto 0; text-align:left; font-size:0.93rem; line-height:1.8;
+}
+footer.source{ text-align:center; font-size:0.76rem; color:var(--sub); padding:24px 0 56px; line-height:1.9; }
+footer.source a{ color:var(--teal); }
+:focus-visible{ outline:3px solid var(--terracotta); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce){ *{ animation:none !important; transition:none !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="hand-wobble-xs" x="-40%" y="-40%" width="180%" height="180%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.25 0.31" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.67" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="hand-wobble-s" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.055 0.07" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.0" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="hand-wobble-m" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.010 0.013" numOctaves="1" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.0" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="hand-wobble-l" x="-5%" y="-15%" width="110%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.007" numOctaves="1" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="4.0" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+
+  <symbol id="owl-doc" viewBox="0 0 100 100">
+    <g filter="url(#hand-wobble-s)">
+      <ellipse cx="50" cy="58" rx="34" ry="32" fill="#EED9A0" stroke="#2A2723" stroke-width="3.0"/>
+      <path d="M28 30 Q34 8 44 27" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M72 30 Q66 8 56 27" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+      <circle cx="38" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+      <circle cx="62" cy="52" r="12" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+      <line x1="49" y1="51" x2="51" y2="51" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="38" cy="52" r="4.2" fill="#2A2723"/>
+      <circle cx="62" cy="52" r="4.2" fill="#2A2723"/>
+      <path d="M50 60 L45 69 L55 69 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M17 66 Q8 76 19 87" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M83 66 Q92 76 81 87" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="check-mark" viewBox="0 0 18 16">
+    <g filter="url(#hand-wobble-xs)">
+      <path d="M2 8 L7 13 L16 3" stroke="#3E6B6E" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="sparkle" viewBox="0 0 24 24">
+    <g filter="url(#hand-wobble-xs)">
+      <path d="M12 1 L14.2 9.8 L23 12 L14.2 14.2 L12 23 L9.8 14.2 L1 12 L9.8 9.8 Z"
+            fill="#EED9A0" stroke="#2A2723" stroke-width="1.4" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="hand-arrow" viewBox="0 0 80 32">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M3 16 Q40 8 64 16" fill="none" stroke="#2A2723" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M64 16 L53 9 M64 16 L53 23" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="table-stack" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <rect x="8" y="10" width="44" height="30" rx="3" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+      <line x1="8" y1="19" x2="52" y2="19" stroke="#2A2723" stroke-width="2.0"/>
+      <line x1="30" y1="10" x2="30" y2="40" stroke="#2A2723" stroke-width="1.8" opacity="0.55"/>
+      <rect x="22" y="26" width="44" height="30" rx="3" fill="#EED9A0" stroke="#2A2723" stroke-width="2.6"/>
+      <line x1="22" y1="35" x2="66" y2="35" stroke="#2A2723" stroke-width="2.0"/>
+      <line x1="44" y1="26" x2="44" y2="56" stroke="#2A2723" stroke-width="1.8" opacity="0.55"/>
+      <rect x="12" y="44" width="44" height="28" rx="3" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0"/>
+      <line x1="12" y1="53" x2="56" y2="53" stroke="#2A2723" stroke-width="2.2"/>
+      <line x1="34" y1="44" x2="34" y2="72" stroke="#2A2723" stroke-width="1.8" opacity="0.55"/>
+    </g>
+  </symbol>
+
+  <symbol id="graph-web" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <g stroke="#2A2723" stroke-width="2.2" stroke-linecap="round" fill="none">
+        <path d="M22 22 Q34 30 40 44"/>
+        <path d="M58 20 Q50 32 40 44"/>
+        <path d="M22 22 Q40 13 58 20"/>
+        <path d="M40 44 Q30 58 18 62"/>
+        <path d="M40 44 Q56 54 64 60"/>
+      </g>
+      <circle cx="22" cy="22" r="8" fill="#EED9A0" stroke="#2A2723" stroke-width="2.6"/>
+      <circle cx="58" cy="20" r="8" fill="#EED9A0" stroke="#2A2723" stroke-width="2.6"/>
+      <circle cx="18" cy="62" r="7" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+      <circle cx="64" cy="60" r="7" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+      <circle cx="40" cy="44" r="11" fill="#C15F3C" stroke="#2A2723" stroke-width="3.2"/>
+    </g>
+  </symbol>
+
+  <symbol id="node-chip" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <circle cx="42" cy="46" r="22" fill="#EED9A0" stroke="#2A2723" stroke-width="3.2"/>
+      <path d="M8 14 L36 14 L43 21 L36 28 L8 28 Z" fill="#3E6B6E" stroke="#2A2723" stroke-width="2.2" stroke-linejoin="round"/>
+      <circle cx="14" cy="21" r="2.4" fill="#F3ECDD"/>
+      <line x1="31" y1="41" x2="54" y2="41" stroke="#2A2723" stroke-width="2.0" stroke-linecap="round"/>
+      <line x1="31" y1="49" x2="48" y2="49" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+      <line x1="31" y1="57" x2="52" y2="57" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+    </g>
+  </symbol>
+
+  <symbol id="edge-link" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <circle cx="14" cy="54" r="9" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.6"/>
+      <circle cx="66" cy="54" r="9" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.6"/>
+      <path d="M24 51 Q40 42 56 51" fill="none" stroke="#C15F3C" stroke-width="3.4" stroke-linecap="round"/>
+      <path d="M56 51 L47 46 M56 51 L47 56" fill="none" stroke="#C15F3C" stroke-width="2.4" stroke-linecap="round"/>
+      <rect x="24" y="14" width="32" height="18" rx="4" fill="#EED9A0" stroke="#2A2723" stroke-width="2.4"/>
+      <line x1="30" y1="23" x2="50" y2="23" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="40" y1="32" x2="40" y2="44" stroke="#2A2723" stroke-width="1.8" stroke-dasharray="3 3"/>
+    </g>
+  </symbol>
+
+  <symbol id="triple-rdf" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M10 22 Q40 10 70 22" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+      <rect x="5" y="31" width="20" height="20" rx="4" fill="#EED9A0" stroke="#2A2723" stroke-width="2.8"/>
+      <rect x="30" y="31" width="20" height="20" rx="4" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.8"/>
+      <rect x="55" y="31" width="20" height="20" rx="4" fill="#3E6B6E" stroke="#2A2723" stroke-width="2.8"/>
+      <line x1="25" y1="41" x2="30" y2="41" stroke="#2A2723" stroke-width="2.4"/>
+      <line x1="50" y1="41" x2="55" y2="41" stroke="#2A2723" stroke-width="2.4"/>
+      <line x1="8" y1="60" x2="22" y2="60" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+      <line x1="33" y1="60" x2="47" y2="60" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+      <line x1="58" y1="60" x2="72" y2="60" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+    </g>
+  </symbol>
+
+  <symbol id="magnifier" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <circle cx="34" cy="34" r="20" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0"/>
+      <line x1="48" y1="48" x2="68" y2="68" stroke="#2A2723" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M24 30 Q30 22 40 26" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+    </g>
+  </symbol>
+
+  <symbol id="gear" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <g stroke="#2A2723" stroke-width="3.2" stroke-linecap="round">
+        <line x1="40" y1="10" x2="40" y2="20"/><line x1="40" y1="60" x2="40" y2="70"/>
+        <line x1="10" y1="40" x2="20" y2="40"/><line x1="60" y1="40" x2="70" y2="40"/>
+        <line x1="18" y1="18" x2="25" y2="25"/><line x1="55" y1="55" x2="62" y2="62"/>
+        <line x1="62" y1="18" x2="55" y2="25"/><line x1="25" y1="55" x2="18" y2="62"/>
+      </g>
+      <circle cx="40" cy="40" r="16" fill="#EED9A0" stroke="#2A2723" stroke-width="3.0"/>
+      <circle cx="40" cy="40" r="6" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+    </g>
+  </symbol>
+
+  <symbol id="pen-note" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <rect x="10" y="12" width="42" height="56" rx="4" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0"/>
+      <line x1="18" y1="26" x2="44" y2="26" stroke="#2A2723" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="18" y1="37" x2="40" y2="37" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+      <line x1="18" y1="48" x2="44" y2="48" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+      <line x1="18" y1="59" x2="34" y2="59" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+      <path d="M48 60 L66 22 L73 26 L55 64 L45 68 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2.4" stroke-linejoin="round"/>
+      <line x1="50" y1="61" x2="57" y2="64" stroke="#2A2723" stroke-width="1.8"/>
+    </g>
+  </symbol>
+
+  <symbol id="question-card" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M10 16 Q10 12 14 12 L66 12 Q70 12 70 16 L70 50 Q70 54 66 54 L34 54 L21 67 L24 54 L14 54 Q10 54 10 50 Z"
+            fill="#EED9A0" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+      <path d="M31 27 Q31 20 40 20 Q49 20 49 27 Q49 32 41 35 L41 40" fill="none" stroke="#2A2723" stroke-width="3.0" stroke-linecap="round"/>
+      <circle cx="41" cy="46" r="2.6" fill="#C15F3C"/>
+    </g>
+  </symbol>
+
+  <symbol id="database" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M16 22 L16 58 Q16 68 40 68 Q64 68 64 58 L64 22" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0"/>
+      <ellipse cx="40" cy="22" rx="24" ry="9" fill="#EED9A0" stroke="#2A2723" stroke-width="2.8"/>
+      <path d="M16 38 Q16 47 40 47 Q64 47 64 38" fill="none" stroke="#2A2723" stroke-width="2.2"/>
+      <path d="M16 52 Q16 61 40 61 Q64 61 64 52" fill="none" stroke="#2A2723" stroke-width="1.8" opacity="0.7"/>
+    </g>
+  </symbol>
+
+  <symbol id="compass" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <circle cx="40" cy="43" r="26" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.2"/>
+      <circle cx="40" cy="43" r="19" fill="none" stroke="#2A2723" stroke-width="1.8" opacity="0.45"/>
+      <path d="M40 26 L47 45 L40 60 L33 45 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="2.2" stroke-linejoin="round"/>
+      <circle cx="40" cy="43" r="3.4" fill="#EED9A0" stroke="#2A2723" stroke-width="2.0"/>
+      <line x1="40" y1="9" x2="40" y2="16" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="code-card" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <rect x="9" y="16" width="62" height="48" rx="5" fill="#2A2723" stroke="#2A2723" stroke-width="2.8"/>
+      <line x1="17" y1="28" x2="33" y2="28" stroke="#EED9A0" stroke-width="2.4" stroke-linecap="round"/>
+      <line x1="37" y1="28" x2="57" y2="28" stroke="#F3ECDD" stroke-width="2.0" stroke-linecap="round" opacity="0.75"/>
+      <line x1="17" y1="39" x2="49" y2="39" stroke="#F3ECDD" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+      <line x1="17" y1="50" x2="41" y2="50" stroke="#C15F3C" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M53 44 L59 50 L53 56" fill="none" stroke="#F3ECDD" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="chain-link" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <rect x="6" y="30" width="27" height="21" rx="5" fill="#EED9A0" stroke="#2A2723" stroke-width="3.0"/>
+      <rect x="47" y="30" width="27" height="21" rx="5" fill="#EED9A0" stroke="#2A2723" stroke-width="3.0"/>
+      <line x1="33" y1="40" x2="47" y2="40" stroke="#C15F3C" stroke-width="3.4" stroke-linecap="round"/>
+      <circle cx="40" cy="40" r="5" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.2"/>
+      <line x1="12" y1="60" x2="27" y2="60" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+      <line x1="53" y1="60" x2="68" y2="60" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+      <line x1="12" y1="21" x2="27" y2="21" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+      <line x1="53" y1="21" x2="68" y2="21" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+    </g>
+  </symbol>
+
+  <symbol id="stopwatch" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <circle cx="40" cy="47" r="24" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.2"/>
+      <path d="M40 47 L40 32" stroke="#C15F3C" stroke-width="3.0" stroke-linecap="round"/>
+      <path d="M40 47 L52 53" stroke="#2A2723" stroke-width="2.4" stroke-linecap="round"/>
+      <rect x="33" y="11" width="14" height="9" rx="3" fill="#EED9A0" stroke="#2A2723" stroke-width="2.4"/>
+      <line x1="40" y1="20" x2="40" y2="24" stroke="#2A2723" stroke-width="2.6"/>
+      <line x1="59" y1="28" x2="65" y2="22" stroke="#2A2723" stroke-width="2.0" stroke-linecap="round" opacity="0.8"/>
+    </g>
+  </symbol>
+
+  <symbol id="route-flag" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M12 66 Q27 53 22 39 Q17 24 36 22 Q55 20 57 35" fill="none" stroke="#2A2723" stroke-width="3.0" stroke-linecap="round" stroke-dasharray="7 5"/>
+      <circle cx="12" cy="66" r="6.5" fill="#3E6B6E" stroke="#2A2723" stroke-width="2.4"/>
+      <circle cx="34" cy="30" r="4.4" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8"/>
+      <line x1="57" y1="36" x2="57" y2="13" stroke="#2A2723" stroke-width="2.8" stroke-linecap="round"/>
+      <path d="M57 14 L73 19 L57 26 Z" fill="#C15F3C" stroke="#2A2723" stroke-width="2.2" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="star-hub" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <g stroke="#2A2723" stroke-width="2.2" stroke-linecap="round">
+        <line x1="40" y1="40" x2="14" y2="20"/><line x1="40" y1="40" x2="66" y2="20"/>
+        <line x1="40" y1="40" x2="12" y2="53"/><line x1="40" y1="40" x2="68" y2="53"/>
+        <line x1="40" y1="40" x2="40" y2="70"/>
+      </g>
+      <circle cx="14" cy="20" r="5.5" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.0"/>
+      <circle cx="66" cy="20" r="5.5" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.0"/>
+      <circle cx="12" cy="53" r="5.5" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.0"/>
+      <circle cx="68" cy="53" r="5.5" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.0"/>
+      <circle cx="40" cy="70" r="5.5" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.0"/>
+      <circle cx="40" cy="40" r="14" fill="#C15F3C" stroke="#2A2723" stroke-width="3.4"/>
+      <path d="M40 32 L42.4 38 L48.8 38.5 L43.9 42.6 L45.5 49 L40 45.4 L34.5 49 L36.1 42.6 L31.2 38.5 L37.6 38 Z"
+            fill="#EED9A0" stroke="#2A2723" stroke-width="1.5" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="cluster" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M8 26 Q6 9 24 9 Q42 9 40 26 Q42 43 24 43 Q6 43 8 26 Z" fill="rgba(62,107,110,0.20)" stroke="#3E6B6E" stroke-width="2.6" stroke-dasharray="6 4"/>
+      <path d="M42 55 Q40 38 58 38 Q76 38 74 55 Q76 72 58 72 Q40 72 42 55 Z" fill="rgba(193,95,60,0.20)" stroke="#C15F3C" stroke-width="2.6" stroke-dasharray="6 4"/>
+      <line x1="32" y1="35" x2="49" y2="48" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.55"/>
+      <circle cx="17" cy="21" r="5" fill="#EED9A0" stroke="#2A2723" stroke-width="2.2"/>
+      <circle cx="30" cy="30" r="5" fill="#EED9A0" stroke="#2A2723" stroke-width="2.2"/>
+      <circle cx="18" cy="34" r="4.4" fill="#F7F1E3" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="53" cy="50" r="5" fill="#EED9A0" stroke="#2A2723" stroke-width="2.2"/>
+      <circle cx="65" cy="59" r="5" fill="#EED9A0" stroke="#2A2723" stroke-width="2.2"/>
+      <circle cx="52" cy="63" r="4.4" fill="#F7F1E3" stroke="#2A2723" stroke-width="1.8"/>
+    </g>
+  </symbol>
+
+  <symbol id="doc-chunks" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <rect x="9" y="9" width="27" height="21" rx="3" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.6"/>
+      <rect x="44" y="13" width="27" height="21" rx="3" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.6"/>
+      <rect x="7" y="46" width="27" height="21" rx="3" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.6"/>
+      <rect x="43" y="49" width="27" height="21" rx="3" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.6"/>
+      <line x1="14" y1="17" x2="31" y2="17" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+      <line x1="14" y1="24" x2="26" y2="24" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+      <line x1="49" y1="21" x2="66" y2="21" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+      <line x1="12" y1="54" x2="29" y2="54" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+      <line x1="48" y1="57" x2="65" y2="57" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+      <circle cx="39" cy="39" r="6.5" fill="#EED9A0" stroke="#2A2723" stroke-width="2.2"/>
+    </g>
+  </symbol>
+
+  <symbol id="brain-net" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <g stroke="#2A2723" stroke-width="2.0" stroke-linecap="round" fill="none">
+        <line x1="17" y1="21" x2="40" y2="33"/><line x1="17" y1="57" x2="40" y2="33"/>
+        <line x1="17" y1="21" x2="40" y2="59"/><line x1="17" y1="57" x2="40" y2="59"/>
+        <line x1="40" y1="33" x2="63" y2="41"/><line x1="40" y1="59" x2="63" y2="41"/>
+      </g>
+      <circle cx="17" cy="21" r="7" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+      <circle cx="17" cy="57" r="7" fill="#F7F1E3" stroke="#2A2723" stroke-width="2.4"/>
+      <circle cx="40" cy="33" r="8" fill="#EED9A0" stroke="#2A2723" stroke-width="2.8"/>
+      <circle cx="40" cy="59" r="8" fill="#EED9A0" stroke="#2A2723" stroke-width="2.8"/>
+      <circle cx="63" cy="41" r="10.5" fill="#C15F3C" stroke="#2A2723" stroke-width="3.2"/>
+      <path d="M58 41 L61.5 44.5 L68 36" fill="none" stroke="#F7F1E3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="warning-tri" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M40 11 L73 66 Q75 70 70 70 L10 70 Q5 70 7 66 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="3.2" stroke-linejoin="round"/>
+      <line x1="40" y1="31" x2="40" y2="52" stroke="#C15F3C" stroke-width="3.4" stroke-linecap="round"/>
+      <circle cx="40" cy="60" r="2.9" fill="#C15F3C"/>
+    </g>
+  </symbol>
+
+  <symbol id="supernode" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <g stroke="#2A2723" stroke-width="1.9" stroke-linecap="round">
+        <line x1="40" y1="40" x2="8" y2="13"/><line x1="40" y1="40" x2="26" y2="5"/>
+        <line x1="40" y1="40" x2="48" y2="4"/><line x1="40" y1="40" x2="70" y2="11"/>
+        <line x1="40" y1="40" x2="77" y2="33"/><line x1="40" y1="40" x2="75" y2="58"/>
+        <line x1="40" y1="40" x2="60" y2="75"/><line x1="40" y1="40" x2="35" y2="78"/>
+        <line x1="40" y1="40" x2="11" y2="69"/><line x1="40" y1="40" x2="3" y2="45"/>
+      </g>
+      <circle cx="40" cy="40" r="15" fill="#C15F3C" stroke="#2A2723" stroke-width="3.4"/>
+      <path d="M33 40 L47 40 M40 33 L40 47" stroke="#F7F1E3" stroke-width="2.8" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="balance" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <line x1="40" y1="19" x2="40" y2="64" stroke="#2A2723" stroke-width="3.0" stroke-linecap="round"/>
+      <path d="M13 25 Q40 16 67 25" fill="none" stroke="#2A2723" stroke-width="3.0" stroke-linecap="round"/>
+      <line x1="14" y1="24" x2="14" y2="31" stroke="#2A2723" stroke-width="1.8"/>
+      <line x1="66" y1="24" x2="66" y2="31" stroke="#2A2723" stroke-width="1.8"/>
+      <path d="M5 31 Q14 48 23 31 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M57 31 Q66 48 75 31 Z" fill="#3E6B6E" stroke="#2A2723" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M26 68 L54 68" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+      <circle cx="40" cy="19" r="4" fill="#C15F3C" stroke="#2A2723" stroke-width="2.0"/>
+    </g>
+  </symbol>
+
+  <symbol id="shield" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M40 10 Q56 16 64 20 Q66 46 40 70 Q14 46 16 20 Q24 16 40 10 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="3.2" stroke-linejoin="round"/>
+      <path d="M28 38 L37 47 L54 28" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="talking-person" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <circle cx="30" cy="26" r="12" fill="#EED9A0" stroke="#2A2723" stroke-width="2.6"/>
+      <path d="M14 68 Q14 46 30 46 Q46 46 46 68" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+      <path d="M48 14 Q70 14 70 30 Q70 44 54 44 L54 52 L46 42 Q46 42 46 30 Q46 14 48 14 Z"
+            fill="#F7F1E3" stroke="#2A2723" stroke-width="2.6" stroke-linejoin="round"/>
+      <line x1="54" y1="24" x2="64" y2="24" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+      <line x1="54" y1="31" x2="60" y2="31" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+    </g>
+  </symbol>
+
+  <symbol id="laptop" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M20 22 Q20 19 23 19 L57 19 Q60 19 60 22 L60 52 L20 52 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+      <path d="M25 28 Q40 24 55 28" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+      <path d="M25 36 Q38 33 50 36" fill="none" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round" opacity="0.5"/>
+      <path d="M10 60 Q10 56 14 56 L66 56 Q70 56 70 60 Q70 64 65 64 L15 64 Q10 64 10 60 Z"
+            fill="#EED9A0" stroke="#2A2723" stroke-width="2.6" stroke-linejoin="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="checklist-doc" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M20 10 L52 10 L62 20 L62 70 Q62 72 60 72 L20 72 Q18 72 18 70 L18 12 Q18 10 20 10 Z"
+            fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+      <path d="M52 10 L52 20 L62 20 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M26 32 L31 37 L38 28" fill="none" stroke="#3E6B6E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="42" y1="33" x2="56" y2="33" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M26 48 L31 53 L38 44" fill="none" stroke="#3E6B6E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="42" y1="49" x2="56" y2="49" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round"/>
+      <rect x="25" y="60" width="8" height="8" fill="none" stroke="#2A2723" stroke-width="1.8"/>
+      <line x1="42" y1="64" x2="56" y2="64" stroke="#2A2723" stroke-width="1.8" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="hand-arrow-down" viewBox="0 0 32 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M16 3 Q24 40 16 64" fill="none" stroke="#2A2723" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M16 64 L9 53 M16 64 L23 53" fill="none" stroke="#2A2723" stroke-width="2.6" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="vector-space" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <rect x="8" y="8" width="64" height="64" rx="6" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0"/>
+      <circle cx="30" cy="41" r="17" fill="none" stroke="#3E6B6E" stroke-width="2.2" stroke-dasharray="5 4"/>
+      <circle cx="21" cy="30" r="3.4" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="41" cy="32" r="3.4" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="23" cy="53" r="3.4" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="42" cy="51" r="3.4" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="61" cy="19" r="3" fill="#F3ECDD" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="62" cy="61" r="3" fill="#F3ECDD" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="57" cy="43" r="3" fill="#F3ECDD" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="30" cy="41" r="5.4" fill="#C15F3C" stroke="#2A2723" stroke-width="2.6"/>
+    </g>
+  </symbol>
+
+  <symbol id="kg-doc" viewBox="0 0 80 80">
+    <g filter="url(#hand-wobble-s)">
+      <path d="M13 8 L53 8 L66 21 L66 72 L13 72 Z" fill="#F7F1E3" stroke="#2A2723" stroke-width="3.0" stroke-linejoin="round"/>
+      <path d="M53 8 L53 21 L66 21 Z" fill="#EED9A0" stroke="#2A2723" stroke-width="1.8" stroke-linejoin="round"/>
+      <g stroke="#3E6B6E" stroke-width="2.2" stroke-linecap="round" fill="none">
+        <line x1="25" y1="37" x2="39" y2="30"/>
+        <line x1="25" y1="37" x2="34" y2="53"/>
+        <line x1="39" y1="30" x2="53" y2="44"/>
+        <line x1="34" y1="53" x2="53" y2="44"/>
+        <line x1="34" y1="53" x2="48" y2="63"/>
+      </g>
+      <circle cx="25" cy="37" r="5" fill="#EED9A0" stroke="#2A2723" stroke-width="2.2"/>
+      <circle cx="39" cy="30" r="4.4" fill="#F3ECDD" stroke="#2A2723" stroke-width="2.0"/>
+      <circle cx="53" cy="44" r="4.4" fill="#F3ECDD" stroke="#2A2723" stroke-width="2.0"/>
+      <circle cx="48" cy="63" r="4" fill="#F3ECDD" stroke="#2A2723" stroke-width="1.8"/>
+      <circle cx="34" cy="53" r="5.6" fill="#C15F3C" stroke="#2A2723" stroke-width="2.6"/>
+    </g>
+  </symbol>
+</svg>
+
+<div class="page">
+
+<header class="hero">
+  <div class="hero-owls">
+    <svg class="deco-icon" width="86" height="86" aria-hidden="true"><use href="#owl-doc"/></svg>
+    <svg class="deco-icon" width="76" height="76" aria-hidden="true"><use href="#graph-web"/></svg>
+    <svg class="deco-icon" width="72" height="72" aria-hidden="true"><use href="#database"/></svg>
+  </div>
+  <h1 class="hero-title"><span class="marker">Graph Engineering</span></h1>
+  <p class="hero-jp">関係そのものをデータとして扱う技術の、全体地図</p>
+  <div class="hero-tag">RDBは触ってきた／グラフは未経験、というエンジニアのために</div>
+  <p class="hero-lead">
+    グラフエンジニアリングとは、データを「表の行」ではなく<strong>「点（ノード）と線（エッジ）」</strong>として設計し、格納し、問い合わせ、さらに機械学習まで通す一連の技術の総称です。
+    本資料は、データモデルの部品立てから、クエリ言語の勢力図、代表的なアルゴリズム、GraphRAG や GNN といった AI との接続、そして運用の落とし穴と導入判断までを、11のセクションで俯瞰します。
+    個々の製品の操作手順ではなく、<span class="marker">どういう問いのときにグラフが効くのか</span>という判断の軸を持ち帰っていただくことを狙いにしています。
+  </p>
+</header>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">01</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">WHY GRAPH<svg width="14" height="14" aria-hidden="true"><use href="#sparkle"/></svg></div>
+        <h2 class="section-title">なぜグラフか — 表の世界と、関係の世界</h2>
+        <p class="sec-sub">同じデータでも、関係をどこに置くかで「書ける問い」が変わる</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="対比">
+      <div class="fig-vs">
+        <div class="fig-vs-pane">
+          <div class="fig-node-label">リレーショナル（表）</div>
+          <svg class="fig-part" width="96" height="96" aria-hidden="true"><use href="#table-stack"/></svg>
+          <ul class="fig-vs-list">
+            <li>実体は<strong>行</strong>として表に納まる</li>
+            <li>関係は外部キーと中間テーブルに<strong>散る</strong></li>
+            <li>辿るには段数ぶんの JOIN が要る</li>
+          </ul>
+        </div>
+        <div class="fig-vs-mid">
+          <div class="fig-vs-badge">vs</div>
+          <svg class="fig-part" width="72" height="29" aria-hidden="true"><use href="#hand-arrow"/></svg>
+        </div>
+        <div class="fig-vs-pane accent">
+          <div class="fig-node-label">グラフ</div>
+          <svg class="fig-part" width="96" height="96" aria-hidden="true"><use href="#graph-web"/></svg>
+          <ul class="fig-vs-list">
+            <li>実体は<strong>ノード</strong></li>
+            <li>関係は<strong>エッジ</strong>としてそのまま格納される</li>
+            <li>辿るのは隣を指すポインタの移動</li>
+          </ul>
+        </div>
+      </div>
+      <p class="fig-cap">同じ実体を持っていても、「関係の置き場所」が違う</p>
+    </div>
+
+    <div class="explain">
+      <p>リレーショナルデータベースは、実体（顧客・注文・商品）を行として表に納め、実体どうしの関係を外部キーや中間テーブルという<strong>別の場所</strong>に置きます。集計と整合性にはこれ以上ない設計ですが、関係を辿る問いに対しては、辿る段数だけ結合を書き足すことになります。</p>
+      <p>グラフでは、<strong>関係（エッジ）そのものが第一級のデータ</strong>です。「この人がこの口座へ送金し、その口座が別の名義と端末を共有している」という連なりが、そのままデータ構造として存在します。だから「何段目で当たりが出るか事前に分からない」問いを、可変長の経路として素直に書けます。</p>
+      <p>言い換えると、グラフが効くのは<span class="marker">答えが〈点〉ではなく〈経路〉である問い</span>です。「AとBはどう繋がっているのか」「この機器が落ちるとどこまで波及するのか」「同じ属性を共有する申込の塊はどこか」——いずれも、答えそのものが辿った道筋の形をしています。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>答えたい問い</th><th>表（SQL）での書き方</th><th>グラフでの書き方</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>直接の知り合いを出す</td><td>結合1回</td><td>1ホップ</td></tr>
+          <tr><td>知り合いの知り合いを出す</td><td>自己結合を2回重ねる</td><td>2ホップ</td></tr>
+          <tr><td>何段でもよいので繋がりを探す</td><td>段数ぶん結合を書き足す、または再帰CTE（<code>WITH RECURSIVE</code>）で書く</td><td>可変長パス（深さは<strong>指定するだけ</strong>で、クエリの形は変わらない）</td></tr>
+          <tr><td>全顧客の平均購入額を出す</td><td>得意分野。集約1回</td><td>不得意。全ノードの走査になる</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box">
+      最下行は意図的に入れてあります。<strong>グラフDBは万能の高速化装置ではありません。</strong>スキャンと集計が主体の処理は、リレーショナルや列指向のほうが速い。速いのは「小さな始点から局所を辿る」問いに限られます。その理由は 05 で扱います。
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">02</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">DATA MODEL</div>
+        <h2 class="section-title">グラフの部品立て — ノード・エッジ・プロパティ</h2>
+        <p class="sec-sub">主流は2系統。プロパティグラフと RDF トリプル</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="階層">
+      <div class="fig-tree-outer">
+        <div class="fig-tree-root">グラフのデータモデル</div>
+        <div class="fig-tree-kids">
+          <div class="fig-tree-kid">
+            <svg class="fig-part" width="90" height="90" aria-hidden="true"><use href="#node-chip"/></svg>
+            <div class="fig-node-label">ノード</div>
+            <ul class="fig-tree-leaf">
+              <li>ラベルで種類を表す</li>
+              <li>プロパティで属性を持つ</li>
+              <li>一意な識別子を持つ</li>
+            </ul>
+          </div>
+          <div class="fig-tree-kid">
+            <svg class="fig-part" width="90" height="90" aria-hidden="true"><use href="#edge-link"/></svg>
+            <div class="fig-node-label">エッジ</div>
+            <ul class="fig-tree-leaf">
+              <li>型と向きを必ず持つ</li>
+              <li><strong>エッジ自身が属性を持てる</strong></li>
+              <li>両端のノードを直に指す</li>
+            </ul>
+          </div>
+          <div class="fig-tree-kid">
+            <svg class="fig-part" width="90" height="90" aria-hidden="true"><use href="#triple-rdf"/></svg>
+            <div class="fig-node-label">RDF トリプル</div>
+            <ul class="fig-tree-leaf">
+              <li>主語・述語・目的語の三つ組</li>
+              <li>すべて URI で識別する</li>
+              <li>語彙を組織横断で共有できる</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <p class="fig-cap">左2つがプロパティグラフの部品。右は別系統の表現（同じ事実を三つ組の集合として書く）</p>
+    </div>
+
+    <div class="explain">
+      <p><strong>プロパティグラフ</strong>では、ノードにラベル（<code>:Person</code> のような種類の札）とプロパティ（<code>name</code>、<code>joined_at</code>）を持たせ、エッジに型（<code>:FOLLOWS</code>）と向き、そして<strong>エッジ自身のプロパティ</strong>（<code>since</code>、<code>weight</code>）を持たせます。</p>
+      <p>このうち実務上いちばん効くのが、エッジがプロパティを持てることです。リレーショナルの中間テーブルでも同じ情報は表現できますが、その瞬間から「関係」は独立した表として管理対象になります。グラフでは<span class="marker">関係に「いつ」「どれくらい強く」を直接書ける</span>ため、「2023年以降に成立した関係だけを辿る」といった条件が、経路の記述そのものに溶け込みます。</p>
+      <p><strong>RDF</strong>は発想が異なり、事実を「主語・述語・目的語」の三つ組として並べます。すべてを URI で識別するため、組織や分野をまたいで同じ語彙を指せることが最大の利点です。Wikidata や生命科学のオントロジーがこの系統で、スキーマの記述は RDFS / OWL、問い合わせは W3C 標準の SPARQL が担い、記述した意味関係から新しい事実を導く推論も規格の一部として定義されています。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>観点</th><th>プロパティグラフ</th><th>RDF（トリプル）</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>基本単位</td><td>ノード ＋ 型付きエッジ</td><td>主語・述語・目的語の三つ組</td></tr>
+          <tr><td>属性の置き方</td><td>ノードにもエッジにもプロパティを直接持てる</td><td>属性も三つ組で表す（関係に属性を付けるには実体化の工夫が要る）</td></tr>
+          <tr><td>識別子</td><td>システム内の ID</td><td>URI（グローバルに一意）</td></tr>
+          <tr><td>問い合わせ</td><td>Cypher / GQL / Gremlin</td><td>SPARQL</td></tr>
+          <tr><td>標準化</td><td>ISO/IEC 39075:2024（GQL）</td><td>W3C 勧告（RDF / SPARQL / OWL）</td></tr>
+          <tr><td>向く場面</td><td>単一システム内の業務データ、経路探索、分析</td><td>組織横断の語彙共有、公開データ統合、推論</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note-box">
+      迷ったときの目安：<strong>自社のアプリケーションの中で関係を辿りたいならプロパティグラフ</strong>、<strong>外部の語彙やデータセットと意味を突き合わせたいなら RDF</strong>。両者は排他ではなく、RDF で語彙を管理しつつ分析用にプロパティグラフへ写す構成も実際に使われます。
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">03</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">MODELING</div>
+        <h2 class="section-title">テーブルからグラフへ — 設計の順序</h2>
+        <p class="sec-sub">正規化からではなく、「答えたい問い」から始める</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="流れ">
+      <div class="fig-flow">
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 1</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#question-card"/></svg>
+          <div class="fig-node-label">問いを書く</div>
+          <div class="fig-note">答えたい問いを3つ、日本語で先に列挙する</div>
+        </div>
+        <div class="fig-flow-arrow"><svg width="30" height="30" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 2</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#node-chip"/></svg>
+          <div class="fig-node-label">名詞→ノード</div>
+          <div class="fig-note">顧客・注文・商品などの実体をノードに置く</div>
+        </div>
+        <div class="fig-flow-arrow"><svg width="30" height="30" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 3</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#edge-link"/></svg>
+          <div class="fig-node-label">動詞→エッジ</div>
+          <div class="fig-note">「注文した」「含む」を型付きの辺として向き付きで結ぶ</div>
+        </div>
+        <div class="fig-flow-arrow"><svg width="30" height="30" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 4</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#table-stack"/></svg>
+          <div class="fig-node-label">中間表を解体</div>
+          <div class="fig-note">多対多の連結表は辺へ。属性が多ければノードに昇格</div>
+        </div>
+        <div class="fig-flow-arrow"><svg width="30" height="30" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 5</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#checklist-doc"/></svg>
+          <div class="fig-node-label">問いで検算</div>
+          <div class="fig-note">STEP 1 の問いが短い経路で書けるか確かめ、書けなければ戻る</div>
+        </div>
+      </div>
+      <div class="fig-flow-ends"><span>始点：業務の問い</span><span>終点：動くグラフモデル</span></div>
+    </div>
+
+    <div class="explain">
+      <p>リレーショナルのモデリングが正規化から出発するのに対し、グラフのモデリングは<strong>クエリ駆動</strong>です。手順の順序自体が主張で、STEP 1 を飛ばして「とりあえずテーブルを機械的に変換する」と、後から辿れない形のグラフができあがります。</p>
+      <p><strong>STEP 3 の命名がモデルの寿命を決めます。</strong>エッジの型は動詞で、向きは「主語→目的語」で決め打ちします。<code>:RELATED_TO</code> のような曖昧な型は最初は楽ですが、増えるにつれてどの辺を辿ればよいか分からなくなり、探索の絞り込みも効かなくなります。</p>
+      <p><strong>STEP 4 の判断はよく迷うところです。</strong>多対多の連結表は多くの場合そのままエッジになりますが、その表が数量・単価・状態といった固有の属性を多く抱えているなら、関係をノードとして<strong>実体化</strong>（reification）したほうが扱いやすくなります。目安は「その関係自身にさらに別の関係が生えるか」。生えるならノードです。</p>
+      <p>最後に、初学者がほぼ必ず踏む落とし穴が<span class="marker">時間の扱い</span>です。「2021年は部署A、2023年から部署B」のような履歴は、エッジに <code>from</code> / <code>to</code> を持たせるか、所属という状態そのものをノードにするかの二択になります。前者は書きやすく、後者は「その期間だけに紐づく別の事実」を後から足せます。どちらを採るにせよ、<strong>現在の関係と過去の関係を同じ型のエッジに混ぜない</strong>ことだけは守ってください。混ざると、あらゆる探索に期間条件が必要になります。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">04</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">QUERY LANGUAGES</div>
+        <h2 class="section-title">問い合わせ言語の地図</h2>
+        <p class="sec-sub">Cypher・GQL・SPARQL・Gremlin・SQL/PGQ は、どこに位置しているか</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="位置づけ">
+      <div class="fig-map-wrap">
+        <div class="fig-map">
+          <div class="fig-map-area"></div>
+          <div class="fig-map-y"><span>宣言的</span><span>手続き的</span></div>
+          <div class="fig-map-x"><span>特定実装から出発</span><span>国際標準</span></div>
+          <div class="fig-plot" style="left:30%; top:22%"><div class="fig-dot"></div><span>Cypher</span></div>
+          <div class="fig-plot" style="left:64%; top:30%"><div class="fig-dot"></div><span>SPARQL</span></div>
+          <div class="fig-plot focus" style="left:88%; top:13%"><div class="fig-dot"></div><span>GQL</span></div>
+          <div class="fig-plot" style="left:82%; top:47%"><div class="fig-dot"></div><span>SQL/PGQ</span></div>
+          <div class="fig-plot" style="left:26%; top:78%"><div class="fig-dot"></div><span>Gremlin</span></div>
+        </div>
+        <div class="fig-map-legend">
+          <div class="fig-legend-row">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#compass"/></svg>
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#code-card"/></svg>
+          </div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#database"/></svg>
+          <p>縦軸は「形を宣言するか、辿り方を手続きで書くか」。横軸は標準化の度合い</p>
+        </div>
+      </div>
+      <p class="fig-cap">丸で囲んだ GQL が、右上（宣言的かつ国際標準）の到達点にあたる</p>
+    </div>
+
+    <div class="explain">
+      <p><strong>Cypher</strong> は Neo4j 由来の言語で、探索したい形をそのまま図のように書けるのが特徴です。<code>(a)-[:FOLLOWS]-&gt;(b)</code> という記法が経路の絵と一対一で対応するため、初見でも読めます。仕様は openCypher として公開され、複数の製品が採用しています。</p>
+      <p><strong>GQL</strong> は、そのパターン記法を主要な源流として国際標準化されたグラフ問い合わせ言語で、<strong>ISO/IEC 39075:2024</strong> として公開されました。SQL に続く、ISO が定めた2つ目のデータベース言語という位置づけです。<span class="marker">グラフの問い合わせは、方言の並立から標準への収斂という段階に入りました。</span></p>
+      <p><strong>SQL/PGQ</strong> は SQL:2023 に加わったプロパティグラフ問い合わせの機能で、既存の表の上にグラフとしての見え方を定義し、SQL の中でグラフパターンを書けます。専用のグラフDBを立てずに試せる道があるということです。<strong>SPARQL</strong> は RDF 用の W3C 標準、<strong>Gremlin</strong> は Apache TinkerPop のトラバーサル記述で、「どう辿るか」を手続き的に連ねる点で他とは発想が異なります。</p>
+    </div>
+
+<pre><code><span class="cm">-- Cypher：自分から1〜3ホップで届くが、まだ直接つながっていない人を出す</span>
+<span class="kw">MATCH</span> (me:Person {id: $id})-[:FOLLOWS<span class="kw">*1..3</span>]-&gt;(reach:Person)
+<span class="kw">WHERE</span> <span class="kw">NOT</span> (me)-[:FOLLOWS]-&gt;(reach)
+<span class="kw">RETURN</span> reach.name, <span class="kw">count</span>(*) <span class="kw">AS</span> paths
+<span class="kw">ORDER BY</span> paths <span class="kw">DESC</span> <span class="kw">LIMIT</span> 10</code></pre>
+    <p class="fig-cap" style="text-align:left">深さを <code>*1..3</code> から <code>*1..5</code> に変えても、クエリの構造は変わらない。これが 01 の表の最終行が意味していること</p>
+
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>言語</th><th>対象モデル</th><th>位置づけ</th><th>代表的な実装</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cypher / openCypher</td><td>プロパティグラフ</td><td>事実上の共通語。公開仕様</td><td>Neo4j、Memgraph ほか</td></tr>
+          <tr><td>GQL</td><td>プロパティグラフ</td><td>ISO/IEC 39075:2024。国際標準</td><td>各製品が順次対応中</td></tr>
+          <tr><td>SQL/PGQ</td><td>プロパティグラフ</td><td>SQL:2023 の一部。既存RDBの延長</td><td>対応RDB、Apache AGE など</td></tr>
+          <tr><td>SPARQL</td><td>RDF</td><td>W3C 勧告</td><td>各種トリプルストア</td></tr>
+          <tr><td>Gremlin</td><td>プロパティグラフ</td><td>Apache TinkerPop のトラバーサル記述</td><td>JanusGraph、Amazon Neptune ほか</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">05</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">WHY IT IS FAST</div>
+        <h2 class="section-title">なぜ深い探索に強いのか</h2>
+        <p class="sec-sub">速さの理由は賢いアルゴリズムではなく、「隣が物理的に隣にある」こと</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="因果">
+      <div class="fig-cause">
+        <div class="fig-cause-src">
+          <div class="fig-cause-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#edge-link"/></svg>
+            <b>関係が実体として保存される</b>
+            <span>問い合わせのたびに結合で作り直さない</span>
+          </div>
+          <div class="fig-cause-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#chain-link"/></svg>
+            <b>隣接がポインタで直結</b>
+            <span>索引を引かず隣のレコードへ移る（インデックスフリー隣接）</span>
+          </div>
+          <div class="fig-cause-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#magnifier"/></svg>
+            <b>探索が始点の周囲に閉じる</b>
+            <span>データ全体を見に行かない</span>
+          </div>
+        </div>
+        <div class="fig-cause-arrow"><svg class="arrow-wide" width="38" height="15" aria-hidden="true"><use href="#hand-arrow"/></svg><svg class="arrow-tall" width="17" height="42" aria-hidden="true"><use href="#hand-arrow-down"/></svg></div>
+        <div class="fig-cause-dst">
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#stopwatch"/></svg>
+          <strong>1段深くするコストは<br>「そのノードの隣の数」しか増えない</strong>
+          <span class="fig-note">データ総量が増えても、1ホップの費用は変わらない</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="explain">
+      <p>リレーショナルで「知り合いの知り合いの知り合い」を出すには、関係表を3回自己結合します。結合のたびに索引を引き直し、中間結果は分岐の数だけ掛け算的に膨らみます。段数を1つ増やすことが、探索範囲の一段の掛け算になるわけです。</p>
+      <p>多くのグラフDBはこれを<strong>インデックスフリー隣接</strong>という設計で回避します。あるノードから出るエッジの一覧が、そのノードのレコードのすぐ隣に置かれ、ポインタで直接辿れる。始点さえ索引で見つければ、そこから先は索引を引きません。<span class="marker">グラフ全体が10倍になっても、1ノードから隣へ移るコストは変わらない</span>——これが「深さに強い」の中身です。</p>
+      <p>裏返しの注意も同じ理屈から出ます。<strong>始点を持たない問いには、この利点が一切効きません。</strong>「全ノードの平均を出す」「条件に合う全件を数える」といったスキャン主体の処理は、グラフDBの不得意分野で、リレーショナルや列指向のほうが素直に速い。また関係を大量に書き込む処理では、ポインタを張る分の負荷がかかるため、初期ロードは専用のバルクロード機構を使うのが定石です。</p>
+    </div>
+
+    <div class="note-box">
+      これは<strong>実装の性質であって規格上の保証ではありません</strong>。同じ「グラフDB」を名乗っていても、内部でリレーショナルや分散KVSに載せている製品では成り立ち方が変わります。分散構成でエッジがノード間をまたぐ場合も同様です（10 で扱います）。採用検討では「深さ3以上の探索を、想定データ量で実際に測る」ことを必ず工程に入れてください。
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">06</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">ALGORITHMS</div>
+        <h2 class="section-title">グラフアルゴリズムの四系統</h2>
+        <p class="sec-sub">経路・重要度・かたまり・類似——問いの種類ごとに道具が違う</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="階層">
+      <div class="fig-branch">
+        <div class="fig-branch-trunk">グラフアルゴリズム</div>
+        <div class="fig-branch-list">
+          <div class="fig-branch-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#route-flag"/></svg>
+            <div>
+              <h4>経路探索</h4>
+              <div class="fig-note">幅優先探索 / Dijkstra / A*<br>「どう繋がっているか」を答える</div>
+            </div>
+          </div>
+          <div class="fig-branch-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#star-hub"/></svg>
+            <div>
+              <h4>中心性</h4>
+              <div class="fig-note">次数 / 媒介中心性 / PageRank<br>「誰が要か」を答える</div>
+            </div>
+          </div>
+          <div class="fig-branch-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#cluster"/></svg>
+            <div>
+              <h4>コミュニティ検出</h4>
+              <div class="fig-note">Louvain / Leiden / ラベル伝播<br>「どこで塊に分かれるか」を答える</div>
+            </div>
+          </div>
+          <div class="fig-branch-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#node-chip"/></svg>
+            <div>
+              <h4>類似度</h4>
+              <div class="fig-note">Jaccard / 共通近傍<br>「何と何が似ているか」を答える</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="explain">
+      <p><strong>経路探索</strong>は最も直感的な系統です。重みのない最短経路は幅優先探索、重み付きなら Dijkstra、目的地の見当がつく場合は A*。用途は配送経路にとどまらず、依存関係の到達可能性判定や、送金の連鎖の追跡が実務では多くを占めます。</p>
+      <p><strong>中心性</strong>は「重要さ」を数値にする系統ですが、重要さの定義が複数あることが要点です。次数中心性は単純につながりの本数、媒介中心性は他のノードどうしの最短経路上にどれだけ乗るか（＝橋渡し役の度合い）、<strong>PageRank</strong> は「重要なノードから指されているほど重要」という再帰的な定義で、Brin と Page が 1998 年に発表し初期の Google 検索の中核となった手法です。<span class="marker">どれを使うかは、業務上の「重要」がどの定義に当たるかで決まります。</span></p>
+      <p><strong>コミュニティ検出</strong>は、密につながった塊にグラフを分割します。<strong>Louvain</strong> 法（Blondel ら、2008年）が広く使われ、<strong>Leiden</strong> 法（Traag ら、2019年）は Louvain が内部で連結でないコミュニティを生んでしまう問題を修正した後継です。08 の GraphRAG でも、この系統が中核部品として使われます。</p>
+      <p>これらは多くの製品でライブラリとして提供され（Neo4j Graph Data Science など）、計算結果をノードのプロパティとして書き戻し、以後は普通の属性として問い合わせる、という使い方が標準的です。<strong>グラフ分析の成果物は「図」ではなく「列」になる</strong>と考えると、既存の分析基盤に組み込む筋道が見えます。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>系統</th><th>代表アルゴリズム</th><th>何を測るか</th><th>典型的な用途</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>経路探索</td><td>幅優先探索、Dijkstra、A*</td><td>2点間の距離・到達可能性</td><td>影響波及、送金追跡、依存解決</td></tr>
+          <tr><td>中心性</td><td>次数、媒介中心性、PageRank</td><td>ノードの重要度（定義は複数）</td><td>影響力の大きい顧客、要となる機器</td></tr>
+          <tr><td>コミュニティ検出</td><td>Louvain、Leiden、ラベル伝播</td><td>密につながった部分集合</td><td>顧客セグメント、不正グループ、名寄せ</td></tr>
+          <tr><td>類似度</td><td>Jaccard、共通近傍</td><td>近傍集合の重なり</td><td>推薦、重複候補の抽出</td></tr>
+          <tr><td>連結性</td><td>連結成分（WCC / SCC）</td><td>互いに到達できる塊</td><td>孤立検出、名寄せの前処理</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">07</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">USE CASES</div>
+        <h2 class="section-title">現場で効く適用領域</h2>
+        <p class="sec-sub">単体では正常に見える点が、関係を辿ると像を結ぶ</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="場面">
+      <div class="fig-scene">
+        <svg class="fig-part" width="104" height="104" aria-hidden="true"><use href="#talking-person"/></svg>
+        <div class="fig-scene-bubble">
+          「一件ずつ審査すれば、どの申込も正常でした。<strong>住所・端末・口座の共有</strong>で結び直したとき、初めて環（リング）が見えたんです」<br>
+          <span class="fig-note">——グラフが効くのは、点を見ている限り何も起きず、線を引いた瞬間に像が結ばれる場面。</span>
+        </div>
+        <div class="fig-scene-tools">
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#shield"/></svg>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#laptop"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="domain-grid">
+      <div class="domain-item">
+        <h3>不正検知</h3>
+        <p>同じ住所・端末・口座を共有する申込は、一件ずつ見れば正常。共有関係で結び直すと、環状のつながりとして浮かび上がる。</p>
+      </div>
+      <div class="domain-item">
+        <h3>名寄せ・エンティティ解決</h3>
+        <p>表記の揺れた顧客レコードを、共有する属性の関係から同一人物へ束ねる。連結成分がそのまま「同じ人の塊」になる。</p>
+      </div>
+      <div class="domain-item">
+        <h3>推薦</h3>
+        <p>「この商品を買った人が買った商品」は購入エッジを2ホップ辿るだけ。協調フィルタリングの素朴な形はグラフ探索そのもの。</p>
+      </div>
+      <div class="domain-item">
+        <h3>IT運用・影響波及分析</h3>
+        <p>構成管理データベース（CMDB）は本来グラフ。「この機器が落ちるとどの業務が止まるか」を到達可能性で解く。</p>
+      </div>
+      <div class="domain-item">
+        <h3>サプライチェーン・部品表</h3>
+        <p>多段の部品展開、代替部品の探索、供給元を遡って依存が一社に集中していないかの点検。</p>
+      </div>
+      <div class="domain-item">
+        <h3>権限・アクセス制御</h3>
+        <p>組織・ロール・資源の継承関係を辿り「この人はこの資源を見られるか」を判定する。Google の Zanzibar が広めた考え方。</p>
+      </div>
+      <div class="domain-item">
+        <h3>創薬・ライフサイエンス</h3>
+        <p>遺伝子・疾患・化合物・論文を結ぶ知識グラフから、既知の関係の隙間にある仮説を探す。</p>
+      </div>
+      <div class="domain-item">
+        <h3>ソフトウェア解析</h3>
+        <p>呼び出しグラフ、依存グラフ、SBOM。「この脆弱性を含む部品はどの製品に入っているか」は到達可能性の問い。</p>
+      </div>
+    </div>
+
+    <div class="note-box">
+      並べてみると共通点が見えます。いずれも<strong>「関係を辿った結果そのものが答え」</strong>であり、集計値を出す問いは一つもありません。自社の課題がこの形をしているかどうかが、11 の導入判断の出発点になります。
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">08</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">GRAPH × LLM</div>
+        <h2 class="section-title">知識グラフと GraphRAG</h2>
+        <p class="sec-sub">ベクタ検索が返すのは「近い断片」。繋ぐ操作は誰がやるのか</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="対比">
+      <div class="fig-vs">
+        <div class="fig-vs-pane">
+          <div class="fig-node-label">ベクタRAG</div>
+          <svg class="fig-part" width="96" height="96" aria-hidden="true"><use href="#vector-space"/></svg>
+          <ul class="fig-vs-list">
+            <li>文書を断片に切り、埋め込みに変換</li>
+            <li>質問に<strong>意味が近い断片</strong>を取り出す</li>
+            <li>答えが一箇所に書かれた問いに強い</li>
+          </ul>
+        </div>
+        <div class="fig-vs-mid">
+          <div class="fig-vs-badge">vs</div>
+          <svg class="fig-part" width="72" height="29" aria-hidden="true"><use href="#hand-arrow"/></svg>
+        </div>
+        <div class="fig-vs-pane accent">
+          <div class="fig-node-label">GraphRAG</div>
+          <svg class="fig-part" width="96" height="96" aria-hidden="true"><use href="#kg-doc"/></svg>
+          <ul class="fig-vs-list">
+            <li>文書から実体と関係を抽出しグラフ化</li>
+            <li>コミュニティごとの<strong>要約を先に作る</strong></li>
+            <li>散らばった事実を繋ぐ問いに答えられる</li>
+          </ul>
+        </div>
+      </div>
+      <p class="fig-cap">分かれ目は「繋ぐ操作を、検索の側が行うかどうか」</p>
+    </div>
+
+    <div class="explain">
+      <p>ベクタRAG は、質問に意味が近い断片を引いて LLM に渡します。「返品規定は何日以内か」のように<strong>答えが一箇所に書かれている</strong>問いには、これで十分です。弱点は、答えが複数の文書に散らばり、それらを繋いで初めて成立する問いにあります。近傍検索は近い断片を返すだけで、<span class="marker">断片どうしを繋ぐ操作そのものは誰も行っていない</span>からです。</p>
+      <p><strong>GraphRAG</strong> は Microsoft Research が 2024 年に公開した手法および OSS 実装で、この繋ぐ操作をインデックス構築時に前倒しします。まず LLM に文書を通してエンティティと関係を抽出し知識グラフを作り、コミュニティ検出（Leiden 法）で階層的な塊に分け、塊ごとの要約をあらかじめ生成しておく。質問時は、局所的な問いなら該当ノードの周辺を、コーパス全体を問う問いなら<strong>コミュニティ要約群を集約して</strong>答えます。06 のアルゴリズムが、そのまま部品として使われているわけです。</p>
+      <p>代償は構築コストです。インデックス作成でコーパス全体を LLM に通すため、単純なベクタ検索とは桁の違う費用と時間がかかります。<strong>すべてを GraphRAG にするのではなく、繋ぐ必要のある問いが業務上重要な場合に選ぶ</strong>——これが実務上の判断になります。</p>
+      <p>もう一つ、見落とされがちな道があります。文書から抽出するのではなく、<strong>既存の業務マスタから決定的に知識グラフを構築し、それを LLM の道具として呼ばせる</strong>方式です。自然文をクエリに翻訳させ（Text-to-Cypher）、返ってきた事実だけを根拠に回答させる。生成の自由度を落として構造化された事実に接地させるため、幻覚（ハルシネーション）の抑制という点ではこちらのほうが素直に効きます。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>問いの型</th><th>ベクタRAG</th><th>GraphRAG</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>「返品規定は何日以内か」（一箇所に書かれている）</td><td>得意</td><td>働くが過剰</td></tr>
+          <tr><td>「A社とB社を繋いでいる人物は誰か」（経路が答え）</td><td>断片は返るが繋がない</td><td>得意</td></tr>
+          <tr><td>「この資料群全体の主要な論点は何か」（全体像）</td><td>近傍しか見ない</td><td>得意（コミュニティ要約）</td></tr>
+          <tr><td>インデックス構築のコスト</td><td>低い</td><td>高い（全文をLLMに通す）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">09</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">GRAPH × ML</div>
+        <h2 class="section-title">GNN — グラフの上で学習する</h2>
+        <p class="sec-sub">表形式の学習は各行を独立と見なす。グラフでは「隣が何者か」が効く</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="流れ">
+      <div class="fig-flow">
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 1</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#graph-web"/></svg>
+          <div class="fig-node-label">近傍を集める</div>
+          <div class="fig-note">各ノードが隣のノードの特徴を受け取る</div>
+        </div>
+        <div class="fig-flow-arrow"><svg width="30" height="30" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 2</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#gear"/></svg>
+          <div class="fig-node-label">集約する</div>
+          <div class="fig-note">平均・最大・注意機構で1つにまとめる</div>
+        </div>
+        <div class="fig-flow-arrow"><svg width="30" height="30" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 3</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#node-chip"/></svg>
+          <div class="fig-node-label">表現を更新</div>
+          <div class="fig-note">自分の特徴と合わせて新しい表現をつくる</div>
+        </div>
+        <div class="fig-flow-arrow"><svg width="30" height="30" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 4</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#brain-net"/></svg>
+          <div class="fig-node-label">層を重ねる</div>
+          <div class="fig-note">k層で k ホップ先の情報まで届く</div>
+        </div>
+        <div class="fig-flow-arrow"><svg width="30" height="30" aria-hidden="true"><use href="#hand-arrow"/></svg></div>
+        <div class="fig-flow-node">
+          <div class="fig-flow-step">STEP 5</div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#checklist-doc"/></svg>
+          <div class="fig-node-label">下流タスクへ</div>
+          <div class="fig-note">得られた埋め込みで分類・予測を行う</div>
+        </div>
+      </div>
+      <div class="fig-flow-ends"><span>始点：ノードの素の特徴</span><span>終点：近傍を織り込んだ埋め込み</span></div>
+    </div>
+
+    <div class="explain">
+      <p>この STEP 1〜3 の繰り返しを<strong>メッセージパッシング</strong>と呼びます。ここが GNN の全体像で、代表的な手法の違いは主に STEP 2 の集約のしかたにあります。<strong>GCN</strong>（Kipf と Welling、2017年）は近傍の平均に正規化を掛け、<strong>GraphSAGE</strong>（Hamilton ら、2017年）は近傍をサンプリングして学習時に見ていないノードにも適用できる帰納的な設計を採り、<strong>GAT</strong>（Veličković ら、2018年）は注意機構で「どの隣をどれだけ重視するか」を学習します。</p>
+      <p>解けるタスクは大きく三つ。ノード分類（不正アカウントの判定）、リンク予測（推薦、欠けている関係の補完）、グラフ分類（分子構造から性質を予測する）。いずれも<span class="marker">「隣が何者かが予測に効く」</span>という前提が成り立つ場面で威力を発揮します。</p>
+      <p>注意点も三つあります。層を深くすると全ノードの表現が似通ってしまう<strong>過平滑化</strong>（over-smoothing）、大規模グラフでミニバッチを組むと近傍が爆発的に増える問題、そして 10 で扱うスーパーノードの扱いです。</p>
+      <p>そして実務的にいちばん大事な忠告を一つ。<strong>いきなり GNN から入る必要はありません。</strong>06 のアルゴリズムで作った特徴量（PageRank のスコア、所属コミュニティのID、次数、共通近傍の数）を既存の勾配ブースティングの特徴量に足すだけで、多くの案件では十分な改善が出ます。実装も運用も説明もはるかに軽い。<strong>まずそこから始め、頭打ちになってから GNN を検討する</strong>のが順序として堅実です。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">10</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">OPERATIONS</div>
+        <h2 class="section-title">運用の落とし穴</h2>
+        <p class="sec-sub">試作では速かったものが、本番データ量で詰まる典型的な三つの理由</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="因果">
+      <div class="fig-cause">
+        <div class="fig-cause-src">
+          <div class="fig-cause-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#supernode"/></svg>
+            <b>スーパーノード</b>
+            <span>次数が極端に大きいノードを通ると走査量が跳ねる</span>
+          </div>
+          <div class="fig-cause-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#database"/></svg>
+            <b>分散でエッジが跨る</b>
+            <span>辿るたびにネットワーク往復が入る</span>
+          </div>
+          <div class="fig-cause-item">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#pen-note"/></svg>
+            <b>曖昧なエッジ型</b>
+            <span>型で絞り込めず探索範囲が広がる</span>
+          </div>
+        </div>
+        <div class="fig-cause-arrow"><svg class="arrow-wide" width="38" height="15" aria-hidden="true"><use href="#hand-arrow"/></svg><svg class="arrow-tall" width="17" height="42" aria-hidden="true"><use href="#hand-arrow-down"/></svg></div>
+        <div class="fig-cause-dst">
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#warning-tri"/></svg>
+          <strong>探索が発散し、<br>応答時間が跳ね上がる</strong>
+          <span class="fig-note">試作データでは起きず、本番量で初めて出る</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="explain">
+      <p><strong>スーパーノード</strong>は最頻出の事故です。人気商品、「日本」というタグ、全員が紐づく共通の管理者アカウント——こうしたノードは隣接エッジを数百万本抱えることがあり、そこを経由する探索は隣接リストの走査量が一気に跳ね上がります。厄介なのは、開発時のサンプルデータでは次数が小さく<span class="marker">問題が一切再現しない</span>ことです。</p>
+      <p><strong>分散配置</strong>も見立てを誤りやすい領域です。グラフを機体間で分割するとき、最適な分割を求める問題は計算量的に難しく、辺が機体をまたぐたびにトラバーサルにネットワーク往復が入ります。「データが大きいから分散」と短絡せず、<strong>単一機のメモリに載るうちはスケールアップで押す</strong>という判断は、グラフに関しては十分に現実的です。載らない場合は、業務上の局所性（テナント、地域、期間）に分割の軸を合わせ、跨ぐ辺を減らす設計にします。</p>
+      <p>残る二つは書き込みと設計の問題です。関係を大量に作る処理はロック競合を起こしやすいため初期投入は専用のバルクロード機構を使うこと、そしてエッジ型の命名を最後まで規律すること。<code>:RELATED_TO</code> のような何にでも使える型が増えると、探索時に型で絞り込めなくなり、あらゆるクエリが広く舐めるようになります。これは <strong>03 のモデリングの負債が、10 の性能問題として返ってくる</strong>という関係です。</p>
+    </div>
+
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>落とし穴</th><th>何が起きるか</th><th>対処</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>スーパーノード</td><td>隣接の走査量が跳ね上がる。サンプルデータでは再現しない</td><td>エッジ型や期間で絞る／中間ノードで束ねる／そもそもそこを辿らない設計にする</td></tr>
+          <tr><td>分散配置</td><td>辺が機体を跨ぐたびネットワーク往復</td><td>載るうちはスケールアップ／分割軸を業務の局所性に合わせる</td></tr>
+          <tr><td>深さ無制限の探索</td><td>全グラフ走査、メモリ枯渇</td><td>ホップ数の上限を必ず置く／経路の重複排除／実行計画の確認を習慣化</td></tr>
+          <tr><td>書き込み競合</td><td>関係作成でロックが競合する</td><td>初期投入はバルクロード／更新は粒度を小さく</td></tr>
+          <tr><td>モデリング負債</td><td>曖昧なエッジ型が増え、絞り込みが効かなくなる</td><td>型は動詞で命名／意味の違う関係を同じ型に混ぜない</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="card">
+    <div class="sec-head">
+      <div class="sec-num">11</div>
+      <div class="sec-head-body">
+        <div class="eyebrow">DECISION</div>
+        <h2 class="section-title">導入判断とはじめ方</h2>
+        <p class="sec-sub">「データが繋がっているから」は理由にならない。データはたいてい繋がっている</p>
+      </div>
+    </div>
+
+    <div class="fig-block" data-fig-type="位置づけ">
+      <div class="fig-map-wrap">
+        <div class="fig-map">
+          <div class="fig-map-area"></div>
+          <div class="fig-map-y"><span>探索が深い</span><span>浅い</span></div>
+          <div class="fig-map-x"><span>関係の重要度：低</span><span>高</span></div>
+          <div class="fig-plot" style="left:15%; top:84%"><div class="fig-dot"></div><span>集計・レポート</span></div>
+          <div class="fig-plot" style="left:30%; top:64%"><div class="fig-dot"></div><span>マスタ参照</span></div>
+          <div class="fig-plot" style="left:60%; top:52%"><div class="fig-dot"></div><span>推薦（2ホップ）</span></div>
+          <div class="fig-plot" style="left:63%; top:22%"><div class="fig-dot"></div><span>権限の到達可能性</span></div>
+          <div class="fig-plot" style="left:88%; top:44%"><div class="fig-dot"></div><span>影響波及分析</span></div>
+          <div class="fig-plot focus" style="left:80%; top:14%"><div class="fig-dot"></div><span>不正リング検出</span></div>
+        </div>
+        <div class="fig-map-legend">
+          <div class="fig-legend-row">
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#balance"/></svg>
+            <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#question-card"/></svg>
+          </div>
+          <svg class="fig-part" width="88" height="88" aria-hidden="true"><use href="#compass"/></svg>
+          <p>右上に寄るほどグラフの適域。左下はリレーショナルのままが正しい</p>
+        </div>
+      </div>
+      <p class="fig-cap">右上——関係が重く、探索が深い——に来る問いだけが専用のグラフ基盤に見合う（丸はその代表例）</p>
+    </div>
+
+    <div class="explain">
+      <p>導入の可否は、次の三つの問いで判断できます。<strong>(1)</strong> 答えたい問いに、何ホップかが事前に決まらない<strong>可変長の経路探索</strong>が含まれるか。<strong>(2)</strong> 関係そのものが属性を持ち、頻繁に変わるか。<strong>(3)</strong> 新しい種類の関係が後から足され続ける見込みか。</p>
+      <p>いずれにも当てはまらず、集計・レポート・単純な参照が主であれば、<span class="marker">リレーショナルのままが正しい判断</span>です。図の左下の領域に専用のグラフ基盤を持ち込んでも、運用対象が一つ増えるだけで見返りはありません。</p>
+      <p>当てはまった場合でも、いきなり専用DBを立てる必要はありません。04 で触れた <strong>SQL/PGQ</strong> や、PostgreSQL 上でグラフを扱う <strong>Apache AGE</strong> のように、既存の基盤の上でグラフ問い合わせを試せる道があります。まずそこで「経路として書けるか」を確かめ、性能とデータ量が要求するようになってから専用製品へ移るほうが、組織にとっては安全です。</p>
+      <p><strong>はじめ方の順序</strong>：(1) 答えたい問いを3つ、日本語で書く → (2) 小さなサンプルを紙に手で描いてグラフにする → (3) その問いを Cypher で書けるか試す → (4) アルゴリズムを1つ当てて示唆が出るか見る → (5) <strong>本番相当のデータ量で</strong>経路の発散とスーパーノードを確認する。(5) を省くと、10 の落とし穴に本番で出会うことになります。</p>
+      <div class="chip-row">
+        <span class="chip">まず Cypher を書いてみる</span>
+        <span class="chip">既存RDBで SQL/PGQ・AGE を試す</span>
+        <span class="chip">アルゴリズムは特徴量として使う</span>
+        <span class="chip">本番データ量で必ず測る</span>
+      </div>
+    </div>
+
+    <div class="sticky-note">
+      <h3>持ち帰る三点</h3>
+      <ul class="summary-list">
+        <li>グラフが効くのは<strong>答えが〈経路〉である問い</strong>。集計が主なら表のままでよい。</li>
+        <li>速さの正体は<strong>インデックスフリー隣接</strong>——始点のない問いには効かない、という裏返しまで含めて理解する。</li>
+        <li>AI との接続（GraphRAG・GNN）は魅力的だが、<strong>グラフアルゴリズムを特徴量として足すところから</strong>始めるほうが費用対効果が高い。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer class="source">
+  <p>本資料は特定の記事の要約ではなく、下記の一次情報・原典に基づいて構成した解説です。作成日：2026年9月1日</p>
+  <p>
+    GQL：<a href="https://www.iso.org/standard/76120.html">ISO/IEC 39075:2024</a>｜
+    <a href="https://opencypher.org/">openCypher</a>｜
+    <a href="https://www.w3.org/TR/sparql11-query/">W3C SPARQL 1.1</a>｜
+    <a href="https://tinkerpop.apache.org/">Apache TinkerPop（Gremlin）</a>｜
+    <a href="https://age.apache.org/">Apache AGE</a>｜
+    <a href="https://neo4j.com/docs/graph-data-science/current/">Neo4j Graph Data Science</a>
+  </p>
+  <p>
+    GraphRAG：<a href="https://microsoft.github.io/graphrag/">Microsoft GraphRAG</a> ／ <a href="https://arxiv.org/abs/2404.16130">arXiv:2404.16130</a>｜
+    PageRank：<a href="http://infolab.stanford.edu/~backrub/google.html">Brin &amp; Page (1998)</a>｜
+    Louvain：<a href="https://arxiv.org/abs/0803.0476">arXiv:0803.0476</a>｜
+    Leiden：<a href="https://arxiv.org/abs/1810.08473">arXiv:1810.08473</a>
+  </p>
+  <p>
+    GCN：<a href="https://arxiv.org/abs/1609.02907">arXiv:1609.02907</a>｜
+    GraphSAGE：<a href="https://arxiv.org/abs/1706.02216">arXiv:1706.02216</a>｜
+    GAT：<a href="https://arxiv.org/abs/1710.10903">arXiv:1710.10903</a>｜
+    Zanzibar：<a href="https://www.usenix.org/conference/atc19/presentation/pang">USENIX ATC 2019</a>
+  </p>
+</footer>
+
+</div>
